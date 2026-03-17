@@ -5,6 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { uploadSiteAssetFn } from "@/features/config/api/config.api";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 interface AssetUploadFieldProps {
@@ -13,6 +14,7 @@ interface AssetUploadFieldProps {
   accept: string;
   label: string;
   hint?: string;
+  placeholder?: string;
   readOnly?: boolean;
   error?: string;
 }
@@ -20,8 +22,11 @@ interface AssetUploadFieldProps {
 function getPreviewUrl(value: string): string | null {
   if (!value || typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!trimmed.startsWith("/")) return null;
-  return trimmed;
+  if (trimmed.startsWith("/")) return trimmed;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return null;
 }
 
 export function AssetUploadField({
@@ -30,6 +35,7 @@ export function AssetUploadField({
   accept,
   label,
   hint,
+  placeholder,
   readOnly,
   error,
 }: AssetUploadFieldProps) {
@@ -84,12 +90,11 @@ export function AssetUploadField({
             <Input
               {...register(name)}
               readOnly={readOnly}
-              className={
-                error
-                  ? "border-destructive focus-visible:border-destructive"
-                  : undefined
-              }
-              placeholder={`/images/asset/${assetPath}`}
+              className={cn(
+                error && "border-destructive focus-visible:border-destructive",
+                readOnly && "border-dashed opacity-60 bg-muted/5",
+              )}
+              placeholder={placeholder ?? `/images/asset/${assetPath}`}
             />
             <input
               ref={fileInputRef}

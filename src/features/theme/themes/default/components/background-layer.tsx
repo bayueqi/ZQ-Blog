@@ -92,7 +92,7 @@ export function BackgroundLayer({
           <div
             style={{
               ...imageStyle,
-              backgroundImage: `url(${homeImage})`,
+              backgroundImage: `url("${homeImage}")`,
               opacity: homeOpacityExpr,
               transition,
             }}
@@ -104,7 +104,7 @@ export function BackgroundLayer({
           <div
             style={{
               ...imageStyle,
-              backgroundImage: `url(${globalImage})`,
+              backgroundImage: `url("${globalImage}")`,
               opacity: globalOpacityExpr,
               transition,
             }}

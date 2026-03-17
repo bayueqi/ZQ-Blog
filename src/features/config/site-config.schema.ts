@@ -55,6 +55,42 @@ function createAssetRefFormSchema(messages: Messages) {
   });
 }
 
+function isExternalImageUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function createBackgroundImageRefSchema() {
+  return z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        value === "" || value.startsWith("/") || isExternalImageUrl(value),
+      {
+        message: "Please enter a root-relative path or http(s) URL",
+      },
+    );
+}
+
+function createBackgroundImageRefFormSchema(messages: Messages) {
+  return z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        value === "" || value.startsWith("/") || isExternalImageUrl(value),
+      {
+        message:
+          messages.settings_site_validation_invalid_background_image_ref(),
+      },
+    );
+}
+
 function createAssetPathSchema() {
   return z.string().refine((value) => value.startsWith("/"), {
     message: "Please enter a root-relative path",
@@ -151,8 +187,8 @@ function createHueFormSchema(messages: Messages) {
 
 function createDefaultThemeBackgroundSchema() {
   return z.object({
-    homeImage: createAssetRefSchema(),
-    globalImage: createAssetRefSchema(),
+    homeImage: createBackgroundImageRefSchema(),
+    globalImage: createBackgroundImageRefSchema(),
     light: z.object({
       opacity: createOpacitySchema(),
     }),
@@ -166,8 +202,8 @@ function createDefaultThemeBackgroundSchema() {
 
 function createDefaultThemeBackgroundInputSchema() {
   return z.object({
-    homeImage: createAssetRefSchema().optional(),
-    globalImage: createAssetRefSchema().optional(),
+    homeImage: createBackgroundImageRefSchema().optional(),
+    globalImage: createBackgroundImageRefSchema().optional(),
     light: z
       .object({
         opacity: createOpacitySchema().optional(),
@@ -185,8 +221,8 @@ function createDefaultThemeBackgroundInputSchema() {
 
 function createDefaultThemeBackgroundInputFormSchema(messages: Messages) {
   return z.object({
-    homeImage: createAssetRefFormSchema(messages).optional(),
-    globalImage: createAssetRefFormSchema(messages).optional(),
+    homeImage: createBackgroundImageRefFormSchema(messages).optional(),
+    globalImage: createBackgroundImageRefFormSchema(messages).optional(),
     light: z
       .object({
         opacity: createOpacityFormSchema(messages).optional(),
@@ -226,7 +262,7 @@ function createDefaultThemeSiteConfigInputFormSchema(messages: Messages) {
 
 function createFuwariThemeSiteConfigSchema() {
   return z.object({
-    homeBg: createAssetRefSchema(),
+    homeBg: createBackgroundImageRefSchema(),
     avatar: createAssetRefSchema(),
     primaryHue: createHueSchema(),
   });
@@ -234,7 +270,7 @@ function createFuwariThemeSiteConfigSchema() {
 
 function createFuwariThemeSiteConfigInputSchema() {
   return z.object({
-    homeBg: createAssetRefSchema().optional(),
+    homeBg: createBackgroundImageRefSchema().optional(),
     avatar: createAssetRefSchema().optional(),
     primaryHue: createHueSchema().optional(),
   });
@@ -242,7 +278,7 @@ function createFuwariThemeSiteConfigInputSchema() {
 
 function createFuwariThemeSiteConfigInputFormSchema(messages: Messages) {
   return z.object({
-    homeBg: createAssetRefFormSchema(messages).optional(),
+    homeBg: createBackgroundImageRefFormSchema(messages).optional(),
     avatar: createAssetRefFormSchema(messages).optional(),
     primaryHue: createHueFormSchema(messages).optional(),
   });
