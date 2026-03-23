@@ -72,6 +72,7 @@ function EditPost() {
     contentJson: post.contentJson,
     publishedAt: post.publishedAt,
     tagIds: tags.map((t) => t.id),
+    pinnedAt: post.pinnedAt,
     isSynced: post.isSynced,
     hasPublicCache: post.hasPublicCache,
   };

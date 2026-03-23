@@ -57,6 +57,27 @@
       "when": 1773620108271,
       "tag": "0007_nervous_pepper_potts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1773872827424,
+      "tag": "0008_strong_callisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1774066164394,
+      "tag": "0009_light_brood",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1774071685152,
+      "tag": "0010_romantic_roland_deschain",
+      "breakpoints": true
     }
   ]
 }

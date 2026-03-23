@@ -26,7 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { OAUTH_MANAGED_SCOPES } from "@/features/oauth-provider/oauth-provider.config";
+import { OAUTH_MANAGED_SCOPES } from "@/features/oauth-provider/oauth-provider.shared";
 import { formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { useOAuthClients } from "../hooks/use-oauth-clients";
@@ -228,14 +228,6 @@ function OAuthConnectionCard({
                 </span>
                 <span className="font-mono text-muted-foreground/80">
                   {formatDate(connection.createdAt, { includeTime: true })}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {m.settings_mcp_connection_activity_label()}
-                </span>
-                <span className="font-mono text-muted-foreground/80">
-                  {formatDate(connection.updatedAt, { includeTime: true })}
                 </span>
               </div>
             </div>

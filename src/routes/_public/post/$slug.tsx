@@ -1,8 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import theme from "@theme";
+import { useEffect } from "react";
 import { z } from "zod";
 import { siteConfigQuery, siteDomainQuery } from "@/features/config/queries";
+import { recordPageViewFn } from "@/features/pageview/api/pageview.api";
 import { postBySlugQuery, relatedPostsQuery } from "@/features/posts/queries";
 import {
   buildArticleJsonLd,
@@ -82,9 +84,20 @@ export const Route = createFileRoute("/_public/post/$slug")({
 });
 
 function RouteComponent() {
-  const { data: post } = useSuspenseQuery(
-    postBySlugQuery(Route.useParams().slug),
-  );
+  const { slug } = Route.useParams();
+  const { data: post } = useSuspenseQuery(postBySlugQuery(slug));
+
+  useEffect(() => {
+    if (!post?.id) return;
+    try {
+      const key = `pv:${post.id}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // Safari private mode / storage disabled — record anyway
+    }
+    void recordPageViewFn({ data: { postId: post.id } });
+  }, [post?.id]);
 
   if (!post) throw notFound();
 

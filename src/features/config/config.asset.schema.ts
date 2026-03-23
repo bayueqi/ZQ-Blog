@@ -19,7 +19,11 @@ type ThemePrefix = `themes/${ThemeName}/`;
 const themePrefixes = themeNames.map(
   (name) => `themes/${name}/` satisfies ThemePrefix,
 );
-const ALLOWED_ASSET_PREFIXES = ["favicon/", ...themePrefixes] as const;
+const ALLOWED_ASSET_PREFIXES = [
+  "favicon/",
+  "social/",
+  ...themePrefixes,
+] as const;
 
 function isAllowedAssetPath(path: string): boolean {
   const normalized = path.replace(/^\/+/, "").replace(/\\/g, "/");

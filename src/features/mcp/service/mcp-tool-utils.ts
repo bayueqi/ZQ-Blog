@@ -37,6 +37,13 @@ export function canAccessTool(
   context: McpToolContext,
   requiredScopes: OAuthScopeRequest,
 ) {
+  return canAccessScopes(context, requiredScopes);
+}
+
+export function canAccessScopes(
+  context: McpToolContext,
+  requiredScopes: OAuthScopeRequest,
+) {
   return (
     getMissingScopes(context.principal.scopes, requiredScopes).length === 0
   );

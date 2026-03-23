@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  OAUTH_DEFAULT_CLIENT_SCOPES,
+  resolveOAuthRequestedScopes,
+} from "../oauth-provider.shared";
 import { flattenBlogScopes } from "./oauth-provider.scope";
 import {
   createOAuthPrincipal,
@@ -21,6 +25,20 @@ describe("oauth-provider service", () => {
       "posts:read",
     ]);
     expect(parseOAuthScopes(null)).toEqual([]);
+  });
+
+  it("falls back to default client scopes when scope is missing", () => {
+    expect(resolveOAuthRequestedScopes(undefined)).toEqual(
+      OAUTH_DEFAULT_CLIENT_SCOPES,
+    );
+  });
+
+  it("filters invalid requested scopes without falling back to defaults", () => {
+    expect(
+      resolveOAuthRequestedScopes(["posts:read", "posts:unknown"]),
+    ).toEqual(["posts:read"]);
+    expect(resolveOAuthRequestedScopes(["posts:unknown"])).toEqual([]);
+    expect(resolveOAuthRequestedScopes([])).toEqual([]);
   });
 
   it("flattens structured scope requests", () => {

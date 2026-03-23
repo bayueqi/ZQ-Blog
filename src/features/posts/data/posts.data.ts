@@ -67,6 +67,7 @@ export async function getPosts(
       slug: PostsTable.slug,
       status: PostsTable.status,
       publishedAt: PostsTable.publishedAt,
+      pinnedAt: PostsTable.pinnedAt,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
     })
@@ -106,12 +107,19 @@ export async function getPostsCursor(
     limit?: number;
     publicOnly?: boolean;
     tagName?: string;
+    excludePinned?: boolean;
   } = {},
 ): Promise<{
   items: Array<PostListItem>;
   nextCursor: number | null;
 }> {
-  const { cursor, limit = DEFAULT_PAGE_SIZE, publicOnly, tagName } = options;
+  const {
+    cursor,
+    limit = DEFAULT_PAGE_SIZE,
+    publicOnly,
+    tagName,
+    excludePinned,
+  } = options;
 
   // Build base conditions from helper
   const baseConditions = buildPostWhereClause({ publicOnly });
@@ -148,6 +156,10 @@ export async function getPostsCursor(
     conditions.push(eq(TagsTable.name, tagName));
   }
 
+  if (excludePinned) {
+    conditions.push(sql`${PostsTable.pinnedAt} IS NULL`);
+  }
+
   let query = db
     .select({
       id: PostsTable.id,
@@ -157,6 +169,7 @@ export async function getPostsCursor(
       slug: PostsTable.slug,
       status: PostsTable.status,
       publishedAt: PostsTable.publishedAt,
+      pinnedAt: PostsTable.pinnedAt,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
     })
@@ -271,6 +284,71 @@ export async function findPostById(db: DB, id: number) {
   const tags = post.postTags.map((pt) => pt.tag);
   const { postTags, ...rest } = post;
   return { ...rest, tags };
+}
+
+export async function findPinnedPosts(db: DB) {
+  const posts = await db.query.PostsTable.findMany({
+    where: and(
+      buildPostWhereClause({ publicOnly: true }),
+      isNotNull(PostsTable.pinnedAt),
+    ),
+    orderBy: [desc(PostsTable.pinnedAt)],
+    columns: {
+      id: true,
+      title: true,
+      summary: true,
+      readTimeInMinutes: true,
+      slug: true,
+      status: true,
+      publishedAt: true,
+      pinnedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    with: {
+      postTags: {
+        with: { tag: true },
+      },
+    },
+  });
+
+  return posts.map((p) => ({
+    ...p,
+    tags: p.postTags.map((pt) => pt.tag),
+  }));
+}
+
+export async function findPostsBySlugs(db: DB, slugs: string[]) {
+  if (slugs.length === 0) return [];
+
+  const posts = await db.query.PostsTable.findMany({
+    where: and(
+      buildPostWhereClause({ publicOnly: true }),
+      inArray(PostsTable.slug, slugs),
+    ),
+    columns: {
+      id: true,
+      title: true,
+      summary: true,
+      readTimeInMinutes: true,
+      slug: true,
+      status: true,
+      publishedAt: true,
+      pinnedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    with: {
+      postTags: {
+        with: { tag: true },
+      },
+    },
+  });
+
+  return posts.map((p) => ({
+    ...p,
+    tags: p.postTags.map((pt) => pt.tag),
+  }));
 }
 
 export async function findPostBySlug(
@@ -443,6 +521,7 @@ export async function getPublicPostsByIds(db: DB, ids: Array<number>) {
       slug: PostsTable.slug,
       status: PostsTable.status,
       publishedAt: PostsTable.publishedAt,
+      pinnedAt: PostsTable.pinnedAt,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
     })

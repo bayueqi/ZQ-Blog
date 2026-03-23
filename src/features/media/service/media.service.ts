@@ -4,6 +4,7 @@ import type {
   GetMediaListInput,
   UpdateMediaNameInput,
 } from "@/features/media/media.schema";
+import { getImageDimensions } from "@/features/media/utils/image-dimensions";
 import {
   buildTransformOptions,
   getContentTypeFromKey,
@@ -14,9 +15,14 @@ import { err, ok } from "@/lib/errors";
 
 export async function upload(
   context: DbContext & { executionCtx: ExecutionContext },
-  input: { file: File; width?: number; height?: number },
+  input: { file: File },
 ) {
-  const { file, width, height } = input;
+  const { file } = input;
+
+  const dimensions = getImageDimensions(await file.arrayBuffer());
+  const width = dimensions?.width;
+  const height = dimensions?.height;
+
   const uploaded = await Storage.putToR2(context.env, file);
 
   try {

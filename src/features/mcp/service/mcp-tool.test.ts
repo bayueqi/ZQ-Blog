@@ -15,7 +15,6 @@ function createMcpToolContext(
       clientId: "client_123",
       scopes,
       subject: "user_123",
-      token: {},
     },
   };
 }

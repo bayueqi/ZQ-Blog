@@ -16,6 +16,7 @@ vi.mock("../data/oauth-client.data", () => oauthClientData);
 describe("oauth-client service", () => {
   const context = {
     db: {},
+    env: {},
     session: {
       user: {
         id: "user_123",
@@ -35,7 +36,6 @@ describe("oauth-client service", () => {
         clientName: "Codex",
         clientType: "web",
         createdAt: "2026-03-15T10:00:00.000Z",
-        updatedAt: "2026-03-15T12:00:00.000Z",
         public: false,
         redirectUris: ["http://localhost:6274/oauth/callback/debug"],
         scopes: ["posts:read", "posts:write"],
@@ -45,7 +45,7 @@ describe("oauth-client service", () => {
     const connections = await listOAuthConnections(context);
 
     expect(oauthClientData.listOAuthConnectionsByUserId).toHaveBeenCalledWith(
-      context.db,
+      context.env,
       "user_123",
     );
     expect(connections).toEqual([
@@ -55,7 +55,6 @@ describe("oauth-client service", () => {
         clientName: "Codex",
         clientType: "web",
         createdAt: "2026-03-15T10:00:00.000Z",
-        updatedAt: "2026-03-15T12:00:00.000Z",
         public: false,
         redirectUris: ["http://localhost:6274/oauth/callback/debug"],
         scopes: ["posts:read", "posts:write"],
@@ -75,7 +74,7 @@ describe("oauth-client service", () => {
     });
 
     expect(oauthClientData.updateOAuthClientName).toHaveBeenCalledWith(
-      context.db,
+      context.env,
       "client_123",
       "Codex Updated",
     );
@@ -93,7 +92,7 @@ describe("oauth-client service", () => {
     await deleteOAuthConnection(context, "consent_123");
 
     expect(oauthClientData.deleteOAuthConsentById).toHaveBeenCalledWith(
-      context.db,
+      context.env,
       "consent_123",
       "user_123",
     );

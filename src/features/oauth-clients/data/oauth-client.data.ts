@@ -1,109 +1,91 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
-import { oauthClient, oauthConsent } from "@/lib/db/schema/auth.table";
+import type {
+  ClientInfo,
+  GrantSummary,
+} from "@cloudflare/workers-oauth-provider";
+import { getOAuthHelpers } from "@/features/oauth-provider/oauth-provider.config";
 import {
   OAuthClientInfoRowSchema,
   OAuthConnectionSchema,
-  OAuthConsentRowSchema,
 } from "../schema/oauth-client.schema";
 
-export async function listOAuthConnectionsByUserId(db: DB, userId: string) {
-  const consents = await db.query.oauthConsent.findMany({
-    where: eq(oauthConsent.userId, userId),
-    orderBy: [desc(oauthConsent.updatedAt)],
-  });
-  const clientIds = [...new Set(consents.map((consent) => consent.clientId))];
-  if (clientIds.length === 0) {
-    return [];
-  }
-
-  const clients = await db.query.oauthClient.findMany({
-    where: inArray(oauthClient.clientId, clientIds),
-  });
-
-  const clientsById = new Map(
-    clients.map((client) => {
-      const normalizedClient = OAuthClientInfoRowSchema.parse({
-        clientId: client.clientId,
-        clientName: client.name,
-        clientIcon: client.icon,
-        clientType: client.type,
-        public: client.public ?? false,
-        redirectUris: client.redirectUris,
-      });
-
-      return [normalizedClient.clientId, normalizedClient] as const;
-    }),
-  );
-
-  return consents.map((consent) => {
-    const normalizedConsent = OAuthConsentRowSchema.parse({
-      consentId: consent.id,
-      clientId: consent.clientId,
-      createdAt: consent.createdAt ?? new Date(0),
-      updatedAt: consent.updatedAt ?? new Date(0),
-      scopes: consent.scopes,
-    });
-    const client = clientsById.get(normalizedConsent.clientId);
-
-    return OAuthConnectionSchema.parse({
-      ...normalizedConsent,
-      clientName: client?.clientName ?? null,
-      clientIcon: client?.clientIcon ?? null,
-      clientType: client?.clientType ?? null,
-      public: client?.public ?? false,
-      redirectUris: client?.redirectUris ?? [],
-    });
-  });
-}
-
-export async function findOAuthClientByClientId(db: DB, clientId: string) {
-  const client = await db.query.oauthClient.findFirst({
-    where: eq(oauthClient.clientId, clientId),
-  });
-
-  if (!client) return null;
-
+function normalizeClientInfo(client: ClientInfo) {
   return OAuthClientInfoRowSchema.parse({
     clientId: client.clientId,
-    clientName: client.name,
-    clientIcon: client.icon,
-    clientType: client.type,
-    public: client.public ?? false,
+    clientName: client.clientName ?? null,
+    clientIcon: client.logoUri ?? null,
+    clientType: null,
+    public: client.tokenEndpointAuthMethod === "none",
     redirectUris: client.redirectUris,
   });
 }
 
+function mapGrantToConnection(
+  grant: GrantSummary,
+  client: ReturnType<typeof normalizeClientInfo> | null,
+) {
+  return OAuthConnectionSchema.parse({
+    consentId: grant.id,
+    clientId: grant.clientId,
+    clientName: client?.clientName ?? null,
+    clientIcon: client?.clientIcon ?? null,
+    clientType: client?.clientType ?? null,
+    createdAt: new Date(grant.createdAt * 1000).toISOString(),
+    public: client?.public ?? false,
+    redirectUris: client?.redirectUris ?? [],
+    scopes: grant.scope,
+  });
+}
+
+export async function listOAuthConnectionsByUserId(env: Env, userId: string) {
+  const oauth = getOAuthHelpers(env);
+  const { items } = await oauth.listUserGrants(userId, { limit: 1000 });
+
+  const connections = await Promise.all(
+    items.map(async (grant) => {
+      const client = await oauth.lookupClient(grant.clientId);
+      return mapGrantToConnection(
+        grant,
+        client ? normalizeClientInfo(client) : null,
+      );
+    }),
+  );
+
+  return connections.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function findOAuthClientByClientId(env: Env, clientId: string) {
+  const client = await getOAuthHelpers(env).lookupClient(clientId);
+
+  if (!client) return null;
+
+  return normalizeClientInfo(client);
+}
+
 export async function updateOAuthClientName(
-  db: DB,
+  env: Env,
   clientId: string,
   clientName: string,
 ) {
-  const [client] = await db
-    .update(oauthClient)
-    .set({
-      name: clientName,
-      updatedAt: new Date(),
-    })
-    .where(eq(oauthClient.clientId, clientId))
-    .returning({
-      clientId: oauthClient.clientId,
-      clientName: oauthClient.name,
-    });
+  const client = await getOAuthHelpers(env).updateClient(clientId, {
+    clientName,
+  });
 
-  return client ?? null;
+  if (!client) {
+    return null;
+  }
+
+  return {
+    clientId: client.clientId,
+    clientName: client.clientName ?? null,
+  };
 }
 
 export async function deleteOAuthConsentById(
-  db: DB,
+  env: Env,
   consentId: string,
   userId: string,
 ) {
-  const [deletedConsent] = await db
-    .delete(oauthConsent)
-    .where(and(eq(oauthConsent.id, consentId), eq(oauthConsent.userId, userId)))
-    .returning({
-      consentId: oauthConsent.id,
-    });
+  await getOAuthHelpers(env).revokeGrant(consentId, userId);
 
-  return deletedConsent ?? null;
+  return { consentId };
 }

@@ -1,11 +1,7 @@
 import type { BetterAuthOptions } from "better-auth";
 import { admin } from "better-auth/plugins";
-import {
-  createOAuthJwtPlugin,
-  createOAuthProviderPlugin,
-} from "@/features/oauth-provider/oauth-provider.config";
 
-export function createAuthConfig(baseURL: string) {
+export function createAuthConfig() {
   return {
     emailAndPassword: {
       enabled: true,
@@ -17,10 +13,6 @@ export function createAuthConfig(baseURL: string) {
         maxAge: 5 * 60,
       },
     },
-    plugins: [
-      admin(),
-      createOAuthJwtPlugin(baseURL),
-      createOAuthProviderPlugin(baseURL),
-    ],
+    plugins: [admin()],
   } satisfies BetterAuthOptions;
 }

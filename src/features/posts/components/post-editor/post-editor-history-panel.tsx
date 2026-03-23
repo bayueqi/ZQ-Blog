@@ -34,6 +34,7 @@ interface PostEditorHistoryPanelProps {
   postId: number;
   isOpen: boolean;
   onClose: () => void;
+  currentSnapshot: PostRevisionSnapshot;
   allTags: Array<{ id: number; name: string }>;
   onRestoreApplied: (input: { snapshot: PostRevisionSnapshot }) => void;
 }
@@ -67,6 +68,7 @@ function HistoryPanelInternal({
   postId,
   isOpen,
   onClose,
+  currentSnapshot,
   allTags,
   onRestoreApplied,
 }: PostEditorHistoryPanelProps) {
@@ -327,7 +329,7 @@ function HistoryPanelInternal({
       {/* Panel */}
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-91 flex w-full max-w-full flex-col border-l border-border/40 bg-background/95 shadow-2xl backdrop-blur lg:max-w-[85vw] duration-500",
+          "fixed inset-y-0 right-0 z-91 flex w-full max-w-full flex-col border-l border-border/40 bg-background/95 shadow-2xl backdrop-blur lg:max-w-[84vw] 2xl:max-w-[80vw] duration-500",
           isOpen
             ? "animate-in fade-in slide-in-from-right"
             : "animate-out fade-out slide-out-to-right fill-mode-forwards",
@@ -388,6 +390,8 @@ function HistoryPanelInternal({
             <PostEditorHistoryPreview
               revision={selectedRevision}
               tagNames={tagNames}
+              currentSnapshot={currentSnapshot}
+              allTags={allTags}
               isLoading={selectedRevisionQuery.isLoading}
               isRestoring={restoreMutation.isPending}
               isDeleting={deleteMutation.isPending}

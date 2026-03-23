@@ -22,8 +22,14 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { sessionQuery } from "@/features/auth/queries";
-import { getOAuthClientMetadataFn } from "@/features/oauth-provider/api/oauth-provider.public.api";
-import { OAUTH_MANAGED_SCOPES } from "@/features/oauth-provider/oauth-provider.config";
+import {
+  completeOAuthConsentFn,
+  getOAuthClientMetadataFn,
+} from "@/features/oauth-provider/api/oauth-provider.api";
+import {
+  OAUTH_MANAGED_SCOPES,
+  resolveOAuthRequestedScopes,
+} from "@/features/oauth-provider/oauth-provider.shared";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -79,14 +85,16 @@ function RouteComponent() {
     enabled: !!clientId,
   });
 
-  const requestedScopes = useMemo(
-    () =>
-      (search.scope ?? "")
-        .split(" ")
-        .map((scope) => scope.trim())
-        .filter(Boolean),
-    [search.scope],
-  );
+  const requestedScopes = useMemo(() => {
+    const rawScopes = (search.scope ?? "")
+      .split(" ")
+      .map((scope) => scope.trim())
+      .filter(Boolean);
+
+    return resolveOAuthRequestedScopes(
+      search.scope == null ? undefined : rawScopes,
+    );
+  }, [search.scope]);
 
   const requestedManagedScopes = useMemo(
     () =>
@@ -117,36 +125,16 @@ function RouteComponent() {
 
     try {
       const oauthQuery = window.location.search.slice(1);
-
-      const response = await fetch("/api/auth/oauth2/consent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({
+      const result = await completeOAuthConsentFn({
+        data: {
           accept,
+          oauthQuery,
           scope: accept
-            ? [...requiredSystemScopes, ...selectedManagedScopes].join(" ")
-            : undefined,
-          oauth_query: oauthQuery,
-        }),
+            ? [...requiredSystemScopes, ...selectedManagedScopes]
+            : [],
+        },
       });
-
-      if (!response.ok) {
-        const message = await response
-          .text()
-          .catch(() => m.oauth_consent_error_failed());
-        throw new Error(message || m.oauth_consent_error_failed());
-      }
-
-      const result = (await response.json()) as {
-        redirect_uri?: string;
-        redirectURI?: string;
-        url?: string;
-      };
-      const redirectUrl =
-        result.redirect_uri ?? result.redirectURI ?? result.url;
+      const redirectUrl = result.redirectTo;
 
       if (!redirectUrl) {
         throw new Error(m.oauth_consent_error_missing_redirect());

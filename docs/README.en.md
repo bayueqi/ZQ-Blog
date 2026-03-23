@@ -32,13 +32,17 @@ Deeply integrated with D1, R2, KV, Workflows, and other Serverless services.
 ## Core Features
 
 - **Post Management** — Rich text editor supporting syntax highlighting, image uploads, and draft/publish workflows.
+- **Version History** — Automatic editor snapshots and post version history for safer recovery.
 - **Tagging System** — Flexible post categorization.
-- **Comment System** — Supports nested replies, email notifications, and moderation.
+- **Comment System** — Supports nested replies, email notifications, AI-assisted moderation, and richer moderation context.
 - **Friend Links** — User applications, admin moderation, and email notifications.
+- **Notification System** — Supports email and webhook notifications with event-based subscriptions.
 - **Full-Text Search** — High-performance search powered by Orama.
 - **Media Library** — R2 object storage for image management and optimization.
 - **Authentication** — GitHub OAuth login with role-based access control.
+- **MCP Server** — Connect AI clients through OAuth to manage posts, comments, tags, friend links, media, and analytics.
 - **Analytics** — Umami integration for visitor metrics and top posts.
+- **SEO Enhancements** — Canonical URLs, Schema.org structured data, RSS, Sitemap, and Robots support.
 - **AI Integration** — Cloudflare Workers AI integration.
 - **Theme System** — Extensible theme templates, fully supporting replacement of all pages and layouts.
 - **Import / Export** — Supports Markdown import and export, preserving images and frontmatter.
@@ -204,11 +208,9 @@ Please refer to the **[Flare Stack Blog Deployment Guide](./deployment-guide.en.
 | `GITHUB_TOKEN`            | Runtime    | GitHub API Token (for version updates checking to avoid rate limits).                                    |
 | `LOCALE`                  | Runtime    | Default language: `zh` or `en`. Default: `zh`. Used for emails, webhooks, and background task messaging. |
 | `CDN_DOMAIN`              | Runtime    | Standalone CDN domain (e.g., `cdn.example.com`), preferentially used during purge.                       |
-| `UMAMI_SRC`               | Runtime    | Umami base URL (Cloud: `https://cloud.umami.is`).                                                        |
-| `UMAMI_API_KEY`           | Runtime    | Umami Cloud API key (for Cloud version exclusively).                                                     |
-| `UMAMI_USERNAME`          | Runtime    | Umami username (Self-hosted exclusively).                                                                |
-| `UMAMI_PASSWORD`          | Runtime    | Umami password (Self-hosted exclusively).                                                                |
-| `VITE_UMAMI_WEBSITE_ID`   | Build-time | Umami Website ID.                                                                                        |
+| `PAGEVIEW_SALT`           | Runtime    | Salt for anonymizing pageview visitor hashes. Generate with `openssl rand -hex 16`.                      |
+| `UMAMI_SRC`               | Runtime    | Umami client-side tracking proxy URL (e.g., `https://cloud.umami.is`).                                   |
+| `VITE_UMAMI_WEBSITE_ID`   | Build-time | Umami Website ID (client-side tracking).                                                                 |
 
 ---
 

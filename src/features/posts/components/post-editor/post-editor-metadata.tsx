@@ -1,4 +1,4 @@
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Pin, PinOff, Sparkles } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import DatePicker from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,36 @@ export function PostEditorMetadata({
             ))}
           </div>
         </div>
+
+        {post.status === "published" && (
+          <div className="space-y-3">
+            <label className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+              {m.editor_meta_pin()}
+            </label>
+            <div>
+              <button
+                onClick={() =>
+                  onPostChange({
+                    pinnedAt: post.pinnedAt ? null : new Date(),
+                  })
+                }
+                className={`
+                  flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider transition-colors
+                  ${
+                    post.pinnedAt
+                      ? "border-b border-foreground font-bold text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }
+                `}
+              >
+                {post.pinnedAt ? <Pin size={12} /> : <PinOff size={12} />}
+                {post.pinnedAt
+                  ? m.editor_meta_pinned()
+                  : m.editor_meta_unpinned()}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3">
           <label className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">

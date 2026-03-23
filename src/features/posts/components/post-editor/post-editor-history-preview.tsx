@@ -1,8 +1,7 @@
 import { ArrowLeft, Loader2, RotateCcw, Trash2 } from "lucide-react";
-import { Editor } from "@/components/tiptap-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { extensions } from "@/features/posts/editor/config";
+import type { PostRevisionSnapshot } from "@/features/posts/schema/post-revisions.schema";
 import { cn, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import {
@@ -11,10 +10,13 @@ import {
   getRevisionReasonLabel,
   type RevisionDetail,
 } from "./post-editor-history.shared";
+import { PostEditorHistoryDiff } from "./post-editor-history-diff";
 
 interface PostEditorHistoryPreviewProps {
   revision: RevisionDetail | null;
   tagNames: Array<string>;
+  currentSnapshot: PostRevisionSnapshot;
+  allTags: Array<{ id: number; name: string }>;
   isLoading: boolean;
   isRestoring: boolean;
   isDeleting: boolean;
@@ -26,6 +28,8 @@ interface PostEditorHistoryPreviewProps {
 export function PostEditorHistoryPreview({
   revision,
   tagNames,
+  currentSnapshot,
+  allTags,
   isLoading,
   isRestoring,
   isDeleting,
@@ -152,13 +156,10 @@ export function PostEditorHistoryPreview({
           </div>
 
           <div className="flex-1">
-            <Editor
-              key={revision.id}
-              extensions={extensions}
-              content={revision.snapshotJson.contentJson ?? ""}
-              editable={false}
-              className="min-h-full"
-              contentClassName="min-h-0 text-base leading-7"
+            <PostEditorHistoryDiff
+              previousSnapshot={revision.snapshotJson}
+              currentSnapshot={currentSnapshot}
+              allTags={allTags}
             />
           </div>
         </div>

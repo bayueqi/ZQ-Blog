@@ -8,6 +8,7 @@ import {
 } from "@/features/config/config.schema";
 import * as ConfigRepo from "@/features/config/data/config.data";
 import { FullSiteConfigSchema } from "@/features/config/site-config.schema";
+import type { SocialLink } from "@/features/config/utils/social-platforms";
 import * as Storage from "@/features/media/data/media.storage";
 import { purgeSiteCDNCache } from "@/lib/invalidate";
 
@@ -43,6 +44,24 @@ export function resolveSystemConfig(
   };
 }
 
+function migrateSocial(social: unknown): SocialLink[] {
+  // New format — already an array
+  if (Array.isArray(social)) return social;
+
+  // Old format — { github?: string, email?: string }
+  if (social && typeof social === "object") {
+    const old = social as { github?: string; email?: string };
+    const migrated: SocialLink[] = [];
+    if (old.github) migrated.push({ platform: "github", url: old.github });
+    if (old.email)
+      migrated.push({ platform: "email", url: `mailto:${old.email}` });
+    return migrated;
+  }
+
+  // Fallback to blogConfig defaults
+  return [...blogConfig.social];
+}
+
 export function resolveSiteConfig(
   config: SystemConfig | null | undefined,
 ): SiteConfig {
@@ -52,10 +71,7 @@ export function resolveSiteConfig(
     title: config?.site?.title ?? blogConfig.title,
     author: config?.site?.author ?? blogConfig.author,
     description: config?.site?.description ?? blogConfig.description,
-    social: {
-      github: config?.site?.social?.github ?? blogConfig.social.github,
-      email: config?.site?.social?.email ?? blogConfig.social.email,
-    },
+    social: migrateSocial(config?.site?.social),
     icons: {
       faviconSvg:
         config?.site?.icons?.faviconSvg || blogConfig.icons.faviconSvg,

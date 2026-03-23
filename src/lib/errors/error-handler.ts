@@ -40,9 +40,7 @@ export function handleServerError(error: unknown): void {
       break;
     }
     case "UNKNOWN": {
-      toast.error(m.request_error_unknown_title(), {
-        description: parsed.message || m.request_error_unknown_desc(),
-      });
+      console.error("[Unhandled request error]", parsed.message);
       break;
     }
     default:

@@ -34,27 +34,8 @@ const ALLOWED_IMAGE_MIME_TYPES = [
 ];
 
 async function handleImageUpload(file: File): Promise<ImageUploadResult> {
-  // Capture image dimensions
-  const dimensions = await new Promise<{ width: number; height: number }>(
-    (resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        resolve({ width: img.naturalWidth, height: img.naturalHeight });
-        URL.revokeObjectURL(img.src);
-      };
-      img.onerror = () => {
-        resolve({ width: 0, height: 0 });
-        URL.revokeObjectURL(img.src);
-      };
-      img.src = URL.createObjectURL(file);
-    },
-  );
-
   const formData = new FormData();
   formData.append("image", file);
-  if (dimensions.width) formData.append("width", dimensions.width.toString());
-  if (dimensions.height)
-    formData.append("height", dimensions.height.toString());
 
   const result = await uploadImageFn({ data: formData });
   if (result.error) {
@@ -66,8 +47,8 @@ async function handleImageUpload(file: File): Promise<ImageUploadResult> {
 
   return {
     url: result.data.url,
-    width: result.data.width || dimensions.width || undefined,
-    height: result.data.height || dimensions.height || undefined,
+    width: result.data.width || undefined,
+    height: result.data.height || undefined,
   };
 }
 

@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as PageviewService from "@/features/pageview/service/pageview.service";
 import {
   FindPostBySlugInputSchema,
   FindRelatedPostsInputSchema,
@@ -27,3 +29,16 @@ export const getRelatedPostsFn = createServerFn()
   .handler(async ({ data, context }) => {
     return await PostService.getRelatedPosts(context, data);
   });
+
+export const getPinnedPostsFn = createServerFn()
+  .middleware([dbMiddleware])
+  .handler(({ context }) => PostService.getPinnedPosts(context));
+
+export const getPopularPostsFn = createServerFn()
+  .middleware([dbMiddleware])
+  .inputValidator(
+    z.object({ limit: z.number().int().min(1).max(20).optional() }),
+  )
+  .handler(({ data, context }) =>
+    PageviewService.getPopularPosts(context, data.limit),
+  );

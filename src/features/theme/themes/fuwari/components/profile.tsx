@@ -1,5 +1,8 @@
 import { Link, useRouteContext } from "@tanstack/react-router";
-import { Github, Mail, Rss } from "lucide-react";
+import {
+  resolveSocialHref,
+  SOCIAL_PLATFORMS,
+} from "@/features/config/utils/social-platforms";
 import { m } from "@/paraglide/messages";
 
 export function Profile() {
@@ -31,31 +34,34 @@ export function Profile() {
           {siteConfig.description}
         </div>
         <div className="flex flex-wrap gap-2 justify-center">
-          <a
-            href={siteConfig.social.github}
-            target="_blank"
-            rel="me noreferrer"
-            aria-label="GitHub"
-            className="fuwari-btn-regular rounded-lg h-10 w-10 active:scale-90 hover:text-(--fuwari-primary) transition-colors"
-          >
-            <Github size={20} strokeWidth={1.5} />
-          </a>
-          <a
-            href="/rss.xml"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="RSS"
-            className="fuwari-btn-regular rounded-lg h-10 w-10 active:scale-90 hover:text-(--fuwari-primary) transition-colors"
-          >
-            <Rss size={20} strokeWidth={1.5} />
-          </a>
-          <a
-            href={`mailto:${siteConfig.social.email}`}
-            aria-label="Email"
-            className="fuwari-btn-regular rounded-lg h-10 w-10 active:scale-90 hover:text-(--fuwari-primary) transition-colors"
-          >
-            <Mail size={20} strokeWidth={1.5} />
-          </a>
+          {siteConfig.social
+            .filter((link) => link.url)
+            .map((link, i) => {
+              const preset =
+                link.platform !== "custom"
+                  ? SOCIAL_PLATFORMS[link.platform]
+                  : null;
+              const Icon = preset?.icon;
+              const label = preset?.label ?? link.label ?? "";
+              const href = resolveSocialHref(link.platform, link.url);
+
+              return (
+                <a
+                  key={`${link.platform}-${i}`}
+                  href={href}
+                  target={link.platform === "email" ? undefined : "_blank"}
+                  rel={link.platform === "email" ? undefined : "me noreferrer"}
+                  aria-label={label}
+                  className="fuwari-btn-regular rounded-lg h-10 w-10 active:scale-90 hover:text-(--fuwari-primary) transition-colors"
+                >
+                  {Icon ? (
+                    <Icon size={20} strokeWidth={1.5} />
+                  ) : (
+                    <img src={link.icon} alt={label} className="w-5 h-5" />
+                  )}
+                </a>
+              );
+            })}
         </div>
       </div>
     </div>

@@ -86,6 +86,28 @@ type McpPostUpdateInput = {
   contentMarkdown?: string;
 };
 
+function normalizeMcpMarkdownInput(markdown: string) {
+  const hasRealLineBreak = /[\r\n]/.test(markdown);
+  const hasEscapedLineBreak = /\\r\\n|\\n|\\r/.test(markdown);
+
+  if (!hasEscapedLineBreak) {
+    return markdown;
+  }
+
+  // Some MCP clients send JSON-escaped markdown ("\n") as literal text.
+  // When that happens, marked sees one long line and can parse the whole
+  // document as a single heading or paragraph.
+  if (hasRealLineBreak) {
+    return markdown;
+  }
+
+  return markdown
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r")
+    .replace(/\\t/g, "\t");
+}
+
 export async function toPostUpdateInput(
   input: McpPostUpdateInput,
 ): Promise<UpdatePostInput> {
@@ -116,7 +138,9 @@ export async function toPostUpdateInput(
   }
 
   if (input.contentMarkdown !== undefined) {
-    data.contentJson = await markdownToJsonContent(input.contentMarkdown);
+    data.contentJson = await markdownToJsonContent(
+      normalizeMcpMarkdownInput(input.contentMarkdown),
+    );
   }
 
   return {

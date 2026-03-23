@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpToolContext } from "./mcp.types";
+import { registerMcpPrompts } from "./mcp-prompt-registry";
 import { registerMcpTools } from "./mcp-tool-registry";
 
 export async function createMcpServer(
@@ -23,5 +24,6 @@ export async function createMcpServer(
   );
 
   registerMcpTools(server, context);
+  registerMcpPrompts(server, context);
   return server;
 }

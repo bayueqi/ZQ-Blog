@@ -3,9 +3,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { proxy } from "hono/proxy";
 import { exportDownloadRoute } from "@/features/import-export/api/hono/download.route";
-import mcpRoute from "@/features/mcp/api/mcp.route";
 import { handleImageRequest } from "@/features/media/service/media.service";
-import oauthProviderRoute from "@/features/oauth-provider/api/oauth-provider.route";
 import postsDetailRoute from "@/features/posts/api/hono/posts.detail.route";
 import postsListRoute from "@/features/posts/api/hono/posts.list.route";
 import postsRelatedRoute from "@/features/posts/api/hono/posts.related.route";
@@ -44,9 +42,7 @@ const publicApi = new Hono<{ Bindings: Env }>()
 // Mount public API
 app.route("/api", publicApi);
 
-app.route("/mcp", mcpRoute);
 app.route("/", siteDocumentsRoute);
-app.route("/", oauthProviderRoute);
 
 // Export type for RPC client
 export type PublicApiType = typeof publicApi;

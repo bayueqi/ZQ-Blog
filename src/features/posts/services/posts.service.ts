@@ -19,6 +19,7 @@ import type {
 } from "@/features/posts/schema/posts.schema";
 import {
   POSTS_CACHE_KEYS,
+  PostItemSchema,
   PostListResponseSchema,
   PostWithTocSchema,
 } from "@/features/posts/schema/posts.schema";
@@ -43,6 +44,19 @@ function stripPublicContentJson<T extends { publicContentJson?: unknown }>(
   return rest;
 }
 
+export async function getPinnedPosts(
+  context: DbContext & { executionCtx: ExecutionContext },
+) {
+  const version = await CacheService.getVersion(context, "posts:list");
+  return CacheService.get(
+    context,
+    POSTS_CACHE_KEYS.pinned(version),
+    PostItemSchema.array(),
+    () => PostRepo.findPinnedPosts(context.db),
+    { ttl: "7d" },
+  );
+}
+
 export async function getPostsCursor(
   context: DbContext & { executionCtx: ExecutionContext },
   data: GetPostsCursorInput,
@@ -53,6 +67,7 @@ export async function getPostsCursor(
       limit: data.limit,
       publicOnly: true,
       tagName: data.tagName,
+      excludePinned: data.excludePinned,
     });
 
   const version = await CacheService.getVersion(context, "posts:list");
@@ -304,6 +319,7 @@ export async function findPostById(
       tagIds: post.tags.map((t) => t.id),
       slug: post.slug,
       publishedAt: post.publishedAt,
+      pinnedAt: post.pinnedAt,
       readTimeInMinutes: post.readTimeInMinutes,
     });
     isSynced = dbHash === kvHash;
@@ -401,6 +417,7 @@ export async function startPostProcessWorkflow(
         tagIds: post.tags.map((tag) => tag.id),
         slug: post.slug,
         publishedAt: post.publishedAt,
+        pinnedAt: post.pinnedAt,
         readTimeInMinutes: post.readTimeInMinutes,
       });
 

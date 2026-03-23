@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OAUTH_PROVIDER_SCOPES } from "@/features/oauth-provider/oauth-provider.config";
+import { OAUTH_PROVIDER_SCOPES } from "@/features/oauth-provider/oauth-provider.shared";
 
 const OAUTH_SCOPE_SET = new Set<string>(OAUTH_PROVIDER_SCOPES);
 
@@ -27,7 +27,6 @@ export const OAuthConnectionSchema = z.object({
   clientIcon: z.string().nullable(),
   clientType: OAuthClientTypeSchema.nullable(),
   createdAt: z.string(),
-  updatedAt: z.string(),
   public: z.boolean(),
   redirectUris: z.array(z.string()),
   scopes: PersistedOAuthScopeListSchema,

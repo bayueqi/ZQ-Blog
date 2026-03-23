@@ -32,10 +32,10 @@ describe("normalizeRedirectUrl", () => {
   it("keeps same-origin api redirects relative", () => {
     expect(
       normalizeRedirectUrl(
-        "https://blog.example.com/api/auth/oauth2/authorize?client_id=abc",
+        "https://blog.example.com/oauth/consent?client_id=abc",
         "/dashboard",
       ),
-    ).toBe("/api/auth/oauth2/authorize?client_id=abc");
+    ).toBe("https://blog.example.com/oauth/consent?client_id=abc");
   });
 
   it("rejects external absolute urls", () => {

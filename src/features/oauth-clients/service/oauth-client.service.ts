@@ -3,7 +3,7 @@ import type { RenameOAuthClientInput } from "../schema/oauth-client.schema";
 
 export async function listOAuthConnections(context: AuthContext) {
   return OAuthClientRepo.listOAuthConnectionsByUserId(
-    context.db,
+    context.env,
     context.session.user.id,
   );
 }
@@ -13,7 +13,7 @@ export async function renameOAuthClient(
   data: RenameOAuthClientInput,
 ) {
   const client = await OAuthClientRepo.updateOAuthClientName(
-    context.db,
+    context.env,
     data.clientId,
     data.clientName,
   );
@@ -33,7 +33,7 @@ export async function deleteOAuthConnection(
   consentId: string,
 ) {
   const deletedConsent = await OAuthClientRepo.deleteOAuthConsentById(
-    context.db,
+    context.env,
     consentId,
     context.session.user.id,
   );
@@ -48,5 +48,5 @@ export async function getOAuthClientMetadata(
   context: DbContext,
   clientId: string,
 ) {
-  return OAuthClientRepo.findOAuthClientByClientId(context.db, clientId);
+  return OAuthClientRepo.findOAuthClientByClientId(context.env, clientId);
 }

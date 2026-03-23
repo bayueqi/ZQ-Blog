@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "my-blog",
   "compatibility_date": "2026-02-17",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "main": "./src/server.ts",
   "observability": {
     "enabled": true
@@ -32,6 +32,11 @@
   "kv_namespaces": [
     {
       "binding": "KV",
+      "id": "KV_NAMESPACE_ID",
+      "remote": true
+    },
+    {
+      "binding": "OAUTH_KV",
       "id": "KV_NAMESPACE_ID",
       "remote": true
     }
@@ -122,6 +127,9 @@
       "kv_namespaces": [
         {
           "binding": "KV"
+        },
+        {
+          "binding": "OAUTH_KV"
         }
       ],
       "r2_buckets": [

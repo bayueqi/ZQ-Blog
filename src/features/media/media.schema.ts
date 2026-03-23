@@ -24,16 +24,7 @@ export function parseUploadMediaInput(formData: FormData, messages: Messages) {
     throw new Error(messages.media_validation_file_invalid_type());
   }
 
-  const rawWidth = formData.get("width");
-  const rawHeight = formData.get("height");
-  const parsedWidth = rawWidth ? parseInt(rawWidth.toString()) : NaN;
-  const parsedHeight = rawHeight ? parseInt(rawHeight.toString()) : NaN;
-
-  return {
-    file,
-    width: Number.isNaN(parsedWidth) ? undefined : parsedWidth,
-    height: Number.isNaN(parsedHeight) ? undefined : parsedHeight,
-  };
+  return { file };
 }
 
 export const MediaKeyInputSchema = z.object({

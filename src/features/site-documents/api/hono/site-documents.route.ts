@@ -13,7 +13,7 @@ const app = new Hono<{ Bindings: Env }>();
 
 type AsyncDocumentBuilder = (
   env: Env,
-  executionCtx: ExecutionContext,
+  executionCtx: ExecutionContext<unknown>,
 ) => Promise<string>;
 
 type SyncDocumentBuilder = (env: Env) => string;
@@ -110,7 +110,7 @@ const derivedAsyncDocumentRoutes = [
     path: "/sitemap.xml",
     contentType: "application/xml; charset=utf-8",
     cacheControl: SITE_DOCUMENT_CACHE_CONTROL.sitemap,
-    build: async (env: Env, _executionCtx: ExecutionContext) =>
+    build: async (env: Env, _executionCtx: ExecutionContext<unknown>) =>
       buildSitemapXml(env),
   },
 ] satisfies AsyncDocumentRouteDefinition[];

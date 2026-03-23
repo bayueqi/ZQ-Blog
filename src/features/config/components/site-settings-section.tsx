@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AssetUploadField } from "@/features/config/components/asset-upload-field";
 import { Field } from "@/features/config/components/site-settings-fields";
+import { SocialLinksEditor } from "@/features/config/components/social-links-editor";
 import { DefaultThemeSettings } from "@/features/config/components/themes/default-theme-settings";
 import { FuwariThemeSettings } from "@/features/config/components/themes/fuwari-theme-settings";
 import type { SystemConfig } from "@/features/config/config.schema";
@@ -94,26 +95,9 @@ export function SiteSettingsSection() {
         title={m.settings_site_section_social_title()}
         description={m.settings_site_section_social_desc()}
       >
-        <Field
-          label={m.settings_site_field_github()}
-          error={errors.site?.social?.github?.message}
-        >
-          <Input
-            {...register("site.social.github")}
-            className={getInputClassName(errors.site?.social?.github?.message)}
-            placeholder={m.settings_site_field_github_ph()}
-          />
-        </Field>
-        <Field
-          label={m.settings_site_field_public_email()}
-          error={errors.site?.social?.email?.message}
-        >
-          <Input
-            {...register("site.social.email")}
-            className={getInputClassName(errors.site?.social?.email?.message)}
-            placeholder={m.settings_site_field_public_email_ph()}
-          />
-        </Field>
+        <div className="md:col-span-2">
+          <SocialLinksEditor />
+        </div>
       </SectionShell>
 
       <SectionShell

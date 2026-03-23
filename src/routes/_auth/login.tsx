@@ -43,7 +43,7 @@ function RouteComponent() {
 
   let resolvedRedirectTo = search.redirectTo;
   if (!resolvedRedirectTo && isOAuthAuthorizationRequest) {
-    resolvedRedirectTo = `/api/auth/oauth2/authorize?${currentSearchParams.toString()}`;
+    resolvedRedirectTo = `/oauth/consent?${currentSearchParams.toString()}`;
   }
 
   const loginForm = useLoginForm({

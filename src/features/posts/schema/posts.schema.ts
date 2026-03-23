@@ -15,6 +15,7 @@ const coercedDateNullable = coercedDate.nullable();
 
 export const PostSelectSchema = createSelectSchema(PostsTable, {
   publishedAt: coercedDateNullable,
+  pinnedAt: coercedDateNullable,
   createdAt: coercedDate,
   updatedAt: coercedDate,
 }).omit({
@@ -52,6 +53,7 @@ export const GetPostsCursorInputSchema = z.object({
   cursor: z.number().optional(),
   limit: z.number().optional(),
   tagName: z.string().optional(),
+  excludePinned: z.boolean().optional(),
 });
 
 export const FindPostBySlugInputSchema = z.object({
@@ -131,4 +133,5 @@ export const POSTS_CACHE_KEYS = {
   related: (slug: string, limit?: number) =>
     ["posts", "related-ids", slug, limit] as const,
   syncHash: (id: number) => `post_hash:${id}` as const,
+  pinned: (version: string) => [version, "posts", "pinned"] as const,
 } as const;

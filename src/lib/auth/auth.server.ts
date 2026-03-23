@@ -51,7 +51,7 @@ export function getAuth({ db, env }: { db: DB; env: Env }) {
   }
 
   return betterAuth({
-    ...createAuthConfig(BETTER_AUTH_URL),
+    ...createAuthConfig(),
     socialProviders: {
       github: {
         clientId: GITHUB_CLIENT_ID,
