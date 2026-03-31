@@ -212,6 +212,8 @@ Flare Stack Blog 的所有面向用户的页面与布局均通过 **主题契约
 | `GITHUB_TOKEN`            | 运行时 | GitHub API Token（版本更新检查，避免限流）                                                                |
 | `LOCALE`                  | 运行时 | 默认语言，支持 `zh` / `en`，默认 `zh`；通知邮件、Webhook 文本和后台异步任务文案会使用该语言               |
 | `CDN_DOMAIN`              | 运行时 | 独立 CDN 域名（如 `cdn.example.com`），purge 时优先使用；须为当前 Zone 下通过 SaaS CNAME 接入的自定义域名 |
+| `ROUTE`                   | CI/CD  | 设为 `1` 时，GitHub Actions 部署自动改用 Cloudflare `routes` 模式                                        |
+| `ZONE_NAME`               | CI/CD  | 可选。仅在 `ROUTE=1` 且 Zone 不是从 `DOMAIN` 自动推导结果时填写                                           |
 | `PAGEVIEW_SALT`           | 运行时 | 浏览量统计的访客匿名化 salt，运行 `openssl rand -hex 16` 生成                                             |
 | `UMAMI_SRC`               | 运行时 | Umami 客户端埋点代理 URL（如 `https://cloud.umami.is`）                                                   |
 | `VITE_UMAMI_WEBSITE_ID`   | 构建时 | Umami Website ID（客户端埋点）                                                                            |
@@ -238,6 +240,7 @@ cp .dev.vars.example .dev.vars  # 服务端变量
 # 配置 Wrangler
 cp wrangler.example.jsonc wrangler.jsonc
 # 编辑 wrangler.jsonc，填入你的资源 ID
+# 默认示例使用 custom_domain，也可以改成 routes 模式（如 blog.example.com/*）
 
 # 启动开发服务器
 bun dev
@@ -305,6 +308,23 @@ bun dev
 > ```bash
 > bun db:migrate:local
 > ```
+
+### 域名绑定方式
+
+默认配置使用 `custom_domain`。如果你希望使用 `routes` 方式接管 `blog.example.com/*`，可改成：
+
+```jsonc
+{
+  "routes": [{ "pattern": "blog.example.com/*", "zone_name": "example.com" }]
+}
+```
+
+使用仓库内置 GitHub Actions 部署时，不必手改 `wrangler.example.jsonc`：
+
+- 默认：`custom_domain`
+- 设置仓库变量 `ROUTE=1`：自动切到 `routes`
+- `pattern` 自动使用 `${DOMAIN}/*`
+- `zone_name` 默认从 `DOMAIN` 推导；如有子域单独托管场景，可额外设置 `ZONE_NAME`
 
 ## 贡献
 

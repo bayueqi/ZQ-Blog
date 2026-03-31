@@ -27,6 +27,7 @@ export default defineWorkersConfig(async () => {
     test: {
       env: loadEnv("test", process.cwd(), "VITE_"),
       setupFiles: ["./tests/apply-migrations.ts"],
+      include: ["src/**/*.integration.test.ts"],
       poolOptions: {
         workers: {
           singleWorker: true,

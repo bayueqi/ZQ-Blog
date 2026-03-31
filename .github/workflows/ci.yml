@@ -46,5 +46,8 @@ jobs:
       - name: Type Check
         run: bun tsc --noEmit
 
-      - name: Run Tests
+      - name: Run Node Tests
+        run: bun run test:node
+
+      - name: Run Integration Tests
         run: bun run test

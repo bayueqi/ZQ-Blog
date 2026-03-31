@@ -141,6 +141,10 @@ Locally or on the GitHub website, duplicate `wrangler.example.jsonc` and rename 
 ```jsonc
 {
   "keep_vars": true, // Do not clear runtime variables on every build
+  // Default: Cloudflare Custom Domains.
+  // Replace the active object below with
+  // { "pattern": "blog.example.com/*", "zone_name": "example.com" }
+  // if you want zone-based route matching instead.
   "routes": [
     { "pattern": "blog.example.com", "custom_domain": true }
   ],
@@ -155,6 +159,24 @@ Locally or on the GitHub website, duplicate `wrangler.example.jsonc` and rename 
   ]
 }
 ```
+
+Use `routes` only if you want zone routing such as `blog.example.com/*`:
+
+```jsonc
+{
+  "routes": [
+    { "pattern": "blog.example.com/*", "zone_name": "example.com" }
+  ]
+}
+```
+
+For the built-in GitHub Actions deployment, you do not need to commit a route-specific `wrangler.jsonc`:
+
+- Default: `custom_domain`
+- Set repository variable `ROUTE=1` to enable route mode
+- The workflow reuses `DOMAIN` to generate `pattern=${DOMAIN}/*`
+- The workflow derives `zone_name` from `DOMAIN`
+- Set optional `ZONE_NAME` only when the actual Cloudflare zone differs from that inferred value
 
 #### 2. Create and Connect Project
 

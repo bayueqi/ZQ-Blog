@@ -15,6 +15,7 @@ export default {
     "before:init": [
       "bun run i18n:compile",
       "bun check",
+      "bun run test:node",
       "bun run test",
       "bun run i18n:verify",
     ],
