@@ -15,11 +15,6 @@ import { ImageExtension } from "@/features/posts/editor/extensions/images";
 import { TableBlockExtension } from "@/features/posts/editor/extensions/table";
 import { BlockQuoteExtension } from "@/features/posts/editor/extensions/typography/block-quote";
 import { HeadingExtension } from "@/features/posts/editor/extensions/typography/heading";
-import {
-  BulletListExtension,
-  ListItemExtension,
-  OrderedListExtension,
-} from "@/features/posts/editor/extensions/typography/list";
 import type { ImageUploadResult } from "@/features/posts/editor/extensions/upload-image";
 import { ImageUpload } from "@/features/posts/editor/extensions/upload-image";
 import { slugify } from "@/features/posts/utils/content";
@@ -70,9 +65,6 @@ function handleFilePaste(editor: TiptapEditor, files: Array<File>) {
 
 export const extensions = [
   StarterKit.configure({
-    orderedList: false,
-    bulletList: false,
-    listItem: false,
     heading: false,
     codeBlock: false,
     blockquote: false,
@@ -103,9 +95,6 @@ export const extensions = [
       },
     },
   }),
-  BulletListExtension,
-  OrderedListExtension,
-  ListItemExtension,
   HeadingExtension.configure({
     levels: [1, 2, 3, 4],
   }),

@@ -1,3 +1,5 @@
+[中文](./error-handling-quickstart.md) | English
+
 # Error Handling and Result Pattern Quickstart
 
 This document is intended to unify the error handling logic within the project, helping contributors quickly decide whether to "return a `Result` or `throw` directly."

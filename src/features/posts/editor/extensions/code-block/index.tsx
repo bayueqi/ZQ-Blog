@@ -31,6 +31,10 @@ export const CodeBlockExtension = CodeBlock.extend({
   addKeyboardShortcuts() {
     return {
       Tab: () => {
+        if (!this.editor.isActive(this.name)) {
+          return false;
+        }
+
         return this.editor.commands.insertContent("  ");
       },
     };

@@ -4,12 +4,6 @@
 // Pre-compiled Regexes for maximum performance on Cloudflare Workers
 export const ROUTE_REGEXPS: Array<RegExp> = [
   /^\/admin\/?$/,
-  /^\/atom\.xml\/?$/,
-  /^\/feed\.json\/?$/,
-  /^\/robots\.txt\/?$/,
-  /^\/rss\.xml\/?$/,
-  /^\/site\.webmanifest\/?$/,
-  /^\/sitemap\.xml\/?$/,
   /^\/admin\/posts\/?$/,
   /^\/forgot-password\/?$/,
   /^\/login\/?$/,
@@ -22,6 +16,7 @@ export const ROUTE_REGEXPS: Array<RegExp> = [
   /^\/unsubscribe\/?$/,
   /^\/profile\/?$/,
   /^\/submit-friend-link\/?$/,
+  /^\/oauth\/consent\/?$/,
   /^\/$/,
   /^\/post\/[^/]+\/?$/,
   /^\/admin\/comments\/?$/,

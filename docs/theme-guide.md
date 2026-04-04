@@ -1,3 +1,5 @@
+中文 | [English](./theme-guide.en.md)
+
 # 主题开发指南
 
 本文介绍如何为 Flare Stack Blog 创建自定义主题。

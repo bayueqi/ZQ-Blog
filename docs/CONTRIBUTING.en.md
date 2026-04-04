@@ -1,3 +1,5 @@
+[中文](../CONTRIBUTING.md) | English
+
 # Contributing Guide
 
 Thank you for considering contributing to this project!

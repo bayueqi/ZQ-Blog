@@ -12,16 +12,35 @@ import type { SocialLink } from "@/features/config/utils/social-platforms";
 import * as Storage from "@/features/media/data/media.storage";
 import { purgeSiteCDNCache } from "@/lib/invalidate";
 
+const DEFAULT_SMTP_PORT = 465;
+const RESEND_SMTP_HOST = "smtp.resend.com";
+const RESEND_SMTP_USERNAME = "resend";
+
+function resolveEmailConfig(config: SystemConfig | null | undefined) {
+  const email = config?.email;
+  const legacyApiKey = email?.apiKey?.trim() || "";
+  const password = email?.password?.trim() || legacyApiKey;
+  const host = email?.host?.trim() || (legacyApiKey ? RESEND_SMTP_HOST : "");
+  const username =
+    email?.username?.trim() || (legacyApiKey ? RESEND_SMTP_USERNAME : "");
+
+  return {
+    host,
+    port: email?.port ?? DEFAULT_SMTP_PORT,
+    username,
+    password,
+    senderName: email?.senderName ?? "",
+    senderAddress: email?.senderAddress ?? "",
+  };
+}
+
 export function resolveSystemConfig(
   config: SystemConfig | null | undefined,
 ): SystemConfig {
   return {
     ...DEFAULT_CONFIG,
     ...config,
-    email: {
-      ...DEFAULT_CONFIG.email,
-      ...config?.email,
-    },
+    email: resolveEmailConfig(config),
     notification: {
       ...DEFAULT_CONFIG.notification,
       ...config?.notification,
@@ -130,13 +149,28 @@ function hasSiteConfigChanged(
 export async function getSystemConfig(
   context: DbContext & { executionCtx: ExecutionContext },
 ) {
-  return await CacheService.get(
+  const config = await CacheService.get(
     context,
     CONFIG_CACHE_KEYS.system,
     SystemConfigSchema,
     async () =>
       resolveSystemConfig(await ConfigRepo.getSystemConfig(context.db)),
   );
+
+  const normalizedConfig = resolveSystemConfig(config);
+
+  if (JSON.stringify(config) !== JSON.stringify(normalizedConfig)) {
+    context.executionCtx.waitUntil(
+      CacheService.set(
+        context,
+        CONFIG_CACHE_KEYS.system,
+        JSON.stringify(normalizedConfig),
+        { ttl: "1h" },
+      ),
+    );
+  }
+
+  return normalizedConfig;
 }
 
 export async function getSiteConfig(

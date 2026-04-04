@@ -1,3 +1,5 @@
+[中文](./theme-guide.md) | English
+
 # Theme Development Guide
 
 This document explains how to create a custom theme for the Flare Stack Blog.

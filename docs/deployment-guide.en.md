@@ -103,8 +103,8 @@ In your GitHub repository, go to Settings -> Secrets and variables -> Actions, c
 | `BETTER_AUTH_SECRET` | Run `openssl rand -hex 32` in your terminal to generate this |
 | `BETTER_AUTH_URL` | Your app URL (e.g., `https://blog.example.com`) |
 | `ADMIN_EMAIL` | Admin email address |
-| `GH_CLIENT_ID` | GitHub OAuth Client ID |
-| `GH_CLIENT_SECRET` | GitHub OAuth Client Secret |
+| `GH_CLIENT_ID` | GitHub OAuth Client ID. The workflow maps this to runtime `GITHUB_CLIENT_ID` |
+| `GH_CLIENT_SECRET` | GitHub OAuth Client Secret. The workflow maps this to runtime `GITHUB_CLIENT_SECRET` |
 | `CLOUDFLARE_ZONE_ID` | Your Cloudflare Zone ID |
 | `CLOUDFLARE_PURGE_API_TOKEN` | The CDN Purge Token from Phase 1, Step 5A |
 | `DOMAIN` | Your blog domain (e.g., `blog.example.com`) |
@@ -112,15 +112,21 @@ In your GitHub repository, go to Settings -> Secrets and variables -> Actions, c
 **C. Optional Runtime Configuration (Secrets)**
 | Variable Name | Description |
 | :--- | :--- |
-| `GH_TOKEN` | Used to check for version updates. To avoid GitHub API rate limits (since multiple Workers share IPs), configure a [Fine-grained Personal Access Token](https://github.com/settings/personal-access-tokens/new) with default permissions. |
+| `GH_TOKEN` | Used to check for version updates. The workflow maps this to runtime `GITHUB_TOKEN`. To avoid GitHub API rate limits (since multiple Workers share IPs), configure a [Fine-grained Personal Access Token](https://github.com/settings/personal-access-tokens/new) with default permissions. |
+| `CDN_DOMAIN` | Optional standalone CDN domain such as `cdn.example.com`, preferred when purging cache |
 | `PAGEVIEW_SALT` | Salt for anonymizing pageview visitor hashes. Generate with `openssl rand -hex 16`. |
 | `UMAMI_SRC` | Umami client-side tracking proxy URL (e.g., `https://cloud.umami.is`) |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret key for CAPTCHA |
 
 **D. Optional Build-time Frontend Variables**
 These variables usually go into the `Variables` tab. They start with `VITE_` and are injected into the client code.
 | Variable Name | Description |
 | :--- | :--- |
+| `THEME` | Theme name. Defaults to `default` |
 | `VITE_UMAMI_WEBSITE_ID` | Umami Website ID for client-side tracking (Note: This is set as a Variable, not a Secret) |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
+| `ROUTE` | Set to `1` to let the GitHub Actions workflow switch from `custom_domain` to `routes` mode automatically |
+| `ZONE_NAME` | Optional override for route mode when the actual Cloudflare zone cannot be inferred from `DOMAIN` |
 
 Site title, description, theme images, favicon assets, and other personalization are managed from the admin **Settings** page after you create and log into an admin account. `src/blog.config.ts` remains the seeded default/fallback source used before runtime overrides are saved.
 
@@ -187,13 +193,13 @@ For the built-in GitHub Actions deployment, you do not need to commit a route-sp
    - **Deploy command**: `bun run deploy`
 3. Add Environment Variables:
    - In the build configuration, add `BUN_VERSION`: `1.3.5`.
-   - Add frontend variables only when needed, for example `VITE_UMAMI_WEBSITE_ID` or `VITE_TURNSTILE_SITE_KEY`.
+   - Add build-time variables as needed, for example `THEME`, `VITE_UMAMI_WEBSITE_ID`, or `VITE_TURNSTILE_SITE_KEY`.
 
 #### 3. Configure Runtime Variables
 
-After the initial deployment is complete, go to the Worker's Settings -> Variables and Secrets. Click "Add secret" and fill in sensitive configurations like `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `ADMIN_EMAIL`, etc. Check the "Required Runtime Configuration" table from Option 1 for details.
+After the initial deployment is complete, go to the Worker's Settings -> Variables and Secrets. Click "Add secret" and fill in runtime configurations like `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `ADMIN_EMAIL`, `CDN_DOMAIN`, and so on. Check the tables from Option 1 for details.
 
-**Important Note on Variable Names**: In the Cloudflare Dashboard, GitHub variable names must use their full names instead of `GH_`:
+**Important Note on Variable Names**: For Cloudflare Dashboard deployment, use the full runtime names. The `GH_*` names are only GitHub repository secret aliases used by the built-in Actions workflow:
 
 - `GH_CLIENT_ID` → `GITHUB_CLIENT_ID`
 - `GH_CLIENT_SECRET` → `GITHUB_CLIENT_SECRET`
@@ -209,12 +215,17 @@ After the initial deployment is complete, go to the Worker's Settings -> Variabl
 
 Enable [Image Resizing](https://developers.cloudflare.com/images/) for your domain in your Dashboard. You get 5000 free transform requests per month, which drastically improves blog image loading speeds.
 
-### 2. Email System (Resend)
+### 2. Email System
 
-Register on [Resend](https://resend.com/) and bind your domain (we recommend using a subdomain).
+The blog supports SMTP mail. Using [Resend](https://resend.com/) as an example, register and bind your domain first. A subdomain is recommended.
 
-- Get the API Key and fill it into your blog admin's "Settings" page.
-- Once enabled, your blog supports: Password login, verification codes, and comment reply email notifications.
+Fill the mail credentials in the admin **Settings** page:
+
+- `host`: `smtp.resend.com`
+- `port`: `465`
+- `user`: `resend`
+- `password`: your Resend API key
+- Once enabled, your blog supports password login, verification codes, and comment reply email notifications.
 
 ### 3. CAPTCHA / Bot Protection (Cloudflare Turnstile)
 
@@ -228,6 +239,16 @@ Go to the Cloudflare Turnstile page and create a Widget. Record the Site Key and
 
 **Blog Identity**: After your first admin login, open the admin **Settings** page to edit the site title, description, author, social links, and theme assets.
 **Favicon**: Generate favicon assets with a tool such as [Real Favicon Generator](https://realfavicongenerator.net/), then upload the generated files from the admin **Settings** page instead of replacing files in `public/`.
+
+### 5. Theme Selection and Personalization
+
+Most day-to-day site personalization now lives in the admin **Settings** page. Use environment variables only for build-time theme selection:
+
+| Variable Name | Description |
+| :--- | :--- |
+| `THEME` | Theme name. Set it in GitHub Variables or Cloudflare build variables |
+
+If you are customizing or extending a theme, see `src/blog.config.ts` for seeded defaults and the theme guide for the runtime fields that can be overridden from the admin panel.
 
 ---
 
@@ -261,7 +282,7 @@ If the deployment succeeds without errors but you see errors (like 500 or a blan
 
 Since this is a full-stack project, there are two types of variables:
 
-- **Build-time variables**: Starting with `VITE_`. These are "hardcoded" into the client script when the project is bundled. If they are wrong, you MUST trigger a new build/deployment for fixes to take effect.
+- **Build-time variables**: Variables such as `THEME` and those starting with `VITE_`. These are baked into the build output. If they are wrong, you MUST trigger a new build/deployment for fixes to take effect.
 - **Runtime variables**: Read by the server code during execution. These are used in server-side logic dynamically.
   In Option 1 (GitHub Actions), you just put everything into your GitHub Secrets/Variables and the pipeline sorts them. In Option 2 (Cloudflare Dashboard), you put Build variables in Settings -> Build -> Variables, and Runtime variables in Settings -> Variables and Secrets.
 

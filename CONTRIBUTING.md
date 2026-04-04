@@ -1,3 +1,5 @@
+中文 | [English](./docs/CONTRIBUTING.en.md)
+
 # 贡献指南
 
 感谢你考虑为本项目做出贡献！
