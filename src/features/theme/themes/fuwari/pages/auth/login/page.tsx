@@ -18,15 +18,11 @@ export function LoginPage({
     turnstilePending: formTurnstilePending,
   } = loginForm;
 
-  const {
-    isLoading: socialIsLoading,
-    turnstilePending: socialTurnstilePending,
-    handleGithubLogin,
-  } = socialLogin;
+  const { isLoading: socialIsLoading, handleGithubLogin } = socialLogin;
 
   const isFormDisabled =
     isSubmitting || loginStep !== "IDLE" || formTurnstilePending;
-  const isSocialDisabled = socialIsLoading || socialTurnstilePending;
+  const isSocialDisabled = socialIsLoading;
 
   return (
     <div className="flex flex-col gap-8">
@@ -132,7 +128,7 @@ export function LoginPage({
             !isEmailConfigured ? "fuwari-btn-primary" : "fuwari-btn-regular"
           }`}
         >
-          {socialIsLoading || socialTurnstilePending ? (
+          {socialIsLoading ? (
             <Loader2 size={16} className="animate-spin opacity-70" />
           ) : (
             <Github size={16} />
@@ -141,9 +137,7 @@ export function LoginPage({
           <span className="tracking-wide">
             {socialIsLoading
               ? m.login_social_connecting()
-              : socialTurnstilePending
-                ? m.login_social_verifying()
-                : m.login_github_fuwari()}
+              : m.login_github_fuwari()}
           </span>
         </button>
 

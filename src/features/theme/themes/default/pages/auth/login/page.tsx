@@ -33,7 +33,6 @@ export function LoginPage({
 
         <SocialLogin
           isLoading={socialLogin.isLoading}
-          turnstilePending={socialLogin.turnstilePending}
           handleGithubLogin={socialLogin.handleGithubLogin}
           showDivider={isEmailConfigured}
         />

@@ -97,7 +97,6 @@ app.get("/api/auth/*", baseMiddleware, forwardAuthRequest);
 const protectedAuthPaths = [
   "/api/auth/sign-in/email",
   "/api/auth/sign-up/email",
-  "/api/auth/sign-in/social",
   "/api/auth/request-password-reset",
   "/api/auth/send-verification-email",
 ] as const;

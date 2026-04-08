@@ -291,7 +291,6 @@
   "login_github": "GitHub 登录",
   "login_github_fuwari": "通过 GitHub 登录",
   "login_social_connecting": "正在连接...",
-  "login_social_verifying": "验证中...",
   "login_powered_by_github": "Powered by GitHub OAuth",
   "login_no_account": "没有账户?",
   "login_register_now": "立即注册",

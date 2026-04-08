@@ -18,7 +18,6 @@ export interface LoginFormData {
 
 export interface SocialLoginData {
   isLoading: boolean;
-  turnstilePending: boolean;
   handleGithubLogin: () => Promise<void>;
 }
 

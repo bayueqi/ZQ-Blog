@@ -54,17 +54,14 @@ function RouteComponent() {
   });
 
   const socialLogin = useSocialLogin({
-    turnstileToken,
-    turnstilePending,
-    resetTurnstile,
     redirectTo: resolvedRedirectTo,
   });
 
-  const turnstileElement = (
+  const turnstileElement = isEmailConfigured ? (
     <div className="flex justify-center">
       <Turnstile {...turnstileProps} />
     </div>
-  );
+  ) : null;
 
   return (
     <theme.LoginPage

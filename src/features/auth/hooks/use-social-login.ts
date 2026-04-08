@@ -7,15 +7,11 @@ import { m } from "@/paraglide/messages";
 import { normalizeRedirectUrl } from "./normalize-redirect-url";
 
 export interface UseSocialLoginOptions {
-  turnstileToken: string | null;
-  turnstilePending: boolean;
-  resetTurnstile: () => void;
   redirectTo?: string;
 }
 
 export function useSocialLogin(options: UseSocialLoginOptions) {
-  const { turnstileToken, turnstilePending, resetTurnstile, redirectTo } =
-    options;
+  const { redirectTo } = options;
 
   const [isLoading, setIsLoading] = useState(false);
   const previousLocation = usePreviousLocation();
@@ -30,12 +26,7 @@ export function useSocialLogin(options: UseSocialLoginOptions) {
       provider: "github",
       errorCallbackURL: `${window.location.origin}/login`,
       callbackURL,
-      fetchOptions: {
-        headers: { "X-Turnstile-Token": turnstileToken || "" },
-      },
     });
-
-    resetTurnstile();
 
     if (error) {
       toast.error(m.login_toast_social_failed(), {
@@ -52,7 +43,7 @@ export function useSocialLogin(options: UseSocialLoginOptions) {
 
   return {
     isLoading,
-    turnstilePending,
+    turnstilePending: false,
     handleGithubLogin,
   };
 }
