@@ -37,5 +37,6 @@
       "file:///home/kuang/projects/personal/blog-cms/.github/ISSUE_TEMPLATE/bug-report.yml",
       "file:///home/kuang/projects/personal/blog-cms/.github/ISSUE_TEMPLATE/feature-request.yml"
     ]
-  }
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

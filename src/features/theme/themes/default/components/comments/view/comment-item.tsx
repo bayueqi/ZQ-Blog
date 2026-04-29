@@ -1,3 +1,4 @@
+import { ClientOnly } from "@tanstack/react-router";
 import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { CommentWithUser } from "@/features/comments/comments.schema";
@@ -111,7 +112,9 @@ export const CommentItem = memo(
               )}
             </div>
             <span className="text-[9px] font-mono text-muted-foreground/30 uppercase tracking-widest">
-              {formatDate(comment.createdAt, { includeTime: true })}
+              <ClientOnly fallback="-">
+                {formatDate(comment.createdAt, { includeTime: true })}
+              </ClientOnly>
             </span>
           </div>
 

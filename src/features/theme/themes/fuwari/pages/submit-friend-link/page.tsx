@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import {
   CheckCircle2,
   Clock,
@@ -233,7 +233,9 @@ export function SubmitFriendLinkPage({
 
                   <div className="text-[10px] fuwari-text-30 text-right mt-2 transition-colors">
                     {m.friend_link_submitted_at()}{" "}
-                    {new Date(link.createdAt).toLocaleDateString()}
+                    <ClientOnly fallback="-">
+                      {new Date(link.createdAt).toLocaleDateString()}
+                    </ClientOnly>
                   </div>
                 </div>
               ))

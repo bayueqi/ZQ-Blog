@@ -9,7 +9,11 @@ interface ArchivePanelProps {
 export function ArchivePanel({ posts }: ArchivePanelProps) {
   const groupedPosts = posts.reduce(
     (acc, post) => {
-      const year = new Date(post.publishedAt || "").getFullYear();
+      if (!post.publishedAt) {
+        return acc;
+      }
+
+      const year = new Date(post.publishedAt).getUTCFullYear();
       acc[year] ??= [];
       acc[year].push(post);
       return acc;

@@ -1,4 +1,4 @@
-import { Link, useRouteContext } from "@tanstack/react-router";
+import { ClientOnly, Link, useRouteContext } from "@tanstack/react-router";
 import {
   resolveSocialHref,
   SOCIAL_PLATFORMS,
@@ -22,10 +22,12 @@ export function Footer({ navOptions }: FooterProps) {
             [ {siteConfig.theme.default.navBarName} ]
           </span>
           <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase">
-            {m.footer_copyright({
-              year: new Date().getFullYear().toString(),
-              author: siteConfig.author,
-            })}
+            <ClientOnly fallback="-">
+              {m.footer_copyright({
+                year: new Date().getFullYear().toString(),
+                author: siteConfig.author,
+              })}
+            </ClientOnly>
           </span>
         </div>
 

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { Eye, Pin } from "lucide-react";
 import { memo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +29,9 @@ export const PostItem = memo(
                 dateTime={post.publishedAt?.toISOString()}
                 className="whitespace-nowrap"
               >
-                {formatDate(post.publishedAt)}
+                <ClientOnly fallback="-">
+                  {formatDate(post.publishedAt)}
+                </ClientOnly>
               </time>
               {post.tags && post.tags.length > 0 && (
                 <>
