@@ -19,10 +19,14 @@ export const setCacheHeaders = (
   });
 };
 
+export function getExecutionContext(c: Context) {
+  return c.executionCtx as ExecutionContext<unknown>;
+}
+
 export function getServiceContext(c: Context<{ Bindings: Env }>) {
   return {
     db: c.get("db"),
     env: c.env,
-    executionCtx: c.executionCtx,
+    executionCtx: getExecutionContext(c),
   };
 }

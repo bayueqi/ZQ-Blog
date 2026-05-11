@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { getExecutionContext } from "@/lib/hono/helper";
 import {
   buildAtomXml,
   buildFeedJson,
@@ -51,7 +52,7 @@ function createHeadResponse(contentType: string, cacheControl: string) {
 
 function registerAsyncDocumentRoute(definition: AsyncDocumentRouteDefinition) {
   app.get(definition.path, async (c) => {
-    const body = await definition.build(c.env, c.executionCtx);
+    const body = await definition.build(c.env, getExecutionContext(c));
     return createCachedResponse(
       body,
       definition.contentType,
