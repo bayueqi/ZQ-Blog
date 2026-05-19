@@ -19,9 +19,6 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    env:
-      # hashicorp/vault-action@v3 does not have a Node 24 release yet.
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -45,7 +42,7 @@ jobs:
       # === Original repo: fetch secrets from Vault ===
       - name: "[Vault] Import cloudflare secrets"
         if: github.repository == 'du2333/flare-stack-blog'
-        uses: hashicorp/vault-action@v3
+        uses: hashicorp/vault-action@v4
         with:
           url: https://vault.dukda.com
           token: ${{ secrets.VAULT_TOKEN }}
@@ -54,7 +51,7 @@ jobs:
 
       - name: "[Vault] Import runtime secrets"
         if: github.repository == 'du2333/flare-stack-blog'
-        uses: hashicorp/vault-action@v3
+        uses: hashicorp/vault-action@v4
         with:
           url: https://vault.dukda.com
           token: ${{ secrets.VAULT_TOKEN }}
