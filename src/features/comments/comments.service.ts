@@ -367,10 +367,13 @@ interface AuthorInfo {
  * 从当前请求中收集评论者信息:
  * - ip   : Cloudflare 注入的访客 IP(CF-Connecting-IP)
  * - ptr  : 通过自建 DoH 反查的域名(异步,失败容忍)
- * - region: 用 Cloudflare 注入的 CF-IPCountry / CF-IPRegion / CF-IPCity 头拼出归属地
+ * - region: 用 Cloudflare 注入的 CF-IPCountry 头(国家)
+ *           + Worker 入口层从 request.cf 注入的 X-Visitor-Region / X-Visitor-City
+ *           拼出归属地(国家 / 省 / 城市)
  *
- * 不依赖 request.cf 对象(TanStack Start server function 里不易取到),
- * 直接用 Cloudflare 全局注入的 HTTP 头,稳定可靠。
+ * 背景:CF-IPCountry 默认注入,但 CF-IPRegion / CF-IPCity 默认不带;
+ * 故在 app-handler.ts 的 withCfGeoHeaders 里把 request.cf 的省市信息
+ * 序列化成自定义头传下来,这里读取。
  */
 async function collectAuthorInfo(
   context: AuthContext & { executionCtx: ExecutionContext },
@@ -378,8 +381,8 @@ async function collectAuthorInfo(
   const ip = getRequestHeader("cf-connecting-ip") || null;
 
   const country = getRequestHeader("cf-ipcountry") || null;
-  const regionName = getRequestHeader("cf-ipregion") || null;
-  const city = getRequestHeader("cf-ipcity") || null;
+  const regionName = getRequestHeader("x-visitor-region") || null;
+  const city = getRequestHeader("x-visitor-city") || null;
   const region = formatRegion(country, regionName, city);
 
   // PTR 反查:通过自建 DoH,DoH 未配置则跳过
