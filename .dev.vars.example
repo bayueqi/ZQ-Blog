@@ -34,11 +34,6 @@ PAGEVIEW_SALT=your-random-salt-string
 # 测试key见：https://developers.cloudflare.com/turnstile/troubleshooting/testing/
 # TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 
-# --- DoH (DNS over HTTPS) 端点（可选，用于评论入库时反查 IP 的 PTR 记录） ---
-# 例：自建 dnsproxy / Cloudflare DoH / Google DoH
-# 留空则不反查 PTR，评论表 author_ptr 字段为空
-# DOH_URL=https://doh.example.com/dns-query
-
 # --- GitHub API（可选，用于版本更新检查） ---
 # 未认证请求限流 60 次/小时/IP，Cloudflare Workers 共享 IP 容易触发限流
 # 创建无权限的 Fine-grained token: https://github.com/settings/personal-access-tokens

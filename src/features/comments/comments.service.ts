@@ -12,8 +12,7 @@ import { sendReplyNotification } from "@/features/comments/workflows/helpers";
 import { publishNotificationEvent } from "@/features/notification/service/notification.publisher";
 import * as PostService from "@/features/posts/services/posts.service";
 import { convertToPlainText } from "@/features/posts/utils/content";
-import { formatIpAdminInfo, queryIpInfo, reverseLookup } from "@/lib/doh";
-import { serverEnv } from "@/lib/env/server.env";
+import { formatIpAdminInfo, queryIpInfo } from "@/lib/doh";
 import { err, ok } from "@/lib/errors";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
@@ -144,7 +143,6 @@ export async function createComment(
     // Admin comments are published immediately, others go through moderation
     status: isAdmin ? "published" : "verifying",
     authorIp: authorInfo.ip,
-    authorPtr: authorInfo.ptr,
     authorRegion: authorInfo.region,
   });
 
@@ -359,7 +357,6 @@ export async function getUserCommentStats(context: DbContext, userId: string) {
 
 interface AuthorInfo {
   ip: string | null;
-  ptr: string | null;
   /**
    * 归属地完整信息字符串(后台展示用)。
    * 格式:「中国 / 广东省 / 深圳市 | 中国电信 | AS4134 | 22.54,114.06」
@@ -371,14 +368,10 @@ interface AuthorInfo {
 /**
  * 从当前请求中收集评论者信息:
  * - ip   : Cloudflare 注入的访客 IP(CF-Connecting-IP)
- * - ptr  : 通过自建 DoH 反查的域名(异步,失败容忍,需配置 DOH_URL)
  * - region: 通过 ip-api.com 查询的归属地信息(中文),含运营商/ASN/经纬度
  *
- * 数据源说明:
- * - 之前用 Cloudflare request.cf,国内精度一般(常只到省级,英文)
- * - 现在改用 ip-api.com,国内可到市级,中文,带运营商/ASN/经纬度
- * - ip-api.com 免费额度 45 次/分钟,适合博客评论场景
- * - 失败/超时返回 null,不影响评论创建
+ * 数据源:ip-api.com,免费额度 45 次/分钟,国内可到市级,中文。
+ * 失败/超时返回 null,不影响评论创建。
  */
 async function collectAuthorInfo(
   context: AuthContext & { executionCtx: ExecutionContext },
@@ -394,14 +387,7 @@ async function collectAuthorInfo(
     }
   }
 
-  // PTR 反查:通过自建 DoH,DoH 未配置则跳过
-  const dohUrl = serverEnv(context.env).DOH_URL;
-  let ptr: string | null = null;
-  if (ip && dohUrl) {
-    ptr = await reverseLookup(ip, dohUrl);
-  }
-
-  return { ip, ptr, region };
+  return { ip, region };
 }
 
 /**

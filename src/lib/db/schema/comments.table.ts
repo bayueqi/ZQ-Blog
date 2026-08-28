@@ -45,7 +45,6 @@ export const CommentsTable = sqliteTable(
 
     // 评论者信息(仅管理后台可见,前台只展示 region)
     authorIp: text("author_ip"),
-    authorPtr: text("author_ptr"),
     authorRegion: text("author_region"),
 
     createdAt,

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import type { JSONContent } from "@tiptap/react";
-import { AlertTriangle, Globe2, Loader2, MapPin, MessageSquareOff, Server } from "lucide-react";
+import { AlertTriangle, Globe2, Loader2, MapPin, MessageSquareOff } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AdminPagination } from "@/components/admin/admin-pagination";
@@ -273,10 +273,9 @@ export const CommentModerationTable = ({
                   </div>
                 )}
 
-                {/* Author IP / PTR / Region 信息(仅管理后台可见) */}
+                {/* Author IP / Region 信息(仅管理后台可见) */}
                 <AuthorIpInfo
                   ip={comment.authorIp}
-                  ptr={comment.authorPtr}
                   region={comment.authorRegion}
                 />
               </div>
@@ -382,10 +381,9 @@ export const CommentModerationTable = ({
                 <StatusBadge status={comment.status} />
               </div>
 
-              {/* Author IP / PTR / Region 信息(仅管理后台可见)- 移动端 */}
+              {/* Author IP / Region 信息(仅管理后台可见)- 移动端 */}
               <AuthorIpInfo
                 ip={comment.authorIp}
-                ptr={comment.authorPtr}
                 region={comment.authorRegion}
               />
 
@@ -480,19 +478,17 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 /**
- * 作者 IP / PTR / 归属地信息展示块(仅管理后台可见)
+ * 作者 IP / 归属地信息展示块(仅管理后台可见)
  * 桌面和移动端共用,自适应宽度。
  */
 const AuthorIpInfo = ({
   ip,
-  ptr,
   region,
 }: {
   ip: string | null | undefined;
-  ptr: string | null | undefined;
   region: string | null | undefined;
 }) => {
-  if (!ip && !ptr && !region) {
+  if (!ip && !region) {
     return (
       <div className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest border border-border/20 px-2 py-1">
         {m.comments_admin_no_ip_info()}
@@ -535,13 +531,6 @@ const AuthorIpInfo = ({
               </>
             )}
           </span>
-        </div>
-      )}
-      {ptr && (
-        <div className="flex items-center gap-1.5">
-          <Server size={9} className="opacity-50 shrink-0" />
-          <span className="uppercase tracking-widest opacity-60 shrink-0">PTR</span>
-          <span className="truncate">{ptr}</span>
         </div>
       )}
     </div>
