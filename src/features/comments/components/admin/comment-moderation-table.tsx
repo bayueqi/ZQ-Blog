@@ -496,9 +496,9 @@ const AuthorIpInfo = ({
     );
   }
 
-  // region 现在是完整字符串:「中国 / 广东省 / 深圳市 | 中国电信 | AS4134 | 22.54,114.06」
-  // 用 | 拆分,逐行展示,避免 truncate 截断丢失信息
-  const regionParts = region?.split("|").map((p) => p.trim()).filter(Boolean) ?? [];
+  // region 格式:「中国 / 山东省 / 济南市」(简洁)
+  // 兼容旧评论:可能用 | 拼了 extras,取 | 之前的归属地部分
+  const displayRegion = region?.split("|")[0]?.trim() ?? null;
 
   return (
     <div className="flex flex-col gap-1 text-[9px] font-mono text-muted-foreground border border-border/20 px-2 py-1.5 bg-muted/5">
@@ -509,28 +509,13 @@ const AuthorIpInfo = ({
           <span className="truncate">{ip}</span>
         </div>
       )}
-      {regionParts.length > 0 && (
-        <div className="flex items-start gap-1.5">
-          <MapPin size={9} className="opacity-50 shrink-0 mt-0.5" />
+      {displayRegion && (
+        <div className="flex items-center gap-1.5">
+          <MapPin size={9} className="opacity-50 shrink-0" />
           <span className="uppercase tracking-widest opacity-60 shrink-0">
             {m.comments_admin_region()}
           </span>
-          <span className="break-all leading-tight">
-            {regionParts[0]}
-            {regionParts.length > 1 && (
-              <>
-                {" "}
-                {regionParts.slice(1).map((part, i) => (
-                  <span
-                    key={i}
-                    className="block text-muted-foreground/70 normal-case tracking-normal"
-                  >
-                    {part}
-                  </span>
-                ))}
-              </>
-            )}
-          </span>
+          <span className="truncate">{displayRegion}</span>
         </div>
       )}
     </div>

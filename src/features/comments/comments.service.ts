@@ -12,7 +12,7 @@ import { sendReplyNotification } from "@/features/comments/workflows/helpers";
 import { publishNotificationEvent } from "@/features/notification/service/notification.publisher";
 import * as PostService from "@/features/posts/services/posts.service";
 import { convertToPlainText } from "@/features/posts/utils/content";
-import { formatIpAdminInfo, queryIpInfo } from "@/lib/doh";
+import { formatRegion, queryIpInfo } from "@/lib/doh";
 import { err, ok } from "@/lib/errors";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
@@ -368,7 +368,7 @@ interface AuthorInfo {
 /**
  * 从当前请求中收集评论者信息:
  * - ip   : Cloudflare 注入的访客 IP(CF-Connecting-IP)
- * - region: 通过 ip-api.com 查询的归属地信息(中文),含运营商/ASN/经纬度
+ * - region: 通过 ip-api.com 查询的中文归属地(国家/省/市)
  *
  * 数据源:ip-api.com,免费额度 45 次/分钟,国内可到市级,中文。
  * 失败/超时返回 null,不影响评论创建。
@@ -378,12 +378,12 @@ async function collectAuthorInfo(
 ): Promise<AuthorInfo> {
   const ip = getRequestHeader("cf-connecting-ip") || null;
 
-  // 归属地查询:ip-api.com(中文,含运营商/ASN/经纬度)
+  // 归属地查询:ip-api.com(中文,国家/省/市)
   let region: string | null = null;
   if (ip) {
     const info = await queryIpInfo(ip);
     if (info) {
-      region = formatIpAdminInfo(info);
+      region = formatRegion(info);
     }
   }
 
