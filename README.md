@@ -36,7 +36,7 @@
 - **文章管理** — 富文本编辑器，支持代码高亮、图片上传、草稿/发布流程
 - **版本历史** — 编辑器自动快照与文章版本回溯，方便恢复误改内容
 - **标签系统** — 灵活的文章分类
-- **评论系统** — 支持嵌套回复、邮件通知、AI 辅助审核与上下文化评论审核
+- **评论系统** — 支持嵌套回复、邮件通知、AI 辅助审核与上下文化评论审核；评论入库时记录作者 IP / 归属地 / PTR 反查记录，前台展示归属地（不暴露 IP），管理后台展示完整信息便于识别机房/代理流量
 - **友情链接** — 用户申请、管理员审核、邮件通知
 - **通知系统** — 支持邮件与 Webhook 多通道通知，可按事件订阅
 - **全文搜索** — 基于 Orama 的高性能搜索
@@ -217,6 +217,20 @@ Flare Stack Blog 的所有面向用户的页面与布局均通过 **主题契约
 | `PAGEVIEW_SALT`           | 运行时 | 浏览量统计的访客匿名化 salt，运行 `openssl rand -hex 16` 生成                                             |
 | `UMAMI_SRC`               | 运行时 | Umami 客户端埋点代理 URL（如 `https://cloud.umami.is`）                                                   |
 | `VITE_UMAMI_WEBSITE_ID`   | 构建时 | Umami Website ID（客户端埋点）                                                                            |
+| `DOH_URL`                 | 运行时 | DoH (DNS over HTTPS) 端点，用于评论入库时反查作者 IP 的 PTR 记录（如 `https://doh.example.com/dns-query`）。留空则跳过 PTR 反查，`author_ptr` 字段为空。需支持 JSON 输出（RFC 8484 的 JSON 变种，Cloudflare/Google/自建 dnsproxy 等均支持） |
+
+### 评论作者 IP / 归属地 / PTR 反查
+
+评论入库时会采集以下信息（仅用于管理后台审核与前台归属地展示，不会公开 IP）：
+
+| 字段            | 来源                                                                 | 展示位置           |
+| :-------------- | :------------------------------------------------------------------- | :----------------- |
+| `author_ip`     | Cloudflare 注入的 `CF-Connecting-IP` 请求头                          | 仅管理后台         |
+| `author_region` | Cloudflare `request.cf` 的 country / region / city（Worker 入口注入自定义头传给下游） | 前台 + 管理后台    |
+| `author_ptr`    | 通过 `DOH_URL` 反查 IP 的 PTR 记录（IPv4 `in-addr.arpa` / IPv6 `ip6.arpa`），3 秒超时，失败容忍 | 仅管理后台         |
+
+> 配置 `DOH_URL` 后，新评论入库时会异步调用 DoH 反查 PTR，便于在后台识别评论者是否来自机房/代理（如 `xxx.cloudfront.net`、`dynamic.isp.com`）。
+> 旧评论不受影响，字段为空。归属地精度取决于 Cloudflare IP 库，国内移动网络可能只识别到省级。
 
 ---
 
