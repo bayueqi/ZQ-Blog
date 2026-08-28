@@ -43,6 +43,11 @@ export const CommentsTable = sqliteTable(
       .references(() => PostsTable.id, { onDelete: "cascade" }),
     userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
 
+    // 评论者信息(仅管理后台可见,前台只展示 region)
+    authorIp: text("author_ip"),
+    authorPtr: text("author_ptr"),
+    authorRegion: text("author_region"),
+
     createdAt,
     updatedAt,
   },

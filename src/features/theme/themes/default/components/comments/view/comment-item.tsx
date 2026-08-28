@@ -1,4 +1,5 @@
 import { ClientOnly } from "@tanstack/react-router";
+import { MapPin } from "lucide-react";
 import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { CommentWithUser } from "@/features/comments/comments.schema";
@@ -97,6 +98,14 @@ export const CommentItem = memo(
               {isBlogger && comment.status !== "deleted" && (
                 <span className="text-[9px] font-mono text-foreground/40 uppercase tracking-widest border border-border/30 px-1 rounded-[1px]">
                   {m.comments_item_blogger()}
+                </span>
+              )}
+
+              {/* 归属地(前台只显示 region,不显示 IP) */}
+              {comment.status !== "deleted" && comment.authorRegion && (
+                <span className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest flex items-center gap-0.5">
+                  <MapPin size={8} className="opacity-60" />
+                  {comment.authorRegion}
                 </span>
               )}
 

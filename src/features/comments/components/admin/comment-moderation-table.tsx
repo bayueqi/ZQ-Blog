@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import type { JSONContent } from "@tiptap/react";
-import { AlertTriangle, Loader2, MessageSquareOff } from "lucide-react";
+import { AlertTriangle, Globe2, Loader2, MapPin, MessageSquareOff, Server } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AdminPagination } from "@/components/admin/admin-pagination";
@@ -272,6 +272,13 @@ export const CommentModerationTable = ({
                     </div>
                   </div>
                 )}
+
+                {/* Author IP / PTR / Region 信息(仅管理后台可见) */}
+                <AuthorIpInfo
+                  ip={comment.authorIp}
+                  ptr={comment.authorPtr}
+                  region={comment.authorRegion}
+                />
               </div>
 
               <div className="col-span-1"></div>
@@ -375,6 +382,13 @@ export const CommentModerationTable = ({
                 <StatusBadge status={comment.status} />
               </div>
 
+              {/* Author IP / PTR / Region 信息(仅管理后台可见)- 移动端 */}
+              <AuthorIpInfo
+                ip={comment.authorIp}
+                ptr={comment.authorPtr}
+                region={comment.authorRegion}
+              />
+
               <ExpandableContent
                 content={comment.content as JSONContent}
                 maxLines={3}
@@ -461,6 +475,56 @@ const StatusBadge = ({ status }: { status: string }) => {
       className={`font-mono text-[9px] uppercase tracking-widest ${styles[status] || ""}`}
     >
       [{labels[status] || status}]
+    </div>
+  );
+};
+
+/**
+ * 作者 IP / PTR / 归属地信息展示块(仅管理后台可见)
+ * 桌面和移动端共用,自适应宽度。
+ */
+const AuthorIpInfo = ({
+  ip,
+  ptr,
+  region,
+}: {
+  ip: string | null | undefined;
+  ptr: string | null | undefined;
+  region: string | null | undefined;
+}) => {
+  if (!ip && !ptr && !region) {
+    return (
+      <div className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest border border-border/20 px-2 py-1">
+        {m.comments_admin_no_ip_info()}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1 text-[9px] font-mono text-muted-foreground border border-border/20 px-2 py-1.5 bg-muted/5">
+      {ip && (
+        <div className="flex items-center gap-1.5">
+          <Globe2 size={9} className="opacity-50 shrink-0" />
+          <span className="uppercase tracking-widest opacity-60">IP</span>
+          <span className="truncate">{ip}</span>
+        </div>
+      )}
+      {region && (
+        <div className="flex items-center gap-1.5">
+          <MapPin size={9} className="opacity-50 shrink-0" />
+          <span className="uppercase tracking-widest opacity-60">
+            {m.comments_admin_region()}
+          </span>
+          <span className="truncate">{region}</span>
+        </div>
+      )}
+      {ptr && (
+        <div className="flex items-center gap-1.5">
+          <Server size={9} className="opacity-50 shrink-0" />
+          <span className="uppercase tracking-widest opacity-60">PTR</span>
+          <span className="truncate">{ptr}</span>
+        </div>
+      )}
     </div>
   );
 };

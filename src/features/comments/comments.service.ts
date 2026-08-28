@@ -12,8 +12,10 @@ import { sendReplyNotification } from "@/features/comments/workflows/helpers";
 import { publishNotificationEvent } from "@/features/notification/service/notification.publisher";
 import * as PostService from "@/features/posts/services/posts.service";
 import { convertToPlainText } from "@/features/posts/utils/content";
+import { reverseLookup } from "@/lib/doh";
 import { serverEnv } from "@/lib/env/server.env";
 import { err, ok } from "@/lib/errors";
+import { getRequestHeader } from "@tanstack/react-start/server";
 
 // ============ Public Service Methods ============
 
@@ -85,6 +87,9 @@ export async function createComment(
   let rootId: number | null = null;
   let replyToCommentId: number | null = null;
 
+  // 评论者信息(IP / PTR / 归属地)
+  const authorInfo = await collectAuthorInfo(context);
+
   if (data.rootId) {
     // Creating a reply - validate rootId exists and is a root comment
     const rootComment = await CommentRepo.findCommentById(
@@ -138,6 +143,9 @@ export async function createComment(
     userId: context.session.user.id,
     // Admin comments are published immediately, others go through moderation
     status: isAdmin ? "published" : "verifying",
+    authorIp: authorInfo.ip,
+    authorPtr: authorInfo.ptr,
+    authorRegion: authorInfo.region,
   });
 
   // Trigger AI moderation workflow only for non-admin users
@@ -346,3 +354,54 @@ export async function updateCommentStatus(
 export async function getUserCommentStats(context: DbContext, userId: string) {
   return await CommentRepo.getUserCommentStats(context.db, userId);
 }
+
+// ============ Author Info Collection ============
+
+interface AuthorInfo {
+  ip: string | null;
+  ptr: string | null;
+  region: string | null;
+}
+
+/**
+ * 从当前请求中收集评论者信息:
+ * - ip   : Cloudflare 注入的访客 IP(CF-Connecting-IP)
+ * - ptr  : 通过自建 DoH 反查的域名(异步,失败容忍)
+ * - region: 用 Cloudflare 注入的 CF-IPCountry / CF-IPRegion / CF-IPCity 头拼出归属地
+ *
+ * 不依赖 request.cf 对象(TanStack Start server function 里不易取到),
+ * 直接用 Cloudflare 全局注入的 HTTP 头,稳定可靠。
+ */
+async function collectAuthorInfo(
+  context: AuthContext & { executionCtx: ExecutionContext },
+): Promise<AuthorInfo> {
+  const ip = getRequestHeader("cf-connecting-ip") || null;
+
+  const country = getRequestHeader("cf-ipcountry") || null;
+  const regionName = getRequestHeader("cf-ipregion") || null;
+  const city = getRequestHeader("cf-ipcity") || null;
+  const region = formatRegion(country, regionName, city);
+
+  // PTR 反查:通过自建 DoH,DoH 未配置则跳过
+  const dohUrl = serverEnv(context.env).DOH_URL;
+  let ptr: string | null = null;
+  if (ip && dohUrl) {
+    ptr = await reverseLookup(ip, dohUrl);
+  }
+
+  return { ip, ptr, region };
+}
+
+function formatRegion(
+  country: string | null,
+  regionName: string | null,
+  city: string | null,
+): string | null {
+  const parts = [country, regionName, city].filter(
+    (p): p is string => Boolean(p),
+  );
+
+  return parts.length > 0 ? parts.join(" / ") : null;
+}
+
+

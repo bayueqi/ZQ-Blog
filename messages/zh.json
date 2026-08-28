@@ -1025,6 +1025,8 @@
   "comments_moderation_reason_empty_pending": "评论内容为空，需人工审核",
   "comments_moderation_reason_dev_approved": "开发环境，自动通过",
   "comments_moderation_reason_ai_unavailable": "AI 审核服务暂时不可用，等待人工审核",
+  "comments_admin_no_ip_info": "无 IP 信息",
+  "comments_admin_region": "归属",
   "friend_links_admin_title": "友链管理",
   "friend_links_admin_tag": "FRIEND_LINKS_MANAGEMENT",
   "friend_links_add_btn": "添加友链",

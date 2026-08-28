@@ -42,6 +42,10 @@ export const CommentWithUserSchema = CommentSelectSchema.extend({
     })
     .nullable()
     .optional(),
+  // 评论者信息(前台仅展示 region,IP/PTR 仅管理后台可见)
+  authorIp: z.string().nullable().optional(),
+  authorPtr: z.string().nullable().optional(),
+  authorRegion: z.string().nullable().optional(),
 });
 
 export const UserStatsSchema = z.object({

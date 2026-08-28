@@ -1033,6 +1033,8 @@
   "comments_moderation_reason_empty_pending": "The comment is empty and requires manual review",
   "comments_moderation_reason_dev_approved": "Automatically approved in development",
   "comments_moderation_reason_ai_unavailable": "The AI moderation service is temporarily unavailable, pending manual review",
+  "comments_admin_no_ip_info": "No IP info",
+  "comments_admin_region": "Region",
   "friend_links_admin_title": "Friend Links",
   "friend_links_admin_tag": "Links Moderation",
   "friend_links_add_btn": "Add Link",

@@ -1,4 +1,5 @@
 import { ClientOnly } from "@tanstack/react-router";
+import { MapPin } from "lucide-react";
 import { memo, useMemo } from "react";
 import type { CommentWithUser } from "@/features/comments/comments.schema";
 import { authClient } from "@/lib/auth/auth.client";
@@ -95,6 +96,14 @@ export const FuwariCommentItem = memo(
               {isBlogger && comment.status !== "deleted" && (
                 <span className="text-[10px] font-medium text-(--fuwari-primary) border border-(--fuwari-primary)/30 px-1.5 py-0.5 rounded-md leading-none">
                   {m.comments_item_blogger()}
+                </span>
+              )}
+
+              {/* 归属地(前台只显示 region,不显示 IP) */}
+              {comment.status !== "deleted" && comment.authorRegion && (
+                <span className="text-[10px] fuwari-text-30 flex items-center gap-0.5">
+                  <MapPin size={9} className="opacity-60" />
+                  {comment.authorRegion}
                 </span>
               )}
 

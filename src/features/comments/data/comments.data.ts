@@ -49,6 +49,9 @@ export async function getRootCommentsByPostId(
       userId: CommentsTable.userId,
       status: CommentsTable.status,
       aiReason: CommentsTable.aiReason,
+      authorIp: CommentsTable.authorIp,
+      authorPtr: CommentsTable.authorPtr,
+      authorRegion: CommentsTable.authorRegion,
       createdAt: CommentsTable.createdAt,
       updatedAt: CommentsTable.updatedAt,
       user: {
@@ -149,6 +152,9 @@ export async function getRepliesByRootId(
       userId: CommentsTable.userId,
       status: CommentsTable.status,
       aiReason: CommentsTable.aiReason,
+      authorIp: CommentsTable.authorIp,
+      authorPtr: CommentsTable.authorPtr,
+      authorRegion: CommentsTable.authorRegion,
       createdAt: CommentsTable.createdAt,
       updatedAt: CommentsTable.updatedAt,
       user: {
@@ -289,6 +295,9 @@ export async function getAllComments(
       userId: CommentsTable.userId,
       status: CommentsTable.status,
       aiReason: CommentsTable.aiReason,
+      authorIp: CommentsTable.authorIp,
+      authorPtr: CommentsTable.authorPtr,
+      authorRegion: CommentsTable.authorRegion,
       createdAt: CommentsTable.createdAt,
       updatedAt: CommentsTable.updatedAt,
       user: {
