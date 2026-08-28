@@ -2,6 +2,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { MapPin } from "lucide-react";
 import { memo, useMemo } from "react";
 import type { CommentWithUser } from "@/features/comments/comments.schema";
+import { getPublicRegion } from "@/features/comments/comments.service";
 import { authClient } from "@/lib/auth/auth.client";
 import { cn, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -99,13 +100,14 @@ export const FuwariCommentItem = memo(
                 </span>
               )}
 
-              {/* 归属地(前台只显示 region,不显示 IP) */}
-              {comment.status !== "deleted" && comment.authorRegion && (
-                <span className="text-[10px] fuwari-text-30 flex items-center gap-0.5">
-                  <MapPin size={9} className="opacity-60" />
-                  {comment.authorRegion}
-                </span>
-              )}
+              {/* 归属地(前台只显示省/市,不显示 IP/运营商/ASN/经纬度) */}
+              {comment.status !== "deleted" &&
+                getPublicRegion(comment.authorRegion) && (
+                  <span className="text-[10px] fuwari-text-30 flex items-center gap-0.5">
+                    <MapPin size={9} className="opacity-60" />
+                    {getPublicRegion(comment.authorRegion)}
+                  </span>
+                )}
 
               {isReply && replyToName && (
                 <span className="text-xs fuwari-text-30">

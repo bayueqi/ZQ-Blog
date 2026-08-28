@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { CommentWithUser } from "@/features/comments/comments.schema";
+import { getPublicRegion } from "@/features/comments/comments.service";
 import { authClient } from "@/lib/auth/auth.client";
 import { cn, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -101,13 +102,14 @@ export const CommentItem = memo(
                 </span>
               )}
 
-              {/* 归属地(前台只显示 region,不显示 IP) */}
-              {comment.status !== "deleted" && comment.authorRegion && (
-                <span className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest flex items-center gap-0.5">
-                  <MapPin size={8} className="opacity-60" />
-                  {comment.authorRegion}
-                </span>
-              )}
+              {/* 归属地(前台只显示省/市,不显示 IP/运营商/ASN/经纬度) */}
+              {comment.status !== "deleted" &&
+                getPublicRegion(comment.authorRegion) && (
+                  <span className="text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest flex items-center gap-0.5">
+                    <MapPin size={8} className="opacity-60" />
+                    {getPublicRegion(comment.authorRegion)}
+                  </span>
+                )}
 
               {isReply && replyToName && (
                 <span className="text-[10px] text-muted-foreground/50 font-mono">

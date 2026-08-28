@@ -12,7 +12,7 @@ import { sendReplyNotification } from "@/features/comments/workflows/helpers";
 import { publishNotificationEvent } from "@/features/notification/service/notification.publisher";
 import * as PostService from "@/features/posts/services/posts.service";
 import { convertToPlainText } from "@/features/posts/utils/content";
-import { reverseLookup } from "@/lib/doh";
+import { formatIpAdminInfo, queryIpInfo, reverseLookup } from "@/lib/doh";
 import { serverEnv } from "@/lib/env/server.env";
 import { err, ok } from "@/lib/errors";
 import { getRequestHeader } from "@tanstack/react-start/server";
@@ -360,30 +360,39 @@ export async function getUserCommentStats(context: DbContext, userId: string) {
 interface AuthorInfo {
   ip: string | null;
   ptr: string | null;
+  /**
+   * 归属地完整信息字符串(后台展示用)。
+   * 格式:「中国 / 广东省 / 深圳市 | 中国电信 | AS4134 | 22.54,114.06」
+   * 前台展示时用 getPublicRegion() 取「|」之前的归属地部分,不暴露运营商/ASN/经纬度。
+   */
   region: string | null;
 }
 
 /**
  * 从当前请求中收集评论者信息:
  * - ip   : Cloudflare 注入的访客 IP(CF-Connecting-IP)
- * - ptr  : 通过自建 DoH 反查的域名(异步,失败容忍)
- * - region: 用 Cloudflare 注入的 CF-IPCountry 头(国家)
- *           + Worker 入口层从 request.cf 注入的 X-Visitor-Region / X-Visitor-City
- *           拼出归属地(国家 / 省 / 城市)
+ * - ptr  : 通过自建 DoH 反查的域名(异步,失败容忍,需配置 DOH_URL)
+ * - region: 通过 ip-api.com 查询的归属地信息(中文),含运营商/ASN/经纬度
  *
- * 背景:CF-IPCountry 默认注入,但 CF-IPRegion / CF-IPCity 默认不带;
- * 故在 app-handler.ts 的 withCfGeoHeaders 里把 request.cf 的省市信息
- * 序列化成自定义头传下来,这里读取。
+ * 数据源说明:
+ * - 之前用 Cloudflare request.cf,国内精度一般(常只到省级,英文)
+ * - 现在改用 ip-api.com,国内可到市级,中文,带运营商/ASN/经纬度
+ * - ip-api.com 免费额度 45 次/分钟,适合博客评论场景
+ * - 失败/超时返回 null,不影响评论创建
  */
 async function collectAuthorInfo(
   context: AuthContext & { executionCtx: ExecutionContext },
 ): Promise<AuthorInfo> {
   const ip = getRequestHeader("cf-connecting-ip") || null;
 
-  const country = getRequestHeader("cf-ipcountry") || null;
-  const regionName = getRequestHeader("x-visitor-region") || null;
-  const city = getRequestHeader("x-visitor-city") || null;
-  const region = formatRegion(country, regionName, city);
+  // 归属地查询:ip-api.com(中文,含运营商/ASN/经纬度)
+  let region: string | null = null;
+  if (ip) {
+    const info = await queryIpInfo(ip);
+    if (info) {
+      region = formatIpAdminInfo(info);
+    }
+  }
 
   // PTR 反查:通过自建 DoH,DoH 未配置则跳过
   const dohUrl = serverEnv(context.env).DOH_URL;
@@ -395,16 +404,15 @@ async function collectAuthorInfo(
   return { ip, ptr, region };
 }
 
-function formatRegion(
-  country: string | null,
-  regionName: string | null,
-  city: string | null,
-): string | null {
-  const parts = [country, regionName, city].filter(
-    (p): p is string => Boolean(p),
-  );
-
-  return parts.length > 0 ? parts.join(" / ") : null;
+/**
+ * 从完整 region 字符串中提取前台可展示的归属地部分(「|」之前)。
+ * 例如:「中国 / 广东省 / 深圳市 | 中国电信 | AS4134」→「中国 / 广东省 / 深圳市」
+ * 如果没有「|」(只有归属地),原样返回。
+ */
+export function getPublicRegion(region: string | null | undefined): string | null {
+  if (!region) return null;
+  const idx = region.indexOf("|");
+  return idx > 0 ? region.slice(0, idx).trim() : region;
 }
 
 
