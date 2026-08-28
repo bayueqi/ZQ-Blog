@@ -503,19 +503,19 @@ const AuthorIpInfo = ({
   return (
     <div className="flex flex-col gap-1 text-[9px] font-mono text-muted-foreground border border-border/20 px-2 py-1.5 bg-muted/5">
       {ip && (
-        <div className="flex items-center gap-1.5">
-          <Globe2 size={9} className="opacity-50 shrink-0" />
+        <div className="flex items-start gap-1.5">
+          <Globe2 size={9} className="opacity-50 shrink-0 mt-0.5" />
           <span className="uppercase tracking-widest opacity-60 shrink-0">IP</span>
-          <span className="truncate">{ip}</span>
+          <span className="break-all leading-tight">{ip}</span>
         </div>
       )}
       {displayRegion && (
-        <div className="flex items-center gap-1.5">
-          <MapPin size={9} className="opacity-50 shrink-0" />
+        <div className="flex items-start gap-1.5">
+          <MapPin size={9} className="opacity-50 shrink-0 mt-0.5" />
           <span className="uppercase tracking-widest opacity-60 shrink-0">
             {m.comments_admin_region()}
           </span>
-          <span className="truncate">{displayRegion}</span>
+          <span className="break-all leading-tight">{displayRegion}</span>
         </div>
       )}
     </div>
