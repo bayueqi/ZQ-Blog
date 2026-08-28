@@ -390,15 +390,4 @@ async function collectAuthorInfo(
   return { ip, region };
 }
 
-/**
- * 从完整 region 字符串中提取前台可展示的归属地部分(「|」之前)。
- * 例如:「中国 / 广东省 / 深圳市 | 中国电信 | AS4134」→「中国 / 广东省 / 深圳市」
- * 如果没有「|」(只有归属地),原样返回。
- */
-export function getPublicRegion(region: string | null | undefined): string | null {
-  if (!region) return null;
-  const idx = region.indexOf("|");
-  return idx > 0 ? region.slice(0, idx).trim() : region;
-}
-
 

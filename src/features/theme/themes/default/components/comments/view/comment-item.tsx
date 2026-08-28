@@ -3,7 +3,7 @@ import { MapPin } from "lucide-react";
 import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { CommentWithUser } from "@/features/comments/comments.schema";
-import { getPublicRegion } from "@/features/comments/comments.service";
+import { getPublicRegion } from "@/features/comments/utils/region";
 import { authClient } from "@/lib/auth/auth.client";
 import { cn, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
