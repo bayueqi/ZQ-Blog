@@ -42,21 +42,12 @@ export function Footer(_: FooterProps) {
           <br />
           {m.footer_powered_by()}{" "}
           <a
-            href="https://tanstack.com/start"
+            href="https://github.com/bayueqi/ZQ-Blog"
             target="_blank"
             rel="noreferrer"
             className="fuwari-expand-animation rounded-md px-1 -m-1 font-medium hover:text-(--fuwari-primary) text-(--fuwari-primary)"
           >
-            Tanstack Start
-          </a>{" "}
-          &{" "}
-          <a
-            href="https://github.com/du2333/flare-stack-blog"
-            target="_blank"
-            rel="noreferrer"
-            className="fuwari-expand-animation rounded-md px-1 -m-1 font-medium hover:text-(--fuwari-primary) text-(--fuwari-primary)"
-          >
-            Flare Stack Blog
+            ZQ-Blog
           </a>
         </div>
       </div>
