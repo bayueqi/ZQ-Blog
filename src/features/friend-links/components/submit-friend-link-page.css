@@ -1,0 +1,150 @@
+.friend-application {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 32px;
+  color: var(--fuwari-fg);
+}
+.friend-application-form fieldset {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.friend-application-core {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.friend-application-logo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.friend-application-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 14px;
+  color: var(--fuwari-primary);
+  background: var(--fuwari-btn-regular-bg);
+}
+.friend-application-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.friend-application-verification {
+  margin-top: 24px;
+  min-width: 0;
+}
+.friend-application-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.friend-application-submit {
+  flex: 1;
+}
+.friend-application
+  :is(a, button):not(.fuwari-button, .fuwari-icon-button):focus-visible {
+  outline: 2px solid var(--fuwari-primary);
+  outline-offset: 3px;
+}
+.friend-application-hint {
+  text-align: center;
+  color: var(--fuwari-fg-50);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.friend-application-error {
+  margin-top: 16px;
+}
+.friend-application-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 0;
+  color: var(--fuwari-fg-50);
+}
+.friend-application-message {
+  padding-block: 32px;
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+.friend-application-switcher {
+  margin-bottom: 24px;
+}
+.friend-application-status h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 18px;
+}
+.friend-application-status > p {
+  color: var(--fuwari-fg-50);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+.friend-application-site {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-block: 24px;
+  margin-top: 20px;
+  border-block: 1px solid
+    color-mix(in srgb, var(--fuwari-fg-50) 20%, transparent);
+}
+.friend-application-site > div {
+  min-width: 0;
+}
+.friend-application-site strong {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.friend-application-site a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fuwari-primary);
+  font-size: 14px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.friend-application-site a svg {
+  flex-shrink: 0;
+}
+.friend-application-site p {
+  color: var(--fuwari-fg-50);
+  font-size: 14px;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.friend-application-reason {
+  margin-top: 20px;
+  border-left: 3px solid var(--fuwari-danger);
+  padding-left: 16px;
+  font-size: 14px;
+}
+.friend-application-reason p {
+  margin-top: 8px;
+  color: var(--fuwari-fg-75);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 639px) {
+  .friend-application {
+    padding: 24px;
+  }
+  .friend-application-core {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}

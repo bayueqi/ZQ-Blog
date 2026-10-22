@@ -1,0 +1,23 @@
+.pswp {
+  --pswp-bg: oklch(0.12 0.01 var(--fuwari-hue));
+  --pswp-placeholder-bg: oklch(0.2 0.015 var(--fuwari-hue));
+}
+
+.pswp__post-caption {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 48rem;
+  padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  color: rgb(255 255 255 / 0.85);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: center;
+  pointer-events: none;
+}
+
+.pswp__post-caption:empty {
+  display: none;
+}

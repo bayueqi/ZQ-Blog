@@ -1,0 +1,117 @@
+.site-status-frame {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+}
+.admin-layout .site-status-frame {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+.admin-layout .site-status {
+  margin-block: auto;
+  flex-shrink: 0;
+  max-height: none;
+}
+.site-status {
+  width: 100%;
+  max-width: 680px;
+  min-height: 0;
+  max-height: 100%;
+  flex-shrink: 1;
+  margin-inline: auto;
+  padding: 48px 32px;
+  overflow: auto;
+  text-align: center;
+  color: var(--fuwari-fg);
+}
+.site-status-code {
+  margin: 0 0 24px;
+  color: var(--fuwari-primary);
+  font-size: clamp(56px, 5vw, 68px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.site-status > h1 {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+.site-status-description {
+  max-width: 440px;
+  margin: 14px auto 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--fuwari-fg-50);
+  overflow-wrap: anywhere;
+}
+.site-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+.site-status-feedback {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--fuwari-fg-50);
+  line-height: 1.7;
+}
+/* A render error may not change the router match status. Keep that case focused too. */
+.public-content-grid:has(.site-status[data-kind="error"]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.public-content-grid:has(.site-status[data-kind="error"]) > .public-sidebar {
+  display: none;
+}
+.public-content-grid:has(.site-status[data-kind="error"]) > .public-footer {
+  grid-column: 1;
+}
+/* Root failures can render without either public or admin chrome. */
+body > .site-status-frame {
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+body > .site-status-frame > .site-status {
+  margin-block: auto;
+}
+@media (max-width: 639px) {
+  .admin-layout .site-status-frame {
+    padding: 8px 0;
+  }
+  .site-status {
+    padding: 36px 24px;
+  }
+  .site-status-code {
+    font-size: 56px;
+    margin-bottom: 20px;
+  }
+  .site-status > h1 {
+    font-size: 24px;
+  }
+  .site-status-actions > a,
+  .site-status-actions > button {
+    padding-inline: 16px;
+  }
+}
+@media (max-width: 359px) {
+  .site-status-actions > a,
+  .site-status-actions > button {
+    width: 100%;
+  }
+}
+@media (max-height: 540px) {
+  .site-status {
+    padding-block: 24px;
+  }
+  .site-status-code {
+    margin-bottom: 16px;
+    font-size: 48px;
+  }
+}

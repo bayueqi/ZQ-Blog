@@ -1,0 +1,45 @@
+/* What a list or panel shows when it has nothing, or failed to load. */
+@layer components {
+  .fuwari-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 240px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--fuwari-fg-50);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .fuwari-empty[data-size="compact"] {
+    min-height: 0;
+    padding: 24px 12px;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .fuwari-empty-icon {
+    flex-shrink: 0;
+    margin-bottom: 4px;
+    color: var(--fuwari-primary);
+  }
+  .fuwari-empty-title {
+    color: var(--fuwari-fg-75);
+    font-size: 17px;
+    font-weight: 550;
+    line-height: 1.5;
+  }
+  .fuwari-empty-description {
+    max-width: 440px;
+    overflow-wrap: anywhere;
+  }
+  .fuwari-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 4px;
+  }
+}

@@ -1,0 +1,77 @@
+/*
+ * Pills where one is chosen, optionally on a grey track. A surface sizes
+ * them through the custom properties; the Admin workspaces scale them with
+ * their unit.
+ */
+@layer components {
+  .fuwari-segmented {
+    display: flex;
+    gap: 3px;
+  }
+  .fuwari-segmented[data-track] {
+    padding: 4px;
+    border-radius: 11px;
+    background: color-mix(
+      in srgb,
+      var(--fuwari-btn-regular-bg) 35%,
+      var(--fuwari-card-bg)
+    );
+  }
+  .fuwari-segment {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: var(--fuwari-segment-height, 32px);
+    padding: 0 var(--fuwari-segment-padding-x, 12px);
+    border-radius: 8px;
+    color: var(--fuwari-fg-75);
+    font-size: var(--fuwari-segment-font-size, 14px);
+    white-space: nowrap;
+    outline: none;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+  .fuwari-segmented[data-size="sm"] > .fuwari-segment {
+    min-height: var(--fuwari-segment-height, 28px);
+    padding: 0 var(--fuwari-segment-padding-x, 10px);
+    font-size: var(--fuwari-segment-font-size, 12px);
+  }
+  .fuwari-segmented[data-stretch] > .fuwari-segment {
+    flex: 1;
+  }
+  .fuwari-segmented:not([data-track]) > .fuwari-segment {
+    color: var(--fuwari-fg-50);
+  }
+  .fuwari-segment:hover:not(:disabled) {
+    color: var(--fuwari-primary);
+  }
+  .fuwari-segmented:not([data-track])
+    > .fuwari-segment:hover:not(
+      :disabled,
+      [aria-checked="true"],
+      [aria-selected="true"]
+    ) {
+    background: var(--fuwari-btn-plain-bg-hover);
+  }
+  .fuwari-segmented
+    > .fuwari-segment:is([aria-checked="true"], [aria-selected="true"]) {
+    background: var(--fuwari-btn-regular-bg);
+    color: var(--fuwari-primary);
+    font-weight: 500;
+  }
+  .fuwari-segment:focus-visible {
+    outline: 2px solid var(--fuwari-primary);
+    outline-offset: 1px;
+  }
+  .fuwari-segment:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fuwari-segment {
+      transition: none;
+    }
+  }
+}

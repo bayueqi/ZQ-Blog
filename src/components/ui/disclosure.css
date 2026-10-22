@@ -1,0 +1,32 @@
+/* Content that grows open from nothing below its trigger. */
+@layer components {
+  .fuwari-disclosure {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 320ms var(--fuwari-motion-ease),
+      opacity 200ms;
+  }
+  .fuwari-disclosure[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  .fuwari-disclosure > div {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .fuwari-disclosure-chevron {
+    flex-shrink: 0;
+    transition: transform 320ms var(--fuwari-motion-ease);
+  }
+  [aria-expanded="true"] > .fuwari-disclosure-chevron {
+    transform: rotate(180deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fuwari-disclosure,
+    .fuwari-disclosure-chevron {
+      transition: none;
+    }
+  }
+}

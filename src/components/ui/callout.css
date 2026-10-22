@@ -1,0 +1,42 @@
+/* A tinted notice box: an icon beside text, with actions under the text. */
+@layer components {
+  .fuwari-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--fuwari-btn-regular-bg);
+    color: var(--fuwari-btn-content);
+    font-size: var(--fuwari-callout-font-size, 14px);
+    line-height: 1.6;
+  }
+  .fuwari-callout[data-tone="warning"] {
+    background: var(--fuwari-warning-bg);
+    color: var(--fuwari-warning-fg);
+  }
+  .fuwari-callout[data-tone="danger"] {
+    background: var(--fuwari-danger-bg);
+    color: var(--fuwari-danger-fg);
+  }
+  .fuwari-callout[data-tone="success"] {
+    background: var(--fuwari-success-bg);
+    color: var(--fuwari-success-fg);
+  }
+  .fuwari-callout-icon {
+    flex-shrink: 0;
+    margin-top: calc((1.6em - 18px) / 2);
+  }
+  .fuwari-callout-body {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .fuwari-callout-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    margin-top: 6px;
+  }
+}

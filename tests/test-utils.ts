@@ -1,0 +1,179 @@
+import {
+  createExecutionContext,
+  waitOnExecutionContext,
+} from "cloudflare:test";
+import { env } from "cloudflare:workers";
+import { vi } from "vitest";
+import { getAuth } from "@/lib/auth/auth.server";
+import { getDb } from "@/lib/db";
+import * as schema from "@/lib/db/schema";
+
+function createTestDb() {
+  return getDb(env);
+}
+
+function createMockAuth() {
+  return {
+    api: {
+      getSession: vi.fn(async () => null),
+    },
+  } as unknown as Auth;
+}
+
+export function createMockSession(
+  overrides: {
+    user?: Partial<AuthContext["session"]["user"]>;
+    session?: Partial<AuthContext["session"]["session"]>;
+  } = {},
+): AuthContext["session"] {
+  const defaultUser: AuthContext["session"]["user"] = {
+    id: "test-user-id",
+    name: "Test User",
+    email: "test@example.com",
+    emailVerified: true,
+    image: null,
+    role: null,
+    banned: false,
+    banReason: null,
+    banExpires: null,
+    mutedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const defaultSession: AuthContext["session"]["session"] = {
+    id: "test-session-id",
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    token: "test-token",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ipAddress: "127.0.0.1",
+    userAgent: "Vitest",
+    userId: "test-user-id",
+    impersonatedBy: null,
+  };
+
+  return {
+    user: { ...defaultUser, ...overrides.user },
+    session: { ...defaultSession, ...overrides.session },
+  };
+}
+
+export function createMockAdminSession(): AuthContext["session"] {
+  return createMockSession({
+    user: {
+      id: "admin-user-id",
+      name: "Admin User",
+      email: "admin@example.com",
+      emailVerified: true,
+      image: null,
+      role: "admin",
+      banned: false,
+      banReason: null,
+      banExpires: null,
+      mutedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export function createMockExecutionCtx(): ExecutionContext {
+  const ctx = createExecutionContext();
+  executionContexts.add(ctx);
+  return ctx;
+}
+
+const executionContexts = new Set<ExecutionContext>();
+
+export async function drainTestExecutionContexts() {
+  await Promise.all(
+    [...executionContexts].map((ctx) => waitOnExecutionContext(ctx)),
+  );
+  executionContexts.clear();
+}
+
+/**
+ * 等待所有的 waitUntil 任务完成
+ */
+export async function waitForBackgroundTasks(ctx: ExecutionContext) {
+  await waitOnExecutionContext(ctx);
+}
+
+export function createTestContext(
+  overrides: Partial<AuthContext & { executionCtx: ExecutionContext }> = {},
+) {
+  const context = {
+    db: createTestDb(),
+    env: { ...env },
+    executionCtx: createMockExecutionCtx(),
+    auth: createMockAuth(),
+    ...overrides,
+  };
+
+  vi.spyOn(context.env.QUEUE, "send").mockResolvedValue({
+    metadata: {
+      metrics: {
+        backlogBytes: 0,
+        backlogCount: 0,
+      },
+    },
+  });
+
+  return context;
+}
+
+export function createAuthTestContext(
+  overrides: Partial<AuthContext & { executionCtx: ExecutionContext }> = {},
+) {
+  return {
+    ...createTestContext(),
+    session: createMockSession(),
+    ...overrides,
+  };
+}
+
+export function createAdminTestContext(
+  overrides: Partial<AuthContext & { executionCtx: ExecutionContext }> = {},
+) {
+  return {
+    ...createTestContext(),
+    session: createMockAdminSession(),
+    ...overrides,
+  };
+}
+
+/**
+ * 确保用户存在于数据库中（用于满足外键约束）
+ */
+export async function seedUser(
+  db: ReturnType<typeof createTestDb>,
+  userRecord: typeof schema.user.$inferInsert,
+) {
+  await db
+    .insert(schema.user)
+    .values(userRecord)
+    .onConflictDoUpdate({
+      target: schema.user.id,
+      set: {
+        name: userRecord.name,
+        email: userRecord.email,
+        role: userRecord.role,
+      },
+    });
+}
+
+/**
+ * 创建一个可用于 `x-api-key` 的 Admin API Key，
+ * 用于模拟外部编辑器（脚本、agent、桌面客户端）调用 Admin HTTP API。
+ */
+export async function seedAdminApiKey(name = "external-editor") {
+  const db = createTestDb();
+  const admin = createMockAdminSession().user;
+  await seedUser(db, admin);
+  const auth = getAuth({ db, env });
+  const created = await auth.api.createApiKey({
+    body: { name, userId: admin.id },
+  });
+  return created.key;
+}

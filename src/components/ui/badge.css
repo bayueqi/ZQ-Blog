@@ -1,0 +1,43 @@
+/*
+ * A small rounded label. A surface sizes it through the custom properties;
+ * the Admin post list scales them with its unit.
+ */
+@layer components {
+  .fuwari-badge {
+    display: inline-block;
+    max-width: 100%;
+    height: var(--fuwari-badge-height, 24px);
+    padding-inline: var(--fuwari-badge-padding-x, 10px);
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--fuwari-btn-regular-bg);
+    color: var(--fuwari-btn-content);
+    font-size: var(--fuwari-badge-font-size, 12px);
+    font-weight: 500;
+    line-height: var(--fuwari-badge-height, 24px);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .fuwari-badge[data-size="sm"] {
+    --fuwari-badge-height: 20px;
+    --fuwari-badge-padding-x: 7px;
+    --fuwari-badge-font-size: 11px;
+  }
+  .fuwari-badge[data-tone="primary"] {
+    color: var(--fuwari-primary);
+  }
+  .fuwari-badge[data-tone="success"] {
+    background: var(--fuwari-success-bg);
+    color: var(--fuwari-success-fg);
+  }
+  .fuwari-badge[data-tone="warning"] {
+    background: var(--fuwari-warning-bg);
+    color: var(--fuwari-warning-fg);
+  }
+  .fuwari-badge[data-tone="danger"] {
+    background: var(--fuwari-danger-bg);
+    color: var(--fuwari-danger-fg);
+  }
+}

@@ -1,0 +1,144 @@
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
+import { FriendLinksTable } from "@/lib/db/schema";
+import type { Messages } from "@/lib/i18n";
+
+const coercedDate = z.union([z.date(), z.string().pipe(z.coerce.date())]);
+
+const FriendLinkSelectSchema = createSelectSchema(FriendLinksTable, {
+  createdAt: coercedDate,
+  updatedAt: coercedDate,
+});
+
+const FriendLinkUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  image: z.string().nullable(),
+});
+
+const FriendLinkWithUserSchema = FriendLinkSelectSchema.extend({
+  user: FriendLinkUserSchema.nullable(),
+});
+
+const friendLinkFields = {
+  siteName: z.string().min(1).max(100),
+  siteUrl: z.string().url(),
+  description: z.string().max(300).optional(),
+  logoUrl: z.union([z.literal(""), z.string().url()]).optional(),
+};
+
+const createFriendLinkFormFields = (m: Messages) => ({
+  siteName: z
+    .string()
+    .min(1, m.friend_link_validation_required())
+    .max(100, m.friend_link_validation_too_long({ max: 100 })),
+  siteUrl: z.string().url(m.friend_link_validation_invalid_url()),
+  description: z
+    .string()
+    .max(300, m.friend_link_validation_too_long({ max: 300 }))
+    .optional(),
+  logoUrl: z
+    .union([
+      z.literal(""),
+      z.string().url(m.friend_link_validation_invalid_url()),
+    ])
+    .optional(),
+});
+
+// === User submission input ===
+
+export const SubmitFriendLinkInputSchema = z.object({
+  id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe(
+      "Omit for a new application. Supply an owned rejected application ID to revise and resubmit it.",
+    ),
+  ...friendLinkFields,
+});
+
+export const createSubmitFriendLinkSchema = (m: Messages) =>
+  z.object({
+    id: z.number().int().positive().optional(),
+    ...createFriendLinkFormFields(m),
+  });
+
+// === Admin create input (manual add) ===
+
+export const CreateFriendLinkInputSchema = z.object(friendLinkFields);
+
+export const createCreateFriendLinkSchema = (m: Messages) =>
+  z.object(createFriendLinkFormFields(m));
+
+// === Admin inputs ===
+export const GetAllFriendLinksInputSchema = z.object({
+  search: z.string().max(200).optional(),
+  offset: z.number().optional(),
+  limit: z.number().optional(),
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+export const ApproveFriendLinkInputSchema = z.object({
+  id: z.number(),
+});
+
+export const RejectFriendLinkInputSchema = z.object({
+  id: z.number(),
+  rejectionReason: z.string().max(500).optional(),
+});
+
+/**
+ * Strict on purpose. Approval state and ownership are not editable here, and a
+ * plain object would silently strip them: a client that PATCHed
+ * `{ status: "approved" }` got a 200 back and an application still pending.
+ * Use POST /admin/friend-links/{id}/approve and /reject instead.
+ */
+export const UpdateFriendLinkInputSchema = z
+  .object({
+    id: z.number(),
+    siteName: friendLinkFields.siteName.optional(),
+    siteUrl: friendLinkFields.siteUrl.optional(),
+    description: friendLinkFields.description,
+    logoUrl: friendLinkFields.logoUrl,
+  })
+  .strict();
+
+export const DeleteFriendLinkInputSchema = z.object({
+  id: z.number(),
+});
+
+// === Cache ===
+export const ApprovedFriendLinksResponseSchema = z.array(
+  FriendLinkWithUserSchema,
+);
+
+const FriendLinkStatusCountsSchema = z.object({
+  pending: z.number().int().nonnegative(),
+  approved: z.number().int().nonnegative(),
+  rejected: z.number().int().nonnegative(),
+});
+
+export const AdminFriendLinkListResponseSchema = z.object({
+  items: z.array(FriendLinkWithUserSchema),
+  total: z.number().int().nonnegative(),
+  counts: FriendLinkStatusCountsSchema,
+});
+
+// === Types ===
+export type SubmitFriendLinkInput = z.infer<typeof SubmitFriendLinkInputSchema>;
+export type CreateFriendLinkInput = z.infer<typeof CreateFriendLinkInputSchema>;
+export type GetAllFriendLinksInput = z.infer<
+  typeof GetAllFriendLinksInputSchema
+>;
+export type ApproveFriendLinkInput = z.infer<
+  typeof ApproveFriendLinkInputSchema
+>;
+export type RejectFriendLinkInput = z.infer<typeof RejectFriendLinkInputSchema>;
+export type UpdateFriendLinkInput = z.infer<typeof UpdateFriendLinkInputSchema>;
+export type DeleteFriendLinkInput = z.infer<typeof DeleteFriendLinkInputSchema>;
+export type FriendLinkWithUser = z.infer<typeof FriendLinkWithUserSchema>;
+export type FriendLinkStatusCounts = z.infer<
+  typeof FriendLinkStatusCountsSchema
+>;

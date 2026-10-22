@@ -1,0 +1,164 @@
+/*
+ * The one Fuwari button look. md and lg read --fuwari-button-height,
+ * --fuwari-button-font-size and --fuwari-button-padding-x, so a surface can
+ * resize them; the Admin workspaces scale them with their unit.
+ */
+@layer components {
+  .fuwari-button,
+  .fuwari-icon-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      background-color 180ms,
+      color 180ms,
+      opacity 180ms;
+  }
+  .fuwari-button {
+    gap: 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+  .fuwari-button svg,
+  .fuwari-icon-button svg {
+    flex-shrink: 0;
+  }
+  .fuwari-button-sm {
+    min-height: 32px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .fuwari-button-md {
+    min-height: var(--fuwari-button-height, 40px);
+    padding: 0 var(--fuwari-button-padding-x, 16px);
+    font-size: var(--fuwari-button-font-size, 14px);
+  }
+  .fuwari-button-lg {
+    min-height: var(--fuwari-button-height, 44px);
+    padding: 10px var(--fuwari-button-padding-x, 20px);
+    font-size: var(--fuwari-button-font-size, 14px);
+    font-weight: 700;
+  }
+
+  .fuwari-button-primary {
+    background-color: var(--fuwari-primary);
+    color: white;
+  }
+  .dark .fuwari-button-primary {
+    color: rgb(0 0 0 / 0.75);
+  }
+  .fuwari-button-primary:not(:disabled):hover {
+    background-color: var(--fuwari-primary-hover);
+  }
+  .fuwari-button-primary:not(:disabled):active {
+    background-color: var(--fuwari-primary-active);
+  }
+
+  .fuwari-button-regular {
+    background-color: var(--fuwari-btn-regular-bg);
+    color: var(--fuwari-btn-content);
+  }
+  .dark .fuwari-button-regular {
+    color: var(--fuwari-fg-75);
+  }
+  .fuwari-button-regular:not(:disabled):hover {
+    background-color: var(--fuwari-btn-regular-bg-hover);
+  }
+  .fuwari-button-regular:not(:disabled):active {
+    background-color: var(--fuwari-btn-regular-bg-active);
+  }
+
+  .fuwari-button-danger {
+    background-color: var(--fuwari-danger);
+    color: white;
+  }
+  .fuwari-button-danger:not(:disabled):hover {
+    opacity: 0.9;
+  }
+
+  /* On top of an image, such as a cover. */
+  .fuwari-button-overlay {
+    background-color: rgb(0 0 0 / 0.45);
+    color: white;
+    backdrop-filter: blur(4px);
+  }
+  .fuwari-button-overlay:not(:disabled):hover {
+    background-color: rgb(0 0 0 / 0.55);
+  }
+
+  /* Plain buttons and icon buttons rest muted and tint on hover. */
+  .fuwari-button-plain {
+    background-color: transparent;
+    color: var(--fuwari-fg-75);
+  }
+  .fuwari-icon-button {
+    padding: 0;
+    background-color: transparent;
+    color: var(--fuwari-fg-50);
+  }
+  .fuwari-icon-button-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .fuwari-icon-button-md {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+  .fuwari-icon-button-lg {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    color: var(--fuwari-fg-75);
+  }
+  .fuwari-button-plain:not(:disabled):hover,
+  .fuwari-icon-button:not(:disabled):hover,
+  .fuwari-icon-button:is([aria-pressed="true"], [aria-expanded="true"]),
+  .fuwari-icon-button-active {
+    background-color: var(--fuwari-btn-regular-bg);
+    color: var(--fuwari-primary);
+  }
+  .fuwari-button-plain.fuwari-button-tone-danger:not(:disabled):hover,
+  .fuwari-icon-button.fuwari-button-tone-danger:not(:disabled):hover {
+    background-color: var(--fuwari-danger-bg);
+    color: var(--fuwari-danger-fg);
+  }
+
+  /* A link-style button: just its coloured text. */
+  .fuwari-button.fuwari-button-text {
+    min-height: 0;
+    padding: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--fuwari-primary);
+    font-weight: inherit;
+  }
+  .fuwari-button-text.fuwari-button-tone-danger {
+    color: var(--fuwari-danger-fg);
+  }
+  .fuwari-button-text:not(:disabled):hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  :is(.fuwari-button, .fuwari-icon-button):disabled,
+  :is(.fuwari-button, .fuwari-icon-button)[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :is(.fuwari-button, .fuwari-icon-button):focus-visible {
+    outline: 2px solid var(--fuwari-primary);
+    outline-offset: 2px;
+  }
+}

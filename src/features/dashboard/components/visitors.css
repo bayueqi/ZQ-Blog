@@ -1,0 +1,196 @@
+/* 访客构成：左边环形图，右边趋势线和当前维度的排行。 */
+.dashboard-visitors {
+  container: visitors / inline-size;
+  --visitor-1: var(--fuwari-primary);
+  --visitor-2: #f59e0b;
+  --visitor-3: #8b5cf6;
+  --visitor-4: #10b981;
+  --visitor-5: #64748b;
+  --visitor-rest: color-mix(in oklab, var(--fuwari-fg) 20%, transparent);
+}
+
+.visitor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: calc(-4 * var(--admin-unit));
+}
+.visitor-tab {
+  padding: calc(5 * var(--admin-unit)) calc(11 * var(--admin-unit));
+  border: 0;
+  border-radius: calc(8 * var(--admin-unit));
+  background: transparent;
+  color: var(--fuwari-fg-50);
+  font-size: calc(13 * var(--admin-unit));
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.visitor-tab:hover {
+  background: var(--dashboard-hover);
+  color: var(--fuwari-fg);
+}
+.visitor-tab[aria-selected="true"] {
+  background: color-mix(in oklab, var(--fuwari-primary) 12%, transparent);
+  color: var(--fuwari-primary);
+  font-weight: 600;
+}
+.visitor-tab:focus-visible {
+  outline: 2px solid var(--fuwari-primary);
+  outline-offset: 1px;
+}
+
+.visitor-body {
+  display: grid;
+  grid-template-areas:
+    "donut trend"
+    "donut legend";
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: calc(12 * var(--admin-unit)) calc(30 * var(--admin-unit));
+  margin-top: calc(2 * var(--admin-unit));
+}
+
+.visitor-donut {
+  position: relative;
+  grid-area: donut;
+  width: calc(164 * var(--admin-unit));
+  max-width: 100%;
+}
+.visitor-donut svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.visitor-donut-track {
+  stroke: color-mix(in oklab, var(--fuwari-fg) 9%, transparent);
+}
+.visitor-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0 18%;
+  text-align: center;
+  pointer-events: none;
+}
+.visitor-donut-label {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--fuwari-fg-75);
+  font-size: calc(11.5 * var(--admin-unit));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.visitor-donut-value {
+  color: var(--fuwari-fg);
+  font-size: calc(26 * var(--admin-unit));
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.visitor-donut-share {
+  color: var(--fuwari-fg-50);
+  font-size: calc(11.5 * var(--admin-unit));
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-trend-block {
+  grid-area: trend;
+  align-self: end;
+  min-width: 0;
+}
+.visitor-trend-title {
+  color: var(--fuwari-fg-50);
+  font-size: calc(12 * var(--admin-unit));
+}
+.visitor-trend {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: calc(2 * var(--admin-unit));
+}
+.visitor-trend-grid {
+  stroke: color-mix(in oklab, var(--fuwari-fg) 9%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.visitor-trend-caption {
+  fill: var(--fuwari-fg-50);
+  font-family: inherit;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-legend {
+  display: flex;
+  grid-area: legend;
+  flex-direction: column;
+  gap: calc(7 * var(--admin-unit));
+  align-self: start;
+}
+.visitor-legend > li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: calc(9 * var(--admin-unit));
+  font-size: calc(13 * var(--admin-unit));
+  line-height: 1.5;
+}
+.visitor-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.visitor-legend-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.visitor-legend-share {
+  color: var(--fuwari-fg-50);
+  font-variant-numeric: tabular-nums;
+}
+.visitor-legend-count {
+  color: var(--fuwari-fg-75);
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-empty {
+  margin-top: calc(6 * var(--admin-unit));
+  color: var(--fuwari-fg-50);
+  font-size: calc(13 * var(--admin-unit));
+}
+
+/* 区块自己变窄时（单栏手机）就竖着排。 */
+@container visitors (max-width: 420px) {
+  .visitor-body {
+    grid-template-areas:
+      "donut"
+      "trend"
+      "legend";
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .visitor-donut {
+    width: calc(138 * var(--admin-unit));
+  }
+  .visitor-trend-block,
+  .visitor-legend {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visitor-tab {
+    transition: none;
+  }
+}

@@ -1,0 +1,79 @@
+/* Every Admin workspace scales with one unit and draws one hairline rule. */
+.admin-workspace {
+  --admin-unit: clamp(1px, 0.07vw, 1.5px);
+  --admin-rule: color-mix(in srgb, var(--fuwari-fg-50) 20%, transparent);
+  --fuwari-tabs-gap: calc(28 * var(--admin-unit));
+  --fuwari-tabs-rule: var(--admin-rule);
+  --fuwari-tab-height: calc(46 * var(--admin-unit));
+  --fuwari-tab-font-size: calc(14 * var(--admin-unit));
+  --fuwari-segment-height: calc(36 * var(--admin-unit));
+  --fuwari-segment-padding-x: calc(12 * var(--admin-unit));
+  --fuwari-segment-font-size: calc(14 * var(--admin-unit));
+}
+@media (max-width: 767px) {
+  .admin-workspace {
+    --fuwari-tabs-gap: 22px;
+  }
+}
+.admin-list-region {
+  position: relative;
+}
+@media (max-height: 540px) {
+  .admin-list-region {
+    display: block;
+    overflow-y: auto;
+  }
+  .admin-list-region > div,
+  .admin-list-region .fuwari-page-fade,
+  .admin-list-region .fuwari-page-fade > div {
+    display: block;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  .admin-list-region
+    :is(
+      .post-manager,
+      .media-workspace,
+      .friend-workspace,
+      .muted-workspace,
+      .settings-workspace
+    ) {
+    display: block;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  .admin-list-region
+    :is(
+      .post-list-scroll,
+      .media-browser,
+      .friend-queue-scroll,
+      .friend-detail-scroll,
+      .muted-list-scroll,
+      .settings-body
+    ) {
+    height: auto;
+    overflow: visible;
+  }
+  .admin-list-region .post-list-table th {
+    position: static;
+  }
+  .admin-list-region .media-workspace-body {
+    min-height: auto;
+  }
+  .admin-list-region .media-panel-slot {
+    min-height: 0;
+  }
+  .admin-list-region aside.media-inspector {
+    position: sticky;
+    top: 0;
+    height: auto;
+    max-height: calc(100dvh - 48px);
+  }
+}
+@media (max-height: 540px) {
+  .admin-list-region .media-table-scroll {
+    overflow-x: auto;
+  }
+}

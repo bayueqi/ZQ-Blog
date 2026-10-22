@@ -1,0 +1,34 @@
+.fuwari-confirmation {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(clamp(420px, 30vw, 520px), calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border: 0;
+  padding: clamp(24px, 1.5vw, 32px);
+  border-radius: 20px;
+  background: var(--fuwari-card-bg);
+  color: var(--fuwari-fg-75);
+  box-shadow: 0 20px 70px rgb(0 0 0 / 0.12);
+  font-size: clamp(15px, 0.88vw, 18px);
+  --fuwari-button-height: 2.75em;
+  --fuwari-button-font-size: 1em;
+  --fuwari-button-padding-x: 1em;
+}
+.fuwari-confirmation h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+  color: var(--fuwari-fg-90);
+}
+.fuwari-confirmation p {
+  margin-top: 0.75em;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.fuwari-confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75em;
+  margin-top: 1.4em;
+}
