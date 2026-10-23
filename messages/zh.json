@@ -1446,7 +1446,7 @@
   "admin_gallery_saved": "已保存",
   "admin_gallery_deleted": "已删除",
   "admin_gallery_failed": "操作失败",
-  "admin_gallery_empty_photos": "这个相册集还没有照片。",
+  "admin_gallery_empty_photos": "这个相册集还没有照片",
   "admin_gallery_new": "新建相册集",
   "admin_gallery_upload": "上传照片",
   "admin_gallery_empty": "暂无相册",

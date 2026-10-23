@@ -1465,7 +1465,7 @@
   "admin_gallery_saved": "Saved",
   "admin_gallery_deleted": "Deleted",
   "admin_gallery_failed": "That did not work",
-  "admin_gallery_empty_photos": "No photos in this collection yet.",
+  "admin_gallery_empty_photos": "No photos in this collection yet",
   "admin_gallery_new": "New collection",
   "admin_gallery_upload": "Upload photos",
   "admin_gallery_empty": "No albums",

@@ -310,15 +310,9 @@ function AdminGalleryPage() {
           <GallerySkeleton count={6} square />
         ) : allPhotos.length === 0 ? (
           <div className="gallery-empty">
-            <EmptyState
-              icon={ImagePlus}
-              description={m.admin_gallery_empty_photos()}
-              action={
-                <Button variant="primary" onClick={() => setPickerOpen(true)}>
-                  {m.admin_gallery_upload()}
-                </Button>
-              }
-            />
+            <p className="fuwari-text-50 text-sm">
+              {m.admin_gallery_empty_photos()}
+            </p>
           </div>
         ) : (
           <ul className="gallery-photo-grid">
