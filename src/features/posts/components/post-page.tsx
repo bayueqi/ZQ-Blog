@@ -1,5 +1,5 @@
 import { ClientOnly, Link } from "@tanstack/react-router";
-import { Clock, FileText, Pencil } from "lucide-react";
+import { Clock, FileText, Lock, Pencil } from "lucide-react";
 import { useRef } from "react";
 import { PUBLIC_IMAGE_WIDTH } from "@/features/media/utils/media.utils";
 import { CommentSection } from "@/features/comments/components/comment-section";
@@ -35,18 +35,25 @@ export function PostPage({ post }: PostPageProps) {
   useHeadingAnchors(contentRef);
   // Approximate word count
   const wordCount = post.readTimeInMinutes * 300;
+  // 隐私保护：解锁前连标题、时间、分类标签都不出现在页面上。
+  const concealed = post.locked && post.privacyProtected;
 
   return (
     <div className="relative flex flex-col rounded-(--fuwari-radius-large) py-1 md:py-0 md:bg-transparent gap-4 mb-4 w-full">
-      <TableOfContents headers={post.toc} />
+      <TableOfContents headers={concealed ? [] : post.toc} />
 
       {/* Main Post Container */}
       <div className="fuwari-card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full">
         {/* Word count and reading time */}
         <div
-          className="flex flex-row flex-wrap fuwari-text-30 gap-5 mb-3 transition fuwari-onload-animation"
+          className={
+            concealed
+              ? "hidden"
+              : "flex flex-row flex-wrap fuwari-text-30 gap-5 mb-3 transition fuwari-onload-animation"
+          }
           style={{ animationDelay: enterDelay(0) }}
         >
+          {" "}
           <div className="flex flex-row items-center">
             <div className="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 fuwari-text-50 flex items-center justify-center mr-2">
               <FileText strokeWidth={1.5} size={16} />
@@ -81,24 +88,32 @@ export function PostPage({ post }: PostPageProps) {
 
         {/* Title */}
         <div
-          className="relative fuwari-onload-animation"
+          className={concealed ? "hidden" : "relative fuwari-onload-animation"}
           style={{ animationDelay: enterDelay(50) }}
         >
-          <h1
-            className="transition w-full block font-bold mb-3
-              text-3xl md:text-[2.25rem]/[2.75rem]
-              fuwari-text-90
-              md:before:w-1 before:h-5 before:rounded-md before:bg-(--fuwari-primary)
-              before:absolute before:top-3 before:-left-4.5"
-            style={{ viewTransitionName: `post-title-${post.slug}` }}
-          >
-            {post.title}
-          </h1>
+          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1
+              className="transition block font-bold
+                text-3xl md:text-[2.25rem]/[2.75rem]
+                fuwari-text-90
+                md:before:w-1 before:h-5 before:rounded-md before:bg-(--fuwari-primary)
+                before:absolute before:top-3 before:-left-4.5"
+              style={{ viewTransitionName: `post-title-${post.slug}` }}
+            >
+              {post.title}
+            </h1>
+            {post.visibility === "password" && (
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-black/5 px-2.5 py-1 text-xs fuwari-text-50 dark:bg-white/10">
+                <Lock size={12} strokeWidth={2} />
+                {m.post_locked_badge()}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Metadata */}
         <div
-          className="fuwari-onload-animation"
+          className={concealed ? "hidden" : "fuwari-onload-animation"}
           style={{
             animationDelay: enterDelay(100),
           }}
@@ -132,7 +147,7 @@ export function PostPage({ post }: PostPageProps) {
         )}
 
         {/* Summary */}
-        <PostSummary summary={post.summary} />
+        {concealed ? null : <PostSummary summary={post.summary} />}
 
         {post.locked ? (
           <PostLock slug={post.slug} />
@@ -167,7 +182,7 @@ export function PostPage({ post }: PostPageProps) {
         )}
       </div>
 
-      <PostAdjacentNav slug={post.slug} />
+      {concealed ? null : <PostAdjacentNav slug={post.slug} />}
 
       {/* Comments Section */}
       {!post.locked && (

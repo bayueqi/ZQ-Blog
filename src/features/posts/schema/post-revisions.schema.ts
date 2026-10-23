@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   POST_REVISION_REASONS,
   POST_STATUSES,
+  POST_VISIBILITIES,
   PostRevisionsTable,
 } from "@/lib/db/schema";
 import { NullableJsonContentSchema } from "./json-content.schema";
@@ -19,6 +20,10 @@ export const PostRevisionSnapshotSchema = z.object({
   tagIds: z.array(z.number().int()),
   categoryId: z.number().int().nullable().default(null),
   coverMediaId: z.number().int().nullable().default(null),
+  // default 是为了兼容加密功能之前存下的老快照。
+  visibility: z.enum(POST_VISIBILITIES).default("public"),
+  accessPasswordHash: z.string().nullable().default(null),
+  privacyProtected: z.boolean().default(false),
 });
 
 export const PostRevisionSelectSchema = createSelectSchema(PostRevisionsTable, {

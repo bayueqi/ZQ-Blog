@@ -76,35 +76,31 @@ export function DashboardPage() {
       />
       <DashboardStats stats={data.stats} />
       <div className="dashboard-grid">
-        <div className="dashboard-column dashboard-column-main">
-          <DashboardVisitors
-            className="dashboard-slot-visitors"
-            visitors={data.visitors}
-          />
-          <DashboardWritingActivity
-            className="dashboard-slot-activity"
-            activity={data.writingActivity}
-          />
-          <DashboardRecentPosts
-            className="dashboard-slot-recent"
-            recentPosts={data.recentPosts}
-            hasDraft={data.latestDraft !== null}
-            onCreate={() => createPost()}
-            isCreating={isCreating}
-            createLabel={createLabel}
-          />
-        </div>
-        <div className="dashboard-column dashboard-column-side">
-          <DashboardComments
-            className="dashboard-slot-comments"
-            comments={data.unrepliedComments.items}
-            total={data.unrepliedComments.total}
-          />
-          <DashboardFriendLinks
-            className="dashboard-slot-links"
-            pendingFriendLinks={data.pendingFriendLinks}
-          />
-        </div>
+        <DashboardVisitors
+          className="dashboard-slot-visitors"
+          visitors={data.visitors}
+        />
+        <DashboardWritingActivity
+          className="dashboard-slot-activity"
+          activity={data.writingActivity}
+        />
+        <DashboardComments
+          className="dashboard-slot-comments"
+          comments={data.unrepliedComments.items}
+          total={data.unrepliedComments.total}
+        />
+        <DashboardRecentPosts
+          className="dashboard-slot-recent"
+          recentPosts={data.recentPosts}
+          hasDraft={data.latestDraft !== null}
+          onCreate={() => createPost()}
+          isCreating={isCreating}
+          createLabel={createLabel}
+        />
+        <DashboardFriendLinks
+          className="dashboard-slot-links"
+          pendingFriendLinks={data.pendingFriendLinks}
+        />
       </div>
     </div>
   );

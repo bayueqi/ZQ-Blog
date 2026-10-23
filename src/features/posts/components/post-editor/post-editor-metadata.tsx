@@ -96,20 +96,35 @@ export function PostEditorMetadata({
             className="min-h-10 w-auto text-sm"
           />
           {post.visibility === "password" && (
-            <FormField label={m.editor_meta_access_password()}>
-              <PasswordInput
-                secret
-                value={post.accessPassword}
-                placeholder={
-                  post.hasAccessPassword
-                    ? m.editor_meta_access_password_keep()
-                    : m.editor_meta_access_password_placeholder()
+            <>
+              <FormField label={m.editor_meta_access_password()}>
+                <PasswordInput
+                  secret
+                  value={post.accessPassword}
+                  placeholder={
+                    post.hasAccessPassword
+                      ? m.editor_meta_access_password_keep()
+                      : m.editor_meta_access_password_placeholder()
+                  }
+                  onChange={(event) =>
+                    onPostChange({ accessPassword: event.target.value })
+                  }
+                />
+              </FormField>
+              <Switch
+                label={m.editor_meta_privacy()}
+                checked={post.privacyProtected}
+                onCheckedChange={(privacyProtected) =>
+                  onPostChange({ privacyProtected })
                 }
-                onChange={(event) =>
-                  onPostChange({ accessPassword: event.target.value })
-                }
+                className="min-h-10 w-auto text-sm"
               />
-            </FormField>
+              {post.privacyProtected ? (
+                <p className="text-xs fuwari-text-50">
+                  {m.editor_meta_privacy_hint()}
+                </p>
+              ) : null}
+            </>
           )}
         </div>
 

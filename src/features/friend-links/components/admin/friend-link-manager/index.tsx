@@ -116,7 +116,9 @@ export function FriendLinkManager({
       <PageHeader
         className="friend-header"
         title={m.friend_links_admin_title()}
-        description={m.friend_review_hint()}
+        description={m.admin_friend_links_total({
+          count: counts.pending + counts.approved + counts.rejected,
+        })}
         actions={
           <Button onClick={openCreate}>{m.friend_links_admin_add()}</Button>
         }

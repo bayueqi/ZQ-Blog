@@ -18,6 +18,8 @@ export const GalleryCategoryCardSchema = z.object({
   cover: CoverSchema,
   photoCount: z.number(),
   locked: z.boolean(),
+  /** 解锁前连名称、描述、封面、创建时间都不下发。 */
+  privacyProtected: z.boolean(),
   createdAt: z.string().nullable(),
 });
 
@@ -54,6 +56,8 @@ export const CreateGalleryCategoryInputSchema = z.object({
   coverMediaId: z.number().nullable().optional(),
   /** null/空 表示不设密码。 */
   password: z.string().min(1).max(100).nullable().optional(),
+  /** 设了密码才能开的隐私保护。 */
+  privacyProtected: z.boolean().optional(),
 });
 
 export const UpdateGalleryCategoryInputSchema =

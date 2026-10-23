@@ -23,6 +23,8 @@ export interface PostEditorData {
   coverMediaId: number | null;
   cover: PostEditorCover | null;
   visibility: "public" | "password";
+  /** 解锁前连标题、摘要、时间、封面都不给看。 */
+  privacyProtected: boolean;
   /** A new password typed in this session; empty keeps the stored one. */
   accessPassword: string;
   hasAccessPassword: boolean;

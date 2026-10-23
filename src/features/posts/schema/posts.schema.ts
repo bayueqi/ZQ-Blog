@@ -248,6 +248,7 @@ const AdminPostListItemSchema = z.object({
   publicSlug: PublicSlugSchema,
   status: z.enum(["draft", "published"]),
   visibility: z.enum(["public", "password"]),
+  privacyProtected: z.boolean(),
   publishedAt: coercedDateNullable,
   pinnedAt: coercedDateNullable,
   createdAt: coercedDate,

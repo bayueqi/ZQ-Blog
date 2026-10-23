@@ -37,6 +37,9 @@ type MetaSnapshot = {
   tagIds: string;
   categoryId: number | null;
   coverMediaId: number | null;
+  visibility: PostEditorData["visibility"];
+  privacyProtected: boolean;
+  accessPassword: string;
 };
 
 type SaveResult = "synced" | "dirty" | "failed" | "discarded" | "blocked";
@@ -53,6 +56,9 @@ function toMeta(post: PostEditorData): MetaSnapshot {
       .join(","),
     categoryId: post.categoryId,
     coverMediaId: post.coverMediaId,
+    visibility: post.visibility,
+    privacyProtected: post.privacyProtected,
+    accessPassword: post.accessPassword,
   };
 }
 
@@ -66,7 +72,10 @@ function isMetaDirty(curr: MetaSnapshot, prev: MetaSnapshot | null) {
     prev.pinnedAt !== curr.pinnedAt ||
     prev.tagIds !== curr.tagIds ||
     prev.categoryId !== curr.categoryId ||
-    prev.coverMediaId !== curr.coverMediaId
+    prev.coverMediaId !== curr.coverMediaId ||
+    prev.visibility !== curr.visibility ||
+    prev.privacyProtected !== curr.privacyProtected ||
+    prev.accessPassword !== curr.accessPassword
   );
 }
 

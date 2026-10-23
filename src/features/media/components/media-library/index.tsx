@@ -231,16 +231,6 @@ export function MediaLibrary() {
                       ? m.media_used_empty()
                       : m.media_empty()
                 }
-                description={filter === "all" ? m.media_empty_hint() : null}
-                action={
-                  <Button
-                    onClick={
-                      filter === "all" ? openFilePicker : () => setFilter("all")
-                    }
-                  >
-                    {filter === "all" ? m.media_choose() : m.media_filter_all()}
-                  </Button>
-                }
               />
             ) : (
               <>

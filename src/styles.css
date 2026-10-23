@@ -514,6 +514,22 @@
   background-color: rgba(255, 255, 255, 0.6);
 }
 
+/*
+ * 手机上没有鼠标滚动条，留着它只会占掉右边十来像素，内容看着往左偏。
+ * 触摸设备本来也不显示，这里直接把占位去掉。
+ */
+@media (max-width: 1023px) {
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  :root,
+  .custom-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
 .fuwari-custom-md {
   --tw-prose-body: rgb(0 0 0 / 0.9);
   --tw-prose-headings: rgb(0 0 0 / 0.9);

@@ -22,6 +22,11 @@ const config = defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // 国产/旧内核不认 `@media (width<=600px)` 这种 Level 4 范围语法，
+    // 降级成 max-width 才让手机端的媒体查询真正命中。
+    cssTarget: ["chrome87", "safari14", "firefox78", "edge88"],
+  },
   plugins: [
     paraglideVitePlugin({
       project: "./project.inlang",

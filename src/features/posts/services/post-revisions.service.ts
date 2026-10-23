@@ -37,6 +37,9 @@ function toRevisionSnapshot(
     tagIds: [...new Set(post.tags.map((tag) => tag.id))].sort((a, b) => a - b),
     categoryId: post.categoryId ?? null,
     coverMediaId: post.coverMediaId ?? null,
+    visibility: post.visibility,
+    accessPasswordHash: post.accessPasswordHash,
+    privacyProtected: post.privacyProtected,
   };
 }
 
@@ -50,6 +53,9 @@ async function hashSnapshot(snapshot: PostRevisionSnapshot) {
     publishedAt: snapshot.publishedAt,
     coverMediaId: snapshot.coverMediaId ?? null,
     categoryId: snapshot.categoryId ?? null,
+    visibility: snapshot.visibility,
+    accessPasswordHash: snapshot.accessPasswordHash ?? null,
+    privacyProtected: snapshot.privacyProtected ?? false,
   });
 }
 
@@ -77,11 +83,16 @@ export async function findPostRevisionById(
   context: DbContext,
   data: FindPostRevisionByIdInput,
 ) {
-  return await PostRevisionRepo.findPostRevisionById(
+  const revision = await PostRevisionRepo.findPostRevisionById(
     context.db,
     data.postId,
     data.revisionId,
   );
+  if (!revision) return null;
+  // 快照里存了密码哈希，接口只回一份去掉它的副本。
+  const { accessPasswordHash: _accessPasswordHash, ...snapshotJson } =
+    revision.snapshotJson;
+  return { ...revision, snapshotJson };
 }
 
 export async function createPostRevision(
@@ -152,7 +163,11 @@ export async function restorePostRevision(
 ) {
   const [post, revision] = await Promise.all([
     PostRepo.findPostById(context.db, data.postId),
-    findPostRevisionById(context, data),
+    PostRevisionRepo.findPostRevisionById(
+      context.db,
+      data.postId,
+      data.revisionId,
+    ),
   ]);
 
   if (!post) {
@@ -173,6 +188,16 @@ export async function restorePostRevision(
     ...parsedSnapshot.data,
     coverMediaId: parsedSnapshot.data.coverMediaId ?? null,
   };
+  // 加密开着却没有密码的版本落不了地；公开的也不可能带着隐私保护。
+  if (
+    targetSnapshot.visibility === "password" &&
+    !targetSnapshot.accessPasswordHash
+  ) {
+    targetSnapshot.visibility = "public";
+  }
+  if (targetSnapshot.visibility === "public") {
+    targetSnapshot.privacyProtected = false;
+  }
   if (targetSnapshot.coverMediaId != null) {
     const coverMedia = await MediaRepo.findMediaById(
       context.db,

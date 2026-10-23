@@ -140,21 +140,31 @@ export function MediaDetail({
               ) : postsPending ? (
                 <p>{m.media_grid_loading()}</p>
               ) : (
-                linkedPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    to="/admin/posts/edit/$id"
-                    params={{ id: String(post.id) }}
-                    className="media-reference"
-                  >
-                    <FileText size={16} />
-                    <span>{post.title}</span>
-                    {post.isCover ? (
+                linkedPosts.map((post) =>
+                  post.isCover ? (
+                    <Link
+                      key={post.id}
+                      to="/admin/posts"
+                      className="media-reference"
+                    >
+                      <FileText size={16} />
+                      <span>{post.title}</span>
                       <small>{m.media_badge_cover()}</small>
-                    ) : null}
-                    <ExternalLink size={14} />
-                  </Link>
-                ))
+                      <ExternalLink size={14} />
+                    </Link>
+                  ) : (
+                    <Link
+                      key={post.id}
+                      to="/admin/posts/edit/$id"
+                      params={{ id: String(post.id) }}
+                      className="media-reference"
+                    >
+                      <FileText size={16} />
+                      <span>{post.title}</span>
+                      <ExternalLink size={14} />
+                    </Link>
+                  ),
+                )
               )}
             </>
           ) : null}

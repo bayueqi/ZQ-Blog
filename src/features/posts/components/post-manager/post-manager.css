@@ -93,12 +93,24 @@
   padding-top: 2px;
   color: var(--fuwari-primary);
 }
+/* 和相册卡片上那颗锁一个意思，就是跟在标题右边的纯图标。 */
+.post-list-title-line {
+  display: flex;
+  align-items: center;
+  gap: calc(6 * var(--admin-unit));
+  min-width: 0;
+}
+.post-list-lock {
+  flex-shrink: 0;
+  color: var(--fuwari-primary);
+}
 .post-list-title-link {
   display: block;
   min-width: 0;
 }
 .post-list-title-link strong {
   display: block;
+  min-width: 0;
   font-size: calc(14 * var(--admin-unit));
   font-weight: 600;
   line-height: 1.5;
@@ -108,7 +120,7 @@
 .post-list-title-link:hover strong {
   color: var(--fuwari-primary);
 }
-.post-list-title-link > span {
+.post-list-slug {
   display: block;
   margin-top: 4px;
   color: var(--fuwari-fg-50);
@@ -260,7 +272,7 @@
   .post-list-title-link strong {
     font-size: calc(15 * var(--admin-unit));
   }
-  .post-list-title-link > span {
+  .post-list-slug {
     font-size: calc(11 * var(--admin-unit));
   }
   .post-list-table td:nth-child(2) {
@@ -297,12 +309,12 @@
 .post-list-title-link strong {
   font-size: calc(15 * var(--admin-unit));
 }
-.post-list-title-link > span,
+.post-list-slug,
 .post-list-date {
   font-size: calc(13 * var(--admin-unit));
 }
 @media (max-width: 620px) {
-  .post-list-title-link > span,
+  .post-list-slug,
   .post-list-date {
     font-size: calc(11 * var(--admin-unit));
   }

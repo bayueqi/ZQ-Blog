@@ -130,11 +130,21 @@ export function purgeOptionsFor(
   return { tags: [POSTS_TAG] };
 }
 
+/** 每个请求一份：渲染时发现这页跟 cookie 有关，就让外层别写进边缘缓存。 */
+export type RequestCacheHint = { privatePage: boolean };
+
+export function createRequestCacheHint(): RequestCacheHint {
+  return { privatePage: false };
+}
+
 export function applyWorkersCachePolicy(
   request: Request,
   response: Response,
+  hint?: RequestCacheHint,
 ): Response {
-  const policy = workersCachePolicy(new URL(request.url).pathname);
+  const policy = hint?.privatePage
+    ? ({ cache: "private" } as const)
+    : workersCachePolicy(new URL(request.url).pathname);
   const headers = new Headers(response.headers);
 
   if (policy.cache === "private") {

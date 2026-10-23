@@ -1,6 +1,6 @@
 import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
 import { ClientOnly, Link } from "@tanstack/react-router";
-import { ExternalLink, EyeOff, Pin, PinOff, Trash2 } from "lucide-react";
+import { ExternalLink, EyeOff, Lock, Pin, PinOff, Trash2 } from "lucide-react";
 import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu";
 import { PostStatusBadge } from "@/features/posts/components/post-status-badge";
 import { openPublicPost } from "@/features/posts/utils/open-public-post";
@@ -76,8 +76,20 @@ export function PostRow({
             params={{ id: String(post.id) }}
             className="post-list-title-link"
           >
-            <strong>{title}</strong>
-            <span>{post.slug || m.admin_posts_slug_empty()}</span>
+            <span className="post-list-title-line">
+              <strong>{title}</strong>
+              {post.visibility === "password" && (
+                <Lock
+                  size={12}
+                  strokeWidth={2}
+                  className="post-list-lock"
+                  aria-label={m.gallery_locked_badge()}
+                />
+              )}
+            </span>
+            <span className="post-list-slug">
+              {post.slug || m.admin_posts_slug_empty()}
+            </span>
           </Link>
         </div>
       </td>

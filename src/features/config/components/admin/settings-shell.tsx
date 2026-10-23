@@ -50,7 +50,6 @@ export function SettingsShell({
       <PageHeader
         className="settings-heading"
         title={m.settings_header_title()}
-        description={m.settings_design_intro()}
       />
       {nav && <SettingsNav current={nav} />}
       <div className="settings-body" ref={scrollRef} aria-label={title}>

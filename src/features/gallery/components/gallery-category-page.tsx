@@ -51,6 +51,8 @@ export function GalleryCategoryPage({
   }, [active, close, step]);
 
   const current = active === null ? null : photos[active];
+  // 锁着又开了隐私保护：标题、描述、张数都不显示。
+  const concealed = locked && category.privacyProtected;
 
   return (
     <section className="space-y-4 fuwari-content-enter">
@@ -63,14 +65,16 @@ export function GalleryCategoryPage({
           {m.gallery_back_to_all()}
         </Link>
         <h1 className="text-2xl font-semibold fuwari-text-90">
-          {category.name}
+          {concealed ? m.gallery_private_placeholder() : category.name}
         </h1>
-        {category.description && (
+        {!concealed && category.description && (
           <p className="text-sm fuwari-text-50">{category.description}</p>
         )}
-        <p className="text-xs fuwari-text-50">
-          {m.gallery_photo_count({ count: category.photoCount })}
-        </p>
+        {!concealed && (
+          <p className="text-xs fuwari-text-50">
+            {m.gallery_photo_count({ count: category.photoCount })}
+          </p>
+        )}
       </header>
 
       {locked ? (

@@ -57,22 +57,26 @@ async function unlocked(
 }
 
 function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
+  // 锁着又开了隐私保护：名称、描述、封面、张数、时间都不下发。
+  const concealed = isLocked && row.privacyProtected;
   return {
     id: row.id,
-    name: row.name,
+    name: concealed ? "" : row.name,
     slug: row.slug,
-    description: row.description,
-    cover: coverOf(row),
-    photoCount: row.photoCount,
+    description: concealed ? null : row.description,
+    cover: concealed ? null : coverOf(row),
+    photoCount: concealed ? 0 : row.photoCount,
     locked: isLocked,
-    createdAt: row.createdAt ? row.createdAt.toISOString() : null,
+    privacyProtected: row.privacyProtected,
+    createdAt: concealed || !row.createdAt ? null : row.createdAt.toISOString(),
   };
 }
 
-/** 后台用：带 hasAccessPassword，但不带 hash 本身。 */
-function toCategoryAdminCard(row: CategoryRow, isLocked: boolean) {
+/** 后台用：带 hasAccessPassword，但不带 hash 本身。后台不做遮蔽。 */
+function toCategoryAdminCard(row: CategoryRow) {
   return {
-    ...toCategoryCard(row, isLocked),
+    ...toCategoryCard(row, false),
+    locked: Boolean(row.accessPasswordHash),
     hasAccessPassword: Boolean(row.accessPasswordHash),
     sortOrder: row.sortOrder,
   };
@@ -91,9 +95,7 @@ export async function listCategories(context: GalleryContext) {
 export async function listCategoriesAdmin(context: GalleryContext) {
   const rows = await Repo.listCategories(context.db);
   return {
-    categories: rows.map((row) =>
-      toCategoryAdminCard(row, Boolean(row.accessPasswordHash)),
-    ),
+    categories: rows.map((row) => toCategoryAdminCard(row)),
   };
 }
 
@@ -188,6 +190,7 @@ export async function createCategory(
     accessPasswordHash: input.password
       ? await hashGalleryPassword(input.password)
       : null,
+    privacyProtected: Boolean(input.password && input.privacyProtected),
   });
   return ok(row);
 }
@@ -218,6 +221,11 @@ export async function updateCategory(
       ? await hashGalleryPassword(input.password)
       : null;
   }
+  if (input.privacyProtected !== undefined) {
+    data.privacyProtected = input.privacyProtected;
+  }
+  // 密码没了，隐私保护也就没有意义。
+  if (data.accessPasswordHash === null) data.privacyProtected = false;
 
   const row = await Repo.updateCategory(context.db, input.id, data);
   return ok(row);

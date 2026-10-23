@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAdminChrome } from "@/components/admin/admin-chrome";
@@ -49,7 +49,6 @@ interface PostManagerProps {
     category?: CategoryFilter;
     tag?: number;
   }) => void;
-  onResetFilters: () => void;
 }
 
 export function PostManager({
@@ -66,7 +65,6 @@ export function PostManager({
   onCategoryChange,
   onTagChange,
   onTaxonomyFilter,
-  onResetFilters,
 }: PostManagerProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -100,11 +98,6 @@ export function PostManager({
       searchTimerRef.current = null;
       searchCallbackRef.current(value);
     }, 300);
-  };
-  const resetFilters = () => {
-    clearPendingSearch();
-    setSearchInput("");
-    onResetFilters();
   };
   const {
     posts,
@@ -173,11 +166,6 @@ export function PostManager({
     onSuccess: () => setPostToUnpublish(null),
   });
   const pinMutation = useTogglePostPin();
-  const hasActiveFilters =
-    status !== "ALL" ||
-    sortBy !== "updatedAt" ||
-    Boolean(searchInput) ||
-    hasTaxonomyFilter;
   const hasContentFilter =
     status !== "ALL" || Boolean(search.trim()) || hasTaxonomyFilter;
   const isEmptyLibrary = !hasContentFilter && totalCount === 0;
@@ -295,24 +283,10 @@ export function PostManager({
             {!isPending && posts.length === 0 && (
               <EmptyState
                 className="post-list-empty"
-                icon={Search}
                 description={
                   isEmptyLibrary
                     ? m.admin_posts_empty_library()
                     : m.admin_posts_no_match()
-                }
-                action={
-                  <Button
-                    variant="text"
-                    disabled={isCreating}
-                    onClick={() =>
-                      isEmptyLibrary ? createPost() : resetFilters()
-                    }
-                  >
-                    {isEmptyLibrary
-                      ? createLabel
-                      : m.admin_posts_clear_filters()}
-                  </Button>
                 }
               />
             )}
@@ -336,11 +310,6 @@ export function PostManager({
               currentPageItemCount={posts.length}
               onPageChange={onPageChange}
             />
-          )}
-          {hasActiveFilters && (
-            <Button variant="text" size="sm" onClick={resetFilters}>
-              {m.admin_posts_clear_filters()}
-            </Button>
           )}
         </footer>
       )}

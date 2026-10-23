@@ -45,6 +45,7 @@ export function PostEditor({
     coverMediaId: initialData.coverMediaId,
     cover: initialData.cover,
     visibility: initialData.visibility,
+    privacyProtected: initialData.privacyProtected,
     accessPassword: "",
     hasAccessPassword: initialData.hasAccessPassword,
   }));

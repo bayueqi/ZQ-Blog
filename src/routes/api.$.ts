@@ -12,6 +12,7 @@ export const Route = createFileRoute("/api/$")({
             request.headers,
             context.env,
             context.executionCtx,
+            context.cacheHint,
           ),
         });
         return response ?? new Response("Not Found", { status: 404 });

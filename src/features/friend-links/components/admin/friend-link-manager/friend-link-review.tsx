@@ -302,16 +302,13 @@ export function FriendLinkReview({
               {loading ? (
                 <FriendLinkManagerSkeleton />
               ) : (
-                <>
-                  <Globe size={36} />
-                  <p>
-                    {error
-                      ? m.friend_links_admin_load_fail()
-                      : search
-                        ? m.friend_review_no_results()
-                        : emptyCopy}
-                  </p>
-                </>
+                <p>
+                  {error
+                    ? m.friend_links_admin_load_fail()
+                    : search
+                      ? m.friend_review_no_results()
+                      : emptyCopy}
+                </p>
               )}
             </div>
           )}

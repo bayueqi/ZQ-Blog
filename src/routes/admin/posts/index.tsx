@@ -70,18 +70,6 @@ function PostManagerPage() {
     });
   };
 
-  const handleResetFilters = () => {
-    void navigate({
-      to: "/admin/posts",
-      search: {
-        page: 1,
-        status: "ALL",
-        sortBy: "updatedAt",
-        search: "",
-      },
-    });
-  };
-
   return (
     <PostManager
       page={page}
@@ -107,7 +95,6 @@ function PostManagerPage() {
       onTaxonomyFilter={(filter) =>
         updateSearch({ category: undefined, tag: undefined, ...filter })
       }
-      onResetFilters={handleResetFilters}
     />
   );
 }

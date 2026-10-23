@@ -4,6 +4,7 @@ import {
 } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { vi } from "vitest";
+import { createRequestCacheHint } from "@/features/cache/workers-cache-policy";
 import { getAuth } from "@/lib/auth/auth.server";
 import { getDb } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
@@ -108,6 +109,7 @@ export function createTestContext(
     env: { ...env },
     executionCtx: createMockExecutionCtx(),
     auth: createMockAuth(),
+    cacheHint: createRequestCacheHint(),
     ...overrides,
   };
 

@@ -4,6 +4,7 @@ import {
   Calendar,
   ChevronRight,
   Clock,
+  Lock,
   Pin,
   Tag,
 } from "lucide-react";
@@ -27,7 +28,9 @@ interface PostCardProps {
 
 export function PostCard({ post, pinned }: PostCardProps) {
   const tagNames = (post.tags ?? []).map((t) => t.name);
-  const hasCover = Boolean(post.cover);
+  // 隐私保护：卡片上只留一句占位，标题、日期、分类、标签、摘要、封面都不渲染。
+  const concealed = post.privacyProtected;
+  const hasCover = Boolean(post.cover) && !concealed;
   const coverWidth = "28%";
 
   return (
@@ -56,12 +59,25 @@ export function PostCard({ post, pinned }: PostCardProps) {
           params={{ slug: post.slug }}
           className="transition group w-full block font-bold mb-3 text-3xl fuwari-text-90 hover:text-(--fuwari-primary) active:text-(--fuwari-primary) relative before:w-1 before:h-5 before:rounded-md before:absolute before:-left-5 before:top-1/2 before:-translate-y-1/2 before:hidden md:before:block before:bg-(--fuwari-primary)"
         >
-          {post.title}
+          {concealed ? (
+            <span className="inline-flex items-center gap-2">
+              <Lock size={24} strokeWidth={1.8} />
+              {m.post_private_placeholder()}
+            </span>
+          ) : (
+            post.title
+          )}
           <ChevronRight className="inline-block md:hidden text-[2rem] text-(--fuwari-primary) align-middle -mt-1 ml-1" />
           <ChevronRight className="text-(--fuwari-primary) text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" />
         </Link>
 
-        <div className="flex flex-wrap fuwari-text-50 items-center gap-4 gap-x-4 gap-y-2 mb-4">
+        <div
+          className={
+            concealed
+              ? "hidden"
+              : "flex flex-wrap fuwari-text-50 items-center gap-4 gap-x-4 gap-y-2 mb-4"
+          }
+        >
           <div className="flex items-center">
             <div className="fuwari-meta-icon">
               <Calendar size={20} strokeWidth={1.5} />
@@ -115,16 +131,26 @@ export function PostCard({ post, pinned }: PostCardProps) {
         </div>
 
         <div
-          className={`fuwari-text-75 pr-4 wrap-break-word ${
-            pinned
-              ? "mb-4 line-clamp-3 md:line-clamp-2 text-lg leading-relaxed"
-              : "mb-3.5 line-clamp-2 md:line-clamp-1"
-          }`}
+          className={
+            concealed
+              ? "hidden"
+              : `fuwari-text-75 pr-4 wrap-break-word ${
+                  pinned
+                    ? "mb-4 line-clamp-3 md:line-clamp-2 text-lg leading-relaxed"
+                    : "mb-3.5 line-clamp-2 md:line-clamp-1"
+                }`
+          }
         >
           {post.summary ?? ""}
         </div>
 
-        <div className="text-sm fuwari-text-50 flex items-center gap-4 [&_svg]:shrink-0">
+        <div
+          className={
+            concealed
+              ? "hidden"
+              : "text-sm fuwari-text-50 flex items-center gap-4 [&_svg]:shrink-0"
+          }
+        >
           <span className="inline-flex items-center gap-1.5">
             <Clock size={14} />
             {m.read_time({ count: post.readTimeInMinutes })}
@@ -160,7 +186,7 @@ export function PostCard({ post, pinned }: PostCardProps) {
         <Link
           to="/post/$slug"
           params={{ slug: post.slug }}
-          aria-label={post.title}
+          aria-label={concealed ? m.post_private_placeholder() : post.title}
           className="hidden md:flex fuwari-btn-regular w-13 absolute right-3 top-3 bottom-3 rounded-xl active:scale-95"
         >
           <ChevronRight

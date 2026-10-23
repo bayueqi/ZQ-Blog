@@ -77,6 +77,7 @@ export function GalleryCategoryDialog({
   const [passwordProtected, setPasswordProtected] = useState(
     Boolean(row?.hasAccessPassword),
   );
+  const [privacy, setPrivacy] = useState(Boolean(row?.privacyProtected));
   const [cover, setCover] = useState<Cover>(row?.cover ?? null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -99,6 +100,7 @@ export function GalleryCategoryDialog({
         slug: slug.trim() || undefined,
         description: description.trim() || undefined,
         coverMediaId: cover?.id ?? null,
+        privacyProtected: passwordProtected && privacy,
         ...passwordField,
       };
       if (row) {
@@ -151,17 +153,19 @@ export function GalleryCategoryDialog({
               onChange={(event) => setName(event.target.value)}
             />
           </FormField>
-          <FormField
-            label={m.admin_gallery_slug()}
-            hint={m.admin_gallery_slug_hint()}
-          >
-            <Input
-              value={slug}
-              maxLength={120}
-              autoComplete="off"
-              onChange={(event) => setSlug(event.target.value)}
-            />
-          </FormField>
+          {row ? (
+            <FormField
+              label={m.admin_gallery_slug()}
+              hint={m.admin_gallery_slug_hint()}
+            >
+              <Input
+                value={slug}
+                maxLength={120}
+                autoComplete="off"
+                onChange={(event) => setSlug(event.target.value)}
+              />
+            </FormField>
+          ) : null}
           <FormField label={m.admin_gallery_description()}>
             <Textarea
               value={description}
@@ -182,20 +186,33 @@ export function GalleryCategoryDialog({
             className="min-h-10 w-auto text-sm"
           />
           {passwordProtected ? (
-            <FormField label={m.admin_gallery_password()}>
-              <PasswordInput
-                value={password}
-                maxLength={100}
-                secret
-                autoComplete="new-password"
-                placeholder={
-                  row?.hasAccessPassword
-                    ? m.editor_meta_access_password_keep()
-                    : m.editor_meta_access_password_placeholder()
-                }
-                onChange={(event) => setPassword(event.target.value)}
+            <>
+              <FormField label={m.admin_gallery_password()}>
+                <PasswordInput
+                  value={password}
+                  maxLength={100}
+                  secret
+                  autoComplete="new-password"
+                  placeholder={
+                    row?.hasAccessPassword
+                      ? m.editor_meta_access_password_keep()
+                      : m.editor_meta_access_password_placeholder()
+                  }
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </FormField>
+              <Switch
+                label={m.editor_meta_privacy()}
+                checked={privacy}
+                onCheckedChange={setPrivacy}
+                className="min-h-10 w-auto text-sm"
               />
-            </FormField>
+              {privacy ? (
+                <p className="text-xs fuwari-text-50">
+                  {m.admin_gallery_privacy_hint()}
+                </p>
+              ) : null}
+            </>
           ) : null}
 
           <footer className="gallery-dialog-footer">

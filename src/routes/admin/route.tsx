@@ -78,7 +78,8 @@ function AdminLayout() {
     <AdminChromeProvider>
       <div
         className={cn(
-          "admin-layout h-dvh overflow-hidden bg-(--fuwari-page-bg) text-foreground flex gap-4 p-4 relative font-sans",
+          // 手机端侧栏是悬浮抽屉，不占位，间距只留给桌面端的侧栏。
+          "admin-layout h-dvh overflow-hidden bg-(--fuwari-page-bg) text-foreground flex p-4 relative font-sans lg:gap-4",
           editorWorkspace && "admin-editor-layout",
         )}
       >

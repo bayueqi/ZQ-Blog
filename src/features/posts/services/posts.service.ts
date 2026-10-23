@@ -1,4 +1,5 @@
 import { invalidate } from "@/features/cache/public-cache";
+import type { RequestCacheHint } from "@/features/cache/workers-cache-policy";
 import * as CategoryRepo from "@/features/categories/data/categories.data";
 import * as MediaRepo from "@/features/media/data/media.data";
 import { syncPostMedia } from "@/features/posts/data/post-media.data";
@@ -124,6 +125,9 @@ async function createPublishRevision(
     pinnedAt: post.pinnedAt,
     coverMediaId: post.coverMediaId,
     categoryId: post.categoryId ?? null,
+    visibility: post.visibility,
+    accessPasswordHash: post.accessPasswordHash,
+    privacyProtected: post.privacyProtected,
   });
 
   const latestPublish = await PostRevisionRepo.findLatestPostRevision(
@@ -149,6 +153,9 @@ async function createPublishRevision(
       tagIds,
       categoryId: post.categoryId ?? null,
       coverMediaId: post.coverMediaId ?? null,
+      visibility: post.visibility,
+      accessPasswordHash: post.accessPasswordHash,
+      privacyProtected: post.privacyProtected,
     },
   });
 }
@@ -188,11 +195,16 @@ export async function findPostBySlug(
     headers?: Headers;
     env?: Env;
     session?: { user: { role?: string | null } } | null;
+    /** 老调用方（测试）不传就没有缓存开关可关。 */
+    cacheHint?: RequestCacheHint;
   },
   data: FindPostBySlugInput,
 ) {
   const post = await postBySlug.get(context, { slug: data.slug });
   if (!post || post.visibility !== "password") return post;
+
+  // 这页的内容取决于 cookie，边缘缓存里放一份就会被别的访客读到。
+  if (context.cacheHint) context.cacheHint.privatePage = true;
 
   const meta = await PostRepo.findPostAccessMetaById(context.db, post.id);
   if (!meta?.accessPasswordHash) return post;
@@ -211,6 +223,21 @@ export async function findPostBySlug(
         )
       : false;
   if (unlocked) return post;
+
+  // 隐私保护连元信息一起收走，浏览器里连标题都拿不到。
+  if (post.privacyProtected) {
+    return {
+      ...post,
+      title: "",
+      summary: null,
+      cover: null,
+      tags: [],
+      category: null,
+      contentJson: null,
+      toc: [],
+      locked: true,
+    };
+  }
 
   // The body and its table of contents never reach the browser before unlock.
   return { ...post, contentJson: null, toc: [], locked: true };

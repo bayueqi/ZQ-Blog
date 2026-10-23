@@ -201,7 +201,13 @@ function AdminGalleryPage() {
         description={
           current
             ? m.gallery_photo_count({ count: allPhotos.length })
-            : m.admin_gallery_desc()
+            : m.admin_gallery_overview({
+                collections: allCategories.length,
+                photos: allCategories.reduce(
+                  (total, row) => total + row.photoCount,
+                  0,
+                ),
+              })
         }
         actions={actions}
       />
@@ -228,18 +234,7 @@ function AdminGalleryPage() {
             <GallerySkeleton count={3} />
           ) : allCategories.length === 0 ? (
             <div className="gallery-empty">
-              <EmptyState
-                icon={Images}
-                description={m.admin_gallery_empty()}
-                action={
-                  <Button
-                    variant="primary"
-                    onClick={() => setDialog({ open: true, row: null })}
-                  >
-                    {m.admin_gallery_new()}
-                  </Button>
-                }
-              />
+              <EmptyState description={m.admin_gallery_empty()} />
             </div>
           ) : (
             <ul className="gallery-grid">

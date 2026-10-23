@@ -3,7 +3,9 @@ import handler from "@tanstack/react-start/server-entry";
 import { applyWorkersCachePurge } from "@/features/cache/workers-cache";
 import {
   applyWorkersCachePolicy,
+  createRequestCacheHint,
   workersCacheKey,
+  type RequestCacheHint,
   type WorkersCachePurgeTarget,
 } from "@/features/cache/workers-cache-policy";
 import { handleQueueBatch } from "@/lib/queue/queue.handler";
@@ -19,6 +21,7 @@ declare module "@tanstack/react-start" {
       requestContext: {
         env: Env;
         executionCtx: ExecutionContext<unknown>;
+        cacheHint: RequestCacheHint;
       };
     };
   }
@@ -30,15 +33,17 @@ type AppProps = {
 
 export class App extends WorkerEntrypoint<Env, AppProps> {
   async fetch(request: Request) {
+    const cacheHint = createRequestCacheHint();
     const response = await paraglideMiddleware(request, () =>
       handler.fetch(request, {
         context: {
           env: this.env,
           executionCtx: this.ctx,
+          cacheHint,
         },
       }),
     );
-    return applyWorkersCachePolicy(request, response);
+    return applyWorkersCachePolicy(request, response, cacheHint);
   }
 
   async purgeCache(target: WorkersCachePurgeTarget) {

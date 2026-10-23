@@ -2,7 +2,7 @@ import type { JSONContent } from "@tiptap/react";
 import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createdAt, id } from "./helper";
-import type { PostStatus } from "./posts.table";
+import type { PostStatus, PostVisibility } from "./posts.table";
 import { PostsTable } from "./posts.table";
 
 export const POST_REVISION_REASONS = [
@@ -21,6 +21,10 @@ export interface PostRevisionSnapshot {
   tagIds: Array<number>;
   categoryId: number | null;
   coverMediaId: number | null;
+  // 加密和隐私也得进版本，否则恢复完成员还是恢复前的样子。
+  visibility: PostVisibility;
+  accessPasswordHash: string | null;
+  privacyProtected: boolean;
 }
 
 export const PostRevisionsTable = sqliteTable(

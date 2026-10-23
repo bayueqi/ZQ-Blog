@@ -30,6 +30,7 @@ export function mapSnapshotToPublicPost(
     id: number;
     status: "draft" | "published";
     visibility: "public" | "password";
+    privacyProtected: boolean;
     createdAt: Date;
     updatedAt: Date;
     publicSnapshotJson: PublicPostSnapshot | null;
@@ -47,6 +48,7 @@ export function mapSnapshotToPublicPost(
     slug: snapshot.slug,
     status: "published",
     visibility: row.visibility,
+    privacyProtected: row.privacyProtected,
     publishedAt: new Date(snapshot.publishedAt),
     pinnedAt: snapshot.pinnedAt ? new Date(snapshot.pinnedAt) : null,
     createdAt: row.createdAt,

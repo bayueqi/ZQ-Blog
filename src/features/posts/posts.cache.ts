@@ -101,6 +101,7 @@ export const postBySlug = defineEntry({
       slug: post.slug,
       status: "published" as const,
       visibility: post.visibility,
+      privacyProtected: post.privacyProtected,
       publishedAt: post.publishedAt,
       pinnedAt: post.pinnedAt,
       createdAt: post.createdAt,

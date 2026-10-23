@@ -61,6 +61,10 @@ export const PostsTable = sqliteTable(
       .notNull()
       .default("public"),
     accessPasswordHash: text("access_password_hash"),
+    // 打开后解锁前连标题、摘要、时间、封面都不给看。
+    privacyProtected: integer("privacy_protected", { mode: "boolean" })
+      .notNull()
+      .default(false),
     publishedAt: integer("published_at", { mode: "timestamp" }),
     pinnedAt: integer("pinned_at", { mode: "timestamp" }),
     coverMediaId: integer("cover_media_id"),

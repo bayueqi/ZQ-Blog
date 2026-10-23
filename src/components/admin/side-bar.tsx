@@ -96,9 +96,9 @@ export function SideBar({
       exact: false,
     },
     {
-      path: "/admin/media",
-      icon: ImageIcon,
-      label: m.admin_sidebar_media(),
+      path: "/admin/gallery",
+      icon: Images,
+      label: m.admin_sidebar_gallery(),
       exact: false,
     },
     {
@@ -108,9 +108,9 @@ export function SideBar({
       exact: false,
     },
     {
-      path: "/admin/gallery",
-      icon: Images,
-      label: m.admin_sidebar_gallery(),
+      path: "/admin/media",
+      icon: ImageIcon,
+      label: m.admin_sidebar_media(),
       exact: false,
     },
     {

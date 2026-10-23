@@ -46,6 +46,7 @@ const INITIAL: PostEditorProps["initialData"] = {
   coverMediaId: null,
   cover: null,
   visibility: "public",
+  privacyProtected: false,
   hasAccessPassword: false,
 };
 

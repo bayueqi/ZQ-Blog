@@ -15,6 +15,7 @@ export function createServerORPCClient() {
         getRequestHeaders(),
         context.env,
         context.executionCtx,
+        context.cacheHint,
       );
     },
   });

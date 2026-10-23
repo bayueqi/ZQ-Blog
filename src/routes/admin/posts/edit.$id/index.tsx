@@ -79,11 +79,20 @@ function EditPost() {
     coverMediaId: post.coverMediaId,
     cover: post.cover,
     visibility: post.visibility,
+    privacyProtected: post.privacyProtected,
     hasAccessPassword: post.hasAccessPassword,
   };
 
   const handleSave = async (data: PostEditorData) => {
     const newPassword = data.accessPassword.trim();
+    // 开关刚拨开、密码框还空着，等服务端只会回 ACCESS_PASSWORD_REQUIRED。
+    if (
+      data.visibility === "password" &&
+      !newPassword &&
+      !data.hasAccessPassword
+    ) {
+      return;
+    }
     await Promise.all([
       orpcClient.posts.admin.update({
         id: post.id,
@@ -97,6 +106,9 @@ function EditPost() {
           coverMediaId: data.coverMediaId,
           categoryId: data.categoryId,
           visibility: data.visibility,
+          // 关掉密码访问就不再谈隐私保护。
+          privacyProtected:
+            data.visibility === "password" && data.privacyProtected,
           // Going public drops the password; blank input keeps the stored one.
           ...(data.visibility === "public"
             ? { accessPassword: null }

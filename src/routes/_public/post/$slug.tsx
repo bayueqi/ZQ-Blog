@@ -9,6 +9,7 @@ import { PostPage } from "@/features/posts/components/post-page";
 import { PostPageSkeleton } from "@/features/posts/components/post-page-skeleton";
 import { adjacentPostsQuery, postBySlugQuery } from "@/features/posts/queries";
 import { jsonContentHasType } from "@/features/posts/utils/content";
+import { m } from "@/paraglide/messages";
 import {
   buildArticleJsonLd,
   buildCanonicalUrl,
@@ -44,6 +45,10 @@ export const Route = createFileRoute("/_public/post/$slug")({
   },
   head: ({ loaderData }) => {
     const post = loaderData?.post;
+    // 开了隐私保护又没解锁，标题、描述、封面一律不下发。
+    const concealed = Boolean(post?.locked && post.privacyProtected);
+    const title = concealed ? m.post_private_placeholder() : post?.title;
+    const description = concealed ? "" : (post?.summary ?? "");
     const canonicalHref = loaderData?.canonicalHref ?? "";
     const coverUrl =
       post?.cover && canonicalHref
@@ -61,14 +66,14 @@ export const Route = createFileRoute("/_public/post/$slug")({
     return {
       meta: [
         {
-          title: post?.title,
+          title,
         },
         {
           name: "description",
-          content: post?.summary ?? "",
+          content: description,
         },
-        { property: "og:title", content: post?.title ?? "" },
-        { property: "og:description", content: post?.summary ?? "" },
+        { property: "og:title", content: title ?? "" },
+        { property: "og:description", content: description },
         { property: "og:type", content: "article" },
         { property: "og:url", content: canonicalHref },
         ...(coverUrl
@@ -80,21 +85,22 @@ export const Route = createFileRoute("/_public/post/$slug")({
           : []),
       ],
       links: [canonicalLink(canonicalHref), ...contentStylesheets],
-      scripts: post
-        ? [
-            {
-              type: "application/ld+json",
-              children: buildArticleJsonLd({
-                authorName: loaderData.authorName,
-                canonicalHref,
-                post: {
-                  ...post,
-                  image: coverUrl,
-                },
-              }),
-            },
-          ]
-        : [],
+      scripts:
+        post && !concealed
+          ? [
+              {
+                type: "application/ld+json",
+                children: buildArticleJsonLd({
+                  authorName: loaderData.authorName,
+                  canonicalHref,
+                  post: {
+                    ...post,
+                    image: coverUrl,
+                  },
+                }),
+              },
+            ]
+          : [],
     };
   },
   pendingComponent: () => <PostPageSkeleton />,

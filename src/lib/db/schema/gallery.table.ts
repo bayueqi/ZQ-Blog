@@ -14,6 +14,10 @@ export const GalleryCategoriesTable = sqliteTable(
       onDelete: "set null",
     }),
     accessPasswordHash: text("access_password_hash"),
+    // 打开后解锁前连名称、描述、封面、创建时间都不给看。
+    privacyProtected: integer("privacy_protected", { mode: "boolean" })
+      .notNull()
+      .default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt,
     updatedAt,

@@ -10,6 +10,9 @@ export async function calculatePostHash(post: {
   pinnedAt?: Date | string | null;
   coverMediaId?: number | null;
   categoryId?: number | null;
+  visibility?: string;
+  accessPasswordHash?: string | null;
+  privacyProtected?: boolean;
 }): Promise<string> {
   const toISOOrNull = (d: Date | string | null) =>
     d instanceof Date ? d.toISOString() : d;
@@ -26,6 +29,14 @@ export async function calculatePostHash(post: {
     pinnedAt: toISOOrNull(post.pinnedAt ?? null),
     coverMediaId: post.coverMediaId ?? null,
     categoryId: post.categoryId ?? null,
+    // 只有传了才进哈希，老调用方的哈希值保持不变。
+    ...(post.visibility === undefined ? {} : { visibility: post.visibility }),
+    ...(post.accessPasswordHash === undefined
+      ? {}
+      : { accessPasswordHash: post.accessPasswordHash }),
+    ...(post.privacyProtected === undefined
+      ? {}
+      : { privacyProtected: post.privacyProtected }),
   };
 
   const msgUint8 = new TextEncoder().encode(JSON.stringify(stateToHash));

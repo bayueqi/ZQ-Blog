@@ -51,6 +51,7 @@ async function hydratePublicPosts(
     id: number;
     status: PostStatus;
     visibility: PostVisibility;
+    privacyProtected: boolean;
     createdAt: Date;
     updatedAt: Date;
     publicSnapshotJson: PublicPostSnapshot | null;
@@ -127,6 +128,7 @@ export async function getPosts(
       publicSlug: PostsTable.publicSlug,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      privacyProtected: PostsTable.privacyProtected,
       publishedAt: publicScope
         ? snapshotDate("publishedAt")
         : PostsTable.publishedAt,
@@ -286,6 +288,7 @@ export async function getPostsCursor(
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      privacyProtected: PostsTable.privacyProtected,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -312,6 +315,7 @@ export async function getHomePosts(db: DB, requestedPage: number) {
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      privacyProtected: PostsTable.privacyProtected,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -436,6 +440,7 @@ export async function findPinnedPosts(db: DB) {
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      privacyProtected: PostsTable.privacyProtected,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -460,6 +465,7 @@ export async function findPostsByIds(db: DB, ids: number[]) {
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      privacyProtected: PostsTable.privacyProtected,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
