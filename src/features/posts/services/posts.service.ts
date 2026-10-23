@@ -206,8 +206,25 @@ export async function findPostBySlug(
   // 这页的内容取决于 cookie，边缘缓存里放一份就会被别的访客读到。
   if (context.cacheHint) context.cacheHint.privatePage = true;
 
+  // 隐私保护连元信息一起收走，浏览器里连标题都拿不到。
+  const lockedView = () =>
+    post.privacyProtected
+      ? {
+          ...post,
+          title: "",
+          summary: null,
+          cover: null,
+          tags: [],
+          category: null,
+          contentJson: null,
+          toc: [],
+          locked: true,
+        }
+      : { ...post, contentJson: null, toc: [], locked: true };
+
   const meta = await PostRepo.findPostAccessMetaById(context.db, post.id);
-  if (!meta?.accessPasswordHash) return post;
+  // 标了加密却没存密码：宁可锁死，也不能把正文放出去。
+  if (!meta?.accessPasswordHash) return lockedView();
   if (context.session?.user.role === "admin") return post;
 
   const unlocked =
@@ -223,24 +240,7 @@ export async function findPostBySlug(
         )
       : false;
   if (unlocked) return post;
-
-  // 隐私保护连元信息一起收走，浏览器里连标题都拿不到。
-  if (post.privacyProtected) {
-    return {
-      ...post,
-      title: "",
-      summary: null,
-      cover: null,
-      tags: [],
-      category: null,
-      contentJson: null,
-      toc: [],
-      locked: true,
-    };
-  }
-
-  // The body and its table of contents never reach the browser before unlock.
-  return { ...post, contentJson: null, toc: [], locked: true };
+  return lockedView();
 }
 
 export async function getAdjacentPosts(

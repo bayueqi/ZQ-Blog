@@ -36,35 +36,39 @@ export function DashboardSkeleton() {
         ))}
       </ul>
       <div className="dashboard-grid">
-        <div className="dashboard-section dashboard-slot-visitors">
-          <SectionTitle width="w-28" />
-          <Skeleton className="h-3.5 w-40" />
-          <div className="mt-2 flex flex-wrap gap-6">
-            <Skeleton className="h-40 w-40 shrink-0 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-24 w-full rounded-md" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-          </div>
-        </div>
-        <div className="dashboard-section dashboard-slot-activity">
-          <SectionTitle width="w-24" />
-          <Skeleton className="h-3.5 w-48" />
-          <Skeleton className="mt-2 aspect-[4/1] w-full rounded-md" />
-        </div>
-        <div className="dashboard-section dashboard-slot-comments">
-          <SectionTitle width="w-28" />
-          {[0, 1, 2, 3].map((row) => (
-            <div key={row} className="flex gap-3 py-3">
-              <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+        <div className="dashboard-column dashboard-column-main">
+          <div className="dashboard-section dashboard-slot-visitors">
+            <SectionTitle width="w-28" />
+            <Skeleton className="h-3.5 w-40" />
+            <div className="mt-2 flex flex-wrap gap-6">
+              <Skeleton className="h-40 w-40 shrink-0 rounded-full" />
               <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-24 w-full rounded-md" />
+                <Skeleton className="h-4 w-2/3" />
               </div>
             </div>
-          ))}
+          </div>
+          <div className="dashboard-section dashboard-slot-activity">
+            <SectionTitle width="w-24" />
+            <Skeleton className="h-3.5 w-48" />
+            <Skeleton className="mt-2 aspect-[4/1] w-full rounded-md" />
+          </div>
+        </div>
+        <div className="dashboard-column dashboard-column-side">
+          <div className="dashboard-section dashboard-slot-comments">
+            <SectionTitle width="w-28" />
+            {[0, 1, 2, 3].map((row) => (
+              <div key={row} className="flex gap-3 py-3">
+                <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -543,6 +543,7 @@
   "editor_meta_access_password": "访问密码",
   "editor_meta_access_password_placeholder": "设置访问密码",
   "editor_meta_access_password_keep": "已设置密码，留空则保持不变",
+  "editor_meta_access_password_required": "请先输入访问密码。",
   "editor_meta_privacy": "隐私保护",
   "editor_meta_privacy_hint": "解锁前不显示标题、摘要、发布时间、分类标签和封面。",
   "editor_back_to_posts": "返回文章",

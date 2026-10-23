@@ -549,6 +549,7 @@
   "editor_meta_access_password": "Access password",
   "editor_meta_access_password_placeholder": "Set an access password",
   "editor_meta_access_password_keep": "Password is set; leave blank to keep it",
+  "editor_meta_access_password_required": "Enter an access password first.",
   "editor_meta_privacy": "Privacy mode",
   "editor_meta_privacy_hint": "Hide the title, summary, publish date, category, tags and cover until unlocked.",
   "editor_back_to_posts": "Back to posts",

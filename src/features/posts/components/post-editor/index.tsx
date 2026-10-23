@@ -30,7 +30,6 @@ export function PostEditor({
   const queryClient = useQueryClient();
   const { setPrimaryAction, setMobileTitle } = useAdminChrome();
   const [infoOpen, setInfoOpen] = useState(false);
-  const closeInfo = useCallback(() => setInfoOpen(false), []);
   const [post, setPost] = useState<PostEditorData>(() => ({
     title: initialData.title,
     summary: initialData.summary,
@@ -49,6 +48,21 @@ export function PostEditor({
     accessPassword: "",
     hasAccessPassword: initialData.hasAccessPassword,
   }));
+  // 开了密码访问却没设密码时，面板不许关，先把密码填上。
+  const closeInfo = useCallback(() => {
+    if (
+      post.visibility === "password" &&
+      !post.hasAccessPassword &&
+      !post.accessPassword.trim()
+    ) {
+      toast.error(m.editor_meta_access_password_required(), {
+        id: "post-access-password-required",
+      });
+      return;
+    }
+    setInfoOpen(false);
+  }, [post.accessPassword, post.hasAccessPassword, post.visibility]);
+
   const [editorContent] = useState<JSONContent | null>(
     () => normalizePostContent(initialData.contentJson) ?? null,
   );
@@ -68,6 +82,22 @@ export function PostEditor({
     return editorContentRef.current;
   }, []);
 
+  // 存过密码/清掉密码后同步本地标记，别让下面的必填判断停在旧状态。
+  const handleSaveWithPasswordState = useCallback(
+    async (data: PostEditorData) => {
+      await onSave(data);
+      setPost((prev) => {
+        const next =
+          data.visibility === "password"
+            ? prev.hasAccessPassword || data.accessPassword.trim().length > 0
+            : false;
+        if (prev.hasAccessPassword === next) return prev;
+        return { ...prev, hasAccessPassword: next };
+      });
+    },
+    [onSave],
+  );
+
   const {
     saveStatus,
     lastSaved,
@@ -79,7 +109,7 @@ export function PostEditor({
     post,
     getContent,
     contentEpoch,
-    onSave,
+    onSave: handleSaveWithPasswordState,
   });
 
   // Unsaved edits of a deleted post have nowhere to go, so leave unguarded.
@@ -179,7 +209,7 @@ export function PostEditor({
       setMobileTitle(m.editor_info_title());
       setPrimaryAction({
         label: m.editor_info_done(),
-        onClick: () => setInfoOpen(false),
+        onClick: closeInfo,
       });
     } else {
       setMobileTitle(post.title.trim() || m.common_untitled());
@@ -196,6 +226,7 @@ export function PostEditor({
     }
   }, [
     canPublish,
+    closeInfo,
     infoOpen,
     post.title,
     processState,

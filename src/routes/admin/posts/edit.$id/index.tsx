@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { StatusPage } from "@/components/common/status-page";
 import { buttonClass } from "@/components/ui/button";
 import { PostEditor } from "@/features/posts/components/post-editor";
@@ -85,13 +86,16 @@ function EditPost() {
 
   const handleSave = async (data: PostEditorData) => {
     const newPassword = data.accessPassword.trim();
-    // 开关刚拨开、密码框还空着，等服务端只会回 ACCESS_PASSWORD_REQUIRED。
+    // 开了密码访问却没填密码：提示并让保存停在失败状态，别假装已保存。
     if (
       data.visibility === "password" &&
       !newPassword &&
       !data.hasAccessPassword
     ) {
-      return;
+      toast.error(m.editor_meta_access_password_required(), {
+        id: "post-access-password-required",
+      });
+      throw new Error("ACCESS_PASSWORD_REQUIRED");
     }
     await Promise.all([
       orpcClient.posts.admin.update({

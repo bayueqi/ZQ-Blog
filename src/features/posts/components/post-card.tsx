@@ -78,6 +78,12 @@ export function PostCard({ post, pinned }: PostCardProps) {
               : "flex flex-wrap fuwari-text-50 items-center gap-4 gap-x-4 gap-y-2 mb-4"
           }
         >
+          {post.visibility === "password" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
+              <Lock size={12} strokeWidth={2} />
+              {m.post_locked_badge()}
+            </span>
+          )}
           <div className="flex items-center">
             <div className="fuwari-meta-icon">
               <Calendar size={20} strokeWidth={1.5} />
