@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, Images, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -81,7 +81,7 @@ export function GalleryCategoryPage({
         <GalleryLock categoryId={category.id} />
       ) : photos.length === 0 ? (
         <div className="fuwari-card-base p-6">
-          <EmptyState icon={Images} description={m.gallery_empty_photos()} />
+          <EmptyState description={m.gallery_empty_photos()} />
         </div>
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -1414,7 +1414,7 @@
   "gallery_title": "相册集",
   "gallery_empty": "还没有相册集。",
   "gallery_empty_albums": "这个类别下还没有相册。",
-  "gallery_empty_photos": "这个相册还没有照片。",
+  "gallery_empty_photos": "这个相册集还没有照片",
   "gallery_locked_badge": "加密",
   "gallery_private_placeholder": "私密相册",
   "gallery_back_to_all": "全部相册集",
