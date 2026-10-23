@@ -11,10 +11,13 @@ import { m } from "@/paraglide/messages";
 export function PostEditorInfoPanel({
   open,
   onClose,
+  onDismiss,
   children,
 }: {
   open: boolean;
   onClose: () => void;
+  /** X、遮罩和 Esc 走这条：能直接关掉，不问问题。 */
+  onDismiss: () => void;
   children: ReactNode;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -23,7 +26,7 @@ export function PostEditorInfoPanel({
   return (
     <Sheet
       open={open}
-      onClose={onClose}
+      onClose={onDismiss}
       modal={false}
       backdrop
       backdropClassName="post-editor-info-backdrop"
@@ -41,7 +44,7 @@ export function PostEditorInfoPanel({
           <IconButton
             ref={closeRef}
             size="md"
-            onClick={onClose}
+            onClick={onDismiss}
             label={m.common_close()}
           >
             <X size={18} />

@@ -48,7 +48,7 @@ export function PostEditor({
     accessPassword: "",
     hasAccessPassword: initialData.hasAccessPassword,
   }));
-  // 开了密码访问却没设密码时，面板不许关，先把密码填上。
+  // 点「完成」：开了密码访问却没设密码就拦下，先把密码填上。
   const closeInfo = useCallback(() => {
     if (
       post.visibility === "password" &&
@@ -59,6 +59,23 @@ export function PostEditor({
         id: "post-access-password-required",
       });
       return;
+    }
+    setInfoOpen(false);
+  }, [post.accessPassword, post.hasAccessPassword, post.visibility]);
+
+  // 点 X：直接关，密码没填就把密码访问关掉，不留个锁不住的开关。
+  const dismissInfo = useCallback(() => {
+    if (
+      post.visibility === "password" &&
+      !post.hasAccessPassword &&
+      !post.accessPassword.trim()
+    ) {
+      setPost((prev) => ({
+        ...prev,
+        visibility: "public",
+        privacyProtected: false,
+        accessPassword: "",
+      }));
     }
     setInfoOpen(false);
   }, [post.accessPassword, post.hasAccessPassword, post.visibility]);
@@ -310,7 +327,11 @@ export function PostEditor({
             />
           </CodeBlockHighlightProvider>
         </div>
-        <PostEditorInfoPanel open={infoOpen} onClose={closeInfo}>
+        <PostEditorInfoPanel
+          open={infoOpen}
+          onClose={closeInfo}
+          onDismiss={dismissInfo}
+        >
           {metadata}
         </PostEditorInfoPanel>
       </section>

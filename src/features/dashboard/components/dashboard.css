@@ -254,24 +254,52 @@
   outline-offset: 4px;
 }
 
-/* Two columns of sections, divided by a hairline. */
+/*
+ * Two columns laid out as rows: the left and right block of every row grow to
+ * the same height, so the hairlines line up instead of one column running long
+ * and the other stopping short.
+ */
 .dashboard-grid {
+  --dashboard-split: 60.8%;
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-columns: var(--dashboard-split) minmax(0, 1fr);
   align-items: stretch;
   margin-top: calc(32 * var(--admin-unit));
 }
+/* The divider runs down the boundary between the two columns. */
+.dashboard-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 var(--dashboard-split);
+  width: 1px;
+  background: var(--admin-rule);
+}
 .dashboard-column {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  display: contents;
 }
-.dashboard-column-main {
-  padding-right: var(--dashboard-gutter);
+.dashboard-slot-visitors {
+  grid-area: 1 / 1;
 }
-.dashboard-column-side {
-  padding-left: var(--dashboard-gutter);
-  border-left: 1px solid var(--admin-rule);
+.dashboard-slot-comments {
+  grid-area: 1 / 2;
+}
+.dashboard-slot-activity {
+  grid-area: 2 / 1;
+}
+.dashboard-slot-recent {
+  grid-area: 2 / 2;
+}
+.dashboard-slot-links {
+  grid-area: 3 / 1 / 4 / 3;
+}
+.dashboard-slot-visitors,
+.dashboard-slot-activity {
+  padding-right: calc(var(--dashboard-gutter) / 2);
+}
+.dashboard-slot-comments,
+.dashboard-slot-recent {
+  padding-left: calc(var(--dashboard-gutter) / 2);
 }
 .dashboard-section {
   display: flex;
@@ -279,10 +307,17 @@
   gap: calc(10 * var(--admin-unit));
   min-width: 0;
 }
-.dashboard-column > .dashboard-section + .dashboard-section {
+/* From the second row down, every block opens with a hairline. */
+.dashboard-slot-activity,
+.dashboard-slot-recent,
+.dashboard-slot-links {
   margin-top: var(--dashboard-section-space);
   padding-top: var(--dashboard-section-space);
   border-top: 1px solid var(--admin-rule);
+}
+/* 左右两块等高，空状态就撑满自己这一块，别缩在上半截。 */
+.dashboard-section > .fuwari-empty {
+  flex: 1;
 }
 .dashboard-heading-count {
   display: inline-flex;
@@ -500,9 +535,7 @@
 @container dashboard (max-width: 1240px) {
   .dashboard-grid {
     --dashboard-gutter: calc(32 * var(--admin-unit));
-  }
-  .dashboard-grid {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    --dashboard-split: 55.6%;
   }
   .dashboard-stat {
     padding-inline: calc(20 * var(--admin-unit));
@@ -511,7 +544,8 @@
 
 /*
  * One column when the workspace is narrow (any phone or tablet, or a small
- * desktop beside the sidebar): what needs a reply comes first.
+ * desktop beside the sidebar): visitors, writing, replies waiting, recent
+ * edits, friend links.
  */
 @container dashboard (max-width: 1000px) {
   .dashboard-grid {
@@ -519,12 +553,12 @@
     flex-direction: column;
     margin-top: 0;
   }
-  .dashboard-column {
-    display: contents;
+  .dashboard-grid::before {
+    content: none;
   }
   .dashboard-grid .dashboard-section {
     margin-top: var(--dashboard-section-space);
-    padding-top: var(--dashboard-section-space);
+    padding: var(--dashboard-section-space) 0 0;
     border-top: 1px solid var(--admin-rule);
   }
   .dashboard-grid .dashboard-slot-visitors {

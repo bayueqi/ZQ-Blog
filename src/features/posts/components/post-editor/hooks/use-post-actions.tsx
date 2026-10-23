@@ -86,6 +86,17 @@ export function usePostActions({
 
   const handlePublish = useCallback(async () => {
     if (processState !== "IDLE") return;
+    // 开了密码访问还没填密码，先在发布这一下拦住并说清楚。
+    if (
+      post.visibility === "password" &&
+      !post.hasAccessPassword &&
+      !post.accessPassword.trim()
+    ) {
+      toast.error(m.editor_meta_access_password_required(), {
+        id: "post-access-password-required",
+      });
+      return;
+    }
     setProcessState("PROCESSING");
     try {
       await flush();
@@ -99,7 +110,14 @@ export function usePostActions({
       return;
     }
     publishMutation.mutate();
-  }, [flush, processState, publishMutation]);
+  }, [
+    flush,
+    post.accessPassword,
+    post.hasAccessPassword,
+    post.visibility,
+    processState,
+    publishMutation,
+  ]);
 
   const handleUnpublish = useCallback(() => {
     if (processState !== "IDLE") return;

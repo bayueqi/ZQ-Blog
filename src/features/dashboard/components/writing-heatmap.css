@@ -161,3 +161,9 @@
     font-size: 11px;
   }
 }
+
+/* 这一块被同行的另一侧拉高时，多出来的高度摊在热力图上下，别堆在底下。 */
+.dashboard-activity > .writing-heatmap {
+  flex: 1;
+  align-content: center;
+}
