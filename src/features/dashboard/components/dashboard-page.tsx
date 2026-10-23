@@ -85,6 +85,13 @@ export function DashboardPage() {
             className="dashboard-slot-activity"
             activity={data.writingActivity}
           />
+        </div>
+        <div className="dashboard-column dashboard-column-side">
+          <DashboardComments
+            className="dashboard-slot-comments"
+            comments={data.unrepliedComments.items}
+            total={data.unrepliedComments.total}
+          />
           <DashboardRecentPosts
             className="dashboard-slot-recent"
             recentPosts={data.recentPosts}
@@ -92,13 +99,6 @@ export function DashboardPage() {
             onCreate={() => createPost()}
             isCreating={isCreating}
             createLabel={createLabel}
-          />
-        </div>
-        <div className="dashboard-column dashboard-column-side">
-          <DashboardComments
-            className="dashboard-slot-comments"
-            comments={data.unrepliedComments.items}
-            total={data.unrepliedComments.total}
           />
           <DashboardFriendLinks
             className="dashboard-slot-links"
