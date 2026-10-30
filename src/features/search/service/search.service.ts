@@ -1,4 +1,5 @@
 import { isNotNull } from "drizzle-orm";
+import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
 import { convertToPlainText } from "@/features/posts/utils/content";
 import * as SearchRepo from "@/features/search/data/search.data";
 import {
@@ -33,6 +34,8 @@ function toIndexedDocument(
     data.summary && data.summary.trim().length > 0
       ? data.summary
       : content.slice(0, SNIPPET_SLICE);
+  // 发布日期按页面上的写法当普通文本一起索引，搜「2026」就能命中。
+  const publishedAt = formatPublicPostDate(data.publishedAt, { locale: "zh" });
 
   return {
     postId: data.id,
@@ -41,7 +44,12 @@ function toIndexedDocument(
     summary,
     content,
     tags: data.tags ?? [],
-    tokens: tokenizeForSearch(data.title, summary, content),
+    tokens: tokenizeForSearch(
+      data.title,
+      summary,
+      content,
+      publishedAt === "-" ? undefined : publishedAt,
+    ),
   };
 }
 
@@ -64,8 +72,7 @@ function snippetText(summary: string, content: string) {
 function countHighlights(...htmls: Array<string | null | undefined>) {
   let total = 0;
   for (const html of htmls) {
-    const marks = html?.match(/<mark>/g);
-    if (marks) total += marks.length;
+    if (html) total += html.split("<mark>").length - 1;
   }
   return total;
 }

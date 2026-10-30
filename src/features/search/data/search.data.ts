@@ -179,6 +179,16 @@ function likePattern(term: string) {
   return `%${escapeLike(term)}%`;
 }
 
+/**
+ * 日期按页面上的写法参与搜索，只此一种：2026年10月29日。
+ * 与 `formatPublicPostDate` 一致（UTC、月日不补零）。
+ */
+function likeDate(column: SQLWrapper, pattern: string) {
+  const stamp = sql`datetime(${column}, 'unixepoch')`;
+  const text = sql`strftime('%Y年', ${stamp}) || CAST(strftime('%m', ${stamp}) AS INTEGER) || '月' || CAST(strftime('%d', ${stamp}) AS INTEGER) || '日'`;
+  return sql`${text} LIKE ${pattern} ESCAPE '\\'`;
+}
+
 /** 每条记录都要命中全部关键词。 */
 function allTermsMatch(terms: Array<string>, build: (p: string) => SQL) {
   return terms.map((term) => build(likePattern(term)));
@@ -190,7 +200,7 @@ export type MomentSearchRow = {
   publishedAt: Date | null;
 };
 
-/** 日常：搜正文；上锁的只有管理员能搜到。 */
+/** 日常：搜正文与日期；上锁的只有管理员能搜到。 */
 export async function matchMoments(
   db: DB,
   terms: Array<string>,
@@ -198,8 +208,10 @@ export async function matchMoments(
   includeLocked = false,
 ): Promise<Array<MomentSearchRow>> {
   if (terms.length === 0) return [];
-  const conditions = allTermsMatch(terms, (pattern) =>
-    likeAnyColumn(MomentsTable.body, pattern),
+  const conditions = allTermsMatch(
+    terms,
+    (pattern) =>
+      sql`(${likeAnyColumn(MomentsTable.body, pattern)} or ${likeDate(MomentsTable.publishedAt, pattern)})`,
   );
 
   const rows = await db
@@ -241,7 +253,7 @@ export async function matchGalleryCategories(
   const conditions = allTermsMatch(
     terms,
     (pattern) =>
-      sql`(${likeAnyColumn(GalleryCategoriesTable.name, pattern)} or coalesce(${GalleryCategoriesTable.description}, '') LIKE ${pattern} ESCAPE '\\')`,
+      sql`(${likeAnyColumn(GalleryCategoriesTable.name, pattern)} or coalesce(${GalleryCategoriesTable.description}, '') LIKE ${pattern} ESCAPE '\\' or ${likeDate(GalleryCategoriesTable.createdAt, pattern)})`,
   );
 
   const rows = await db
