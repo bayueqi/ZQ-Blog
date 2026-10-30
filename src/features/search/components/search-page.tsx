@@ -123,9 +123,9 @@ export function SearchPage({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const hasQuery = query.trim().length > 0;
-  // 计数按关键词在各条结果里出现的次数累加，不是结果的条数。
+  // 计数按关键词在结果里高亮出来的处数累加，不是结果的条数。
   const occurrenceCount = results.reduce(
-    (total, hit) => total + Math.max(hit.occurrences ?? 0, 1),
+    (total, hit) => total + (hit.occurrences ?? 0),
     0,
   );
   useEffect(() => {

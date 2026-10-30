@@ -63,20 +63,15 @@ function snippetText(summary: string, content: string) {
   return `${head}\n${body}`;
 }
 
-/** 关键词在文本里出现的次数，用来给列表统计"命中多少处"而不是"命中多少条"。 */
-function countTermHits(text: string, terms: Array<string>) {
-  const lower = text.toLowerCase();
+/**
+ * 列表上「共 N 处匹配」的数字：直接数最终高亮 HTML 里的 `<mark>`，
+ * 与页面上真正标出来的处数完全一致，不会漏掉摘要或被去重的重复句子。
+ */
+function countHighlights(...htmls: Array<string | null | undefined>) {
   let total = 0;
-  for (const term of terms) {
-    const needle = term.toLowerCase();
-    if (needle.length === 0) continue;
-    let from = 0;
-    while (from < lower.length) {
-      const idx = lower.indexOf(needle, from);
-      if (idx === -1) break;
-      total += 1;
-      from = idx + needle.length;
-    }
+  for (const html of htmls) {
+    const marks = html?.match(/<mark>/g);
+    if (marks) total += marks.length;
   }
   return total;
 }
@@ -98,28 +93,35 @@ async function searchPosts(
     includeLocked,
   );
 
-  return rows.map((row) => ({
-    kind: "post" as const,
-    id: row.postId,
-    title: row.title,
-    titleHtml: buildSnippet({
+  return rows.map((row) => {
+    const titleHtml = buildSnippet({
       text: row.title,
       terms,
       fallbackTerm: query,
-    }),
-    snippets: buildSnippets({
+    });
+    const snippets = buildSnippets({
       // 只在命中词出现的地方取句子，摘要不整段塞进来。
       text: snippetText(row.summary, row.content),
       terms,
       fallbackTerm: query,
-    }),
-    occurrences: countTermHits(`${row.title}\n${row.content}`, terms),
-    tags: row.tags,
-    category: row.category,
-    slug: row.slug,
-    href: null,
-    publishedAt: row.publishedAt?.toISOString() ?? null,
-  }));
+    });
+    return {
+      kind: "post" as const,
+      id: row.postId,
+      title: row.title,
+      titleHtml,
+      snippets,
+      occurrences: countHighlights(
+        titleHtml,
+        ...snippets.map((line) => line.html),
+      ),
+      tags: row.tags,
+      category: row.category,
+      slug: row.slug,
+      href: null,
+      publishedAt: row.publishedAt?.toISOString() ?? null,
+    };
+  });
 }
 
 export async function search(
@@ -147,72 +149,86 @@ export async function search(
     SearchRepo.matchFriendLinks(context.db, terms, EXTRA_LIMIT),
   ]);
 
-  const momentHits: Array<SearchHit> = moments.map((row) => ({
-    kind: "moment",
-    id: row.id,
-    title: row.body.replaceAll("\n", " ").slice(0, 60),
-    titleHtml: buildSnippet({
+  const momentHits: Array<SearchHit> = moments.map((row) => {
+    const titleHtml = buildSnippet({
       text: row.body,
       terms,
       fallbackTerm: query,
       // 日常没有单独摘要，标题位置只给一句，避免整条太长。
       options: { maxWindows: 1, snippetSlice: 60 },
-    }),
-    snippets: [],
-    occurrences: countTermHits(row.body, terms),
-    category: null,
-    tags: [],
-    slug: null,
-    href: null,
-    publishedAt: row.publishedAt?.toISOString() ?? null,
-  }));
+    });
+    return {
+      kind: "moment",
+      id: row.id,
+      title: row.body.replaceAll("\n", " ").slice(0, 60),
+      titleHtml,
+      snippets: [],
+      occurrences: countHighlights(titleHtml),
+      category: null,
+      tags: [],
+      slug: null,
+      href: null,
+      publishedAt: row.publishedAt?.toISOString() ?? null,
+    };
+  });
 
-  const galleryHits: Array<SearchHit> = galleries.map((row) => ({
-    kind: "gallery",
-    id: row.id,
-    title: row.name,
-    titleHtml: buildSnippet({
+  const galleryHits: Array<SearchHit> = galleries.map((row) => {
+    const titleHtml = buildSnippet({
       text: row.name,
       terms,
       fallbackTerm: query,
-    }),
-    snippets: buildSnippets({
+    });
+    const snippets = buildSnippets({
       text: row.description,
       terms,
       fallbackTerm: query,
-    }),
-    occurrences: countTermHits(`${row.name}\n${row.description ?? ""}`, terms),
-    category: null,
-    tags: [],
-    slug: row.slug,
-    href: null,
-    publishedAt: row.publishedAt?.toISOString() ?? null,
-  }));
+    });
+    return {
+      kind: "gallery",
+      id: row.id,
+      title: row.name,
+      titleHtml,
+      snippets,
+      occurrences: countHighlights(
+        titleHtml,
+        ...snippets.map((line) => line.html),
+      ),
+      category: null,
+      tags: [],
+      slug: row.slug,
+      href: null,
+      publishedAt: row.publishedAt?.toISOString() ?? null,
+    };
+  });
 
-  const friendLinkHits: Array<SearchHit> = friendLinks.map((row) => ({
-    kind: "friend-link",
-    id: row.id,
-    title: row.siteName,
-    titleHtml: buildSnippet({
+  const friendLinkHits: Array<SearchHit> = friendLinks.map((row) => {
+    const titleHtml = buildSnippet({
       text: row.siteName,
       terms,
       fallbackTerm: query,
-    }),
-    snippets: buildSnippets({
+    });
+    const snippets = buildSnippets({
       text: row.description?.trim() ? row.description : row.siteUrl,
       terms,
       fallbackTerm: query,
-    }),
-    occurrences: countTermHits(
-      `${row.siteName}\n${row.description ?? ""}\n${row.siteUrl}`,
-      terms,
-    ),
-    category: null,
-    tags: [],
-    slug: null,
-    href: row.siteUrl,
-    publishedAt: row.createdAt?.toISOString() ?? null,
-  }));
+    });
+    return {
+      kind: "friend-link",
+      id: row.id,
+      title: row.siteName,
+      titleHtml,
+      snippets,
+      occurrences: countHighlights(
+        titleHtml,
+        ...snippets.map((line) => line.html),
+      ),
+      category: null,
+      tags: [],
+      slug: null,
+      href: row.siteUrl,
+      publishedAt: row.createdAt?.toISOString() ?? null,
+    };
+  });
 
   return [...posts, ...momentHits, ...galleryHits, ...friendLinkHits];
 }

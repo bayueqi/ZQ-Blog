@@ -40,7 +40,7 @@ export type SearchHit = {
   titleHtml: string | null;
   /** 命中处的句子，一行一条，带 `<mark>` 以及回跳原文的定位信息。 */
   snippets: Array<{ html: string; term: string; occurrence: number }>;
-  /** 关键词在这一条里出现的次数，标题、正文都算。 */
+  /** 关键词在这一条里高亮出来的处数，用于列表顶部的合计。 */
   occurrences: number;
   /** 文章的分类名，其余为 null。 */
   category: string | null;
