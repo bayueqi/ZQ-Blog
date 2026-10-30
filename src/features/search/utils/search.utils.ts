@@ -163,7 +163,10 @@ function collectWindows(
   maxDistance: number,
 ): { windows: Array<MatchWindow>; token: string | null } {
   const scan = Math.min(scanLimit, source.length);
-  const lowerSource = source.slice(0, scan).toLowerCase();
+  // 文本本来就不长时直接用，少复制一份。
+  const lowerSource = (
+    source.length > scan ? source.slice(0, scan) : source
+  ).toLowerCase();
   const windows: Array<MatchWindow> = [];
 
   // 先收齐每个关键词的所有出现位置，再按文档顺序排，
@@ -295,6 +298,8 @@ function findApproxMatch(
   scanLimit: number,
   maxDistance: number,
 ): { idx: number; len: number; token: string } | null {
+  // 不允许近似就不必再逐字扫一遍长文，省掉每篇文章一次全文遍历。
+  if (maxDistance <= 0) return null;
   const chunk = source.slice(0, Math.min(scanLimit, source.length));
   const lowerChunk = chunk.toLowerCase();
 

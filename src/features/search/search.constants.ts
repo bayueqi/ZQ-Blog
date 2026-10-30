@@ -4,4 +4,5 @@ export const SNIPPET_SLICE = 200;
 export const EXCERPT_SLICE = 1200;
 export const SNIPPET_CONTEXT = 60;
 export const SCAN_LIMIT = CONTENT_SLICE;
-export const FUZZY_MAX_DISTANCE = 1;
+/** 只标原文里真有的字，不做近似匹配：搜「2026年1」不标「2026年2」。 */
+export const FUZZY_MAX_DISTANCE = 0;

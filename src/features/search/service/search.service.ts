@@ -102,6 +102,11 @@ function countTextHits(text: string, terms: Array<string>) {
   return total;
 }
 
+/** 关键词必须原样出现（不分大小写），空格也算字。 */
+function includesTerm(text: string, term: string) {
+  return text.toLowerCase().includes(term.toLowerCase());
+}
+
 /** 一条结果在页面上高亮了几处：标题片段里的 mark，加上日期那行的命中。 */
 function occurrencesOf(
   date: Date | null | undefined,
@@ -121,14 +126,21 @@ async function searchPosts(
   const match = toFtsMatchQuery(query);
   if (!match) return [];
 
+  // 分词后「实 习」和「实习」长得一样，全文索引分不出来。
+  // 多取一些，再按原文核对，对不上的直接丢掉，保证搜什么就出什么。
+  const fetchLimit = Math.min(limit * 4, 100);
   const rows = await SearchRepo.matchSearchDocuments(
     context.env,
     match,
-    limit,
+    fetchLimit,
     includeLocked,
   );
 
-  return rows.map((row) => {
+  const hits: Array<SearchHit> = [];
+  for (const row of rows) {
+    const haystack = `${row.title}\n${row.summary}\n${row.content}\n${hitDateText(row.publishedAt)}`;
+    if (!terms.every((term) => includesTerm(haystack, term))) continue;
+
     const titleHtml = buildSnippet({
       text: row.title,
       terms,
@@ -140,8 +152,9 @@ async function searchPosts(
       terms,
       fallbackTerm: query,
     });
-    return {
-      kind: "post" as const,
+
+    hits.push({
+      kind: "post",
       id: row.postId,
       title: row.title,
       titleHtml,
@@ -157,8 +170,11 @@ async function searchPosts(
       slug: row.slug,
       href: null,
       publishedAt: row.publishedAt?.toISOString() ?? null,
-    };
-  });
+    });
+    if (hits.length >= limit) break;
+  }
+
+  return hits;
 }
 
 export async function search(

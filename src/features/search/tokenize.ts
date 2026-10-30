@@ -25,7 +25,11 @@ export function toFtsMatchQuery(query: string) {
   return `"${tokens.join(" ")}"*`;
 }
 
-/** 关键词原样保留，不拆词：高亮、计数和 LIKE 都按用户输入的整串来。 */
+/**
+ * 关键词就是用户敲的那一串，空格也算字：不切分，也不忽略空白。
+ * 「实 习」找的就是「实 习」，跟「实习」是两回事。
+ */
 export function queryTerms(query: string) {
-  return query.split(/\s+/).filter((token) => token.length > 0);
+  const trimmed = query.trim();
+  return trimmed.length > 0 ? [trimmed] : [];
 }
