@@ -168,7 +168,7 @@ async function uniqueSlug(
 ) {
   const root = slugify(base);
   let candidate = root;
-  let index = 2;
+  let index = 1;
   while (await taken(candidate)) {
     candidate = `${root}-${index}`;
     index += 1;
