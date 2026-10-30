@@ -17,7 +17,6 @@ import {
   SearchDocumentsTable,
   SearchIndexMetaTable,
 } from "@/lib/db/schema/search.table";
-import { SEARCH_DATE_OFFSET } from "@/features/search/search-date";
 
 export type SearchDocumentFields = {
   postId: number;
@@ -180,21 +179,6 @@ function likePattern(term: string) {
   return `%${escapeLike(term)}%`;
 }
 
-/** 日期也参与搜索：摊平成几种中文/横线写法，再走 LIKE。 */
-function searchableDate(column: SQLWrapper) {
-  const ts = sql`${column} + ${SEARCH_DATE_OFFSET}`;
-  const stamp = sql`datetime(${ts}, 'unixepoch')`;
-  const ymdCn = sql`strftime('%Y年%m月%d日', ${ts}, 'unixepoch')`;
-  const ymCn = sql`strftime('%Y年%m月', ${ts}, 'unixepoch')`;
-  const yCn = sql`strftime('%Y年', ${ts}, 'unixepoch')`;
-  const noPad = sql`${yCn} || CAST(strftime('%m', ${ts}, 'unixepoch') AS INTEGER) || '月' || CAST(strftime('%d', ${ts}, 'unixepoch') AS INTEGER) || '日'`;
-  return sql`(${stamp} || ' ' || ${ymdCn} || ' ' || ${ymCn} || ' ' || ${noPad})`;
-}
-
-function likeDate(column: SQLWrapper, pattern: string) {
-  return sql`${searchableDate(column)} LIKE ${pattern} ESCAPE '\\'`;
-}
-
 /** 每条记录都要命中全部关键词。 */
 function allTermsMatch(terms: Array<string>, build: (p: string) => SQL) {
   return terms.map((term) => build(likePattern(term)));
@@ -206,7 +190,7 @@ export type MomentSearchRow = {
   publishedAt: Date | null;
 };
 
-/** 日常：搜正文与发布日期；上锁的只有管理员能搜到。 */
+/** 日常：搜正文；上锁的只有管理员能搜到。 */
 export async function matchMoments(
   db: DB,
   terms: Array<string>,
@@ -214,10 +198,8 @@ export async function matchMoments(
   includeLocked = false,
 ): Promise<Array<MomentSearchRow>> {
   if (terms.length === 0) return [];
-  const conditions = allTermsMatch(
-    terms,
-    (pattern) =>
-      sql`(${likeAnyColumn(MomentsTable.body, pattern)} or ${likeDate(MomentsTable.publishedAt, pattern)})`,
+  const conditions = allTermsMatch(terms, (pattern) =>
+    likeAnyColumn(MomentsTable.body, pattern),
   );
 
   const rows = await db
@@ -259,7 +241,7 @@ export async function matchGalleryCategories(
   const conditions = allTermsMatch(
     terms,
     (pattern) =>
-      sql`(${likeAnyColumn(GalleryCategoriesTable.name, pattern)} or coalesce(${GalleryCategoriesTable.description}, '') LIKE ${pattern} ESCAPE '\\' or ${likeDate(GalleryCategoriesTable.createdAt, pattern)})`,
+      sql`(${likeAnyColumn(GalleryCategoriesTable.name, pattern)} or coalesce(${GalleryCategoriesTable.description}, '') LIKE ${pattern} ESCAPE '\\')`,
   );
 
   const rows = await db

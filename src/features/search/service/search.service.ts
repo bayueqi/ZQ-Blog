@@ -1,7 +1,6 @@
 import { isNotNull } from "drizzle-orm";
 import { convertToPlainText } from "@/features/posts/utils/content";
 import * as SearchRepo from "@/features/search/data/search.data";
-import { searchableDateText } from "@/features/search/search-date";
 import {
   CONTENT_SLICE,
   SNIPPET_SLICE,
@@ -42,12 +41,7 @@ function toIndexedDocument(
     summary,
     content,
     tags: data.tags ?? [],
-    tokens: tokenizeForSearch(
-      data.title,
-      summary,
-      content,
-      searchableDateText(data.publishedAt),
-    ),
+    tokens: tokenizeForSearch(data.title, summary, content),
   };
 }
 
