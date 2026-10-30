@@ -77,7 +77,8 @@ export function GalleryCategoryDialog({
     Boolean(row?.hasAccessPassword),
   );
   const [privacy, setPrivacy] = useState(Boolean(row?.privacyProtected));
-  const [published, setPublished] = useState(Boolean(row?.published));
+  // 新建时默认发布，编辑时沿用原来的状态。
+  const [published, setPublished] = useState(row?.published ?? true);
   const [cover, setCover] = useState<Cover>(row?.cover ?? null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
