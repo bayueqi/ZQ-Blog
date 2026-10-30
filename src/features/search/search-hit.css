@@ -1,0 +1,17 @@
+.search-hit-mark {
+  color: var(--fuwari-primary);
+  background: color-mix(in srgb, var(--fuwari-primary) 18%, transparent);
+  border-radius: 3px;
+  padding: 0 2px;
+  transition: background 400ms;
+}
+.search-hit-mark[data-active="true"] {
+  background: color-mix(in srgb, var(--fuwari-primary) 38%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--fuwari-primary) 28%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-hit-mark {
+    transition: none;
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1768012947476,
+      "tag": "0000_breezy_pretty_boy",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1768029417769,
+      "tag": "0001_flawless_black_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768130358240,
+      "tag": "0002_flimsy_sentry",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1770449895500,
+      "tag": "0003_zippy_luminals",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1773271285901,
+      "tag": "0004_slim_tinkerer",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1773274477966,
+      "tag": "0005_tricky_scarlet_spider",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1773543180283,
+      "tag": "0006_grey_legion",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1773620108271,
+      "tag": "0007_nervous_pepper_potts",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1773872827424,
+      "tag": "0008_strong_callisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1774066164394,
+      "tag": "0009_light_brood",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1774071685152,
+      "tag": "0010_romantic_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1776686400000,
+      "tag": "0011_publish_public_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1776892800000,
+      "tag": "0012_drop_comment_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1776988800000,
+      "tag": "0013_comment_body_plain_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1787532454317,
+      "tag": "0014_drop_page_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1788038843079,
+      "tag": "0015_muted_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1788048987558,
+      "tag": "0016_apikey",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1788062400000,
+      "tag": "0017_post_cover",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1788100000000,
+      "tag": "0018_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1788739200000,
+      "tag": "0019_search_fts",
+      "breakpoints": true
+    }
+  ]
+}

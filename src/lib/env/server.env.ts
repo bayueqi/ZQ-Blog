@@ -1,0 +1,40 @@
+import { z } from "zod";
+
+const domainRegex = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+const localeSchema = z.enum(["zh", "en"]);
+const domainSchema = z
+  .string()
+  .regex(domainRegex, "Must be a valid domain (e.g., www.example.com)");
+
+const serverEnvSchema = z.object({
+  BETTER_AUTH_SECRET: z.string(),
+  BETTER_AUTH_URL: z.url(),
+  LOCALE: localeSchema.catch("zh"),
+  GITHUB_CLIENT_ID: z.string(),
+  GITHUB_CLIENT_SECRET: z.string(),
+  DOMAIN: domainSchema,
+  ENVIRONMENT: z.enum(["dev", "prod", "test"]).optional(),
+  TURNSTILE_SECRET_KEY: z.string().optional(),
+  GITHUB_TOKEN: z.string().optional(),
+});
+
+export type ServerEnv = z.infer<typeof serverEnvSchema>;
+
+export function serverEnv(env: Env) {
+  const result = serverEnvSchema.safeParse(env);
+
+  if (!result.success) {
+    console.error(
+      JSON.stringify({
+        message: "Invalid environment variables",
+        error: z.treeifyError(result.error),
+      }),
+    );
+    throw new Error("Invalid environment variables");
+  }
+
+  return result.data;
+}
+
+export const isNotInProduction = (env: Env) =>
+  serverEnv(env).ENVIRONMENT === "test" || serverEnv(env).ENVIRONMENT === "dev";

@@ -1,0 +1,262 @@
+/*
+ * The one Fuwari form-field look: a soft grey fill that tints and rings on
+ * focus. A surface sizes it through the custom properties; the Admin
+ * workspaces scale them with their unit.
+ */
+@layer components {
+  .fuwari-input,
+  .fuwari-field-shell {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--fuwari-field-height, 44px);
+    border: 1px solid transparent;
+    border-radius: var(--fuwari-field-radius, 12px);
+    background: color-mix(
+      in srgb,
+      var(--fuwari-fg-50) 10%,
+      var(--fuwari-card-bg)
+    );
+    color: var(--fuwari-fg);
+    font: inherit;
+    font-size: var(--fuwari-field-font-size, 15px);
+    line-height: 1.5;
+    outline: none;
+    box-shadow: none;
+    transition:
+      background-color 180ms,
+      border-color 180ms,
+      box-shadow 180ms;
+  }
+  .fuwari-input {
+    display: block;
+    padding: 9px var(--fuwari-field-padding-x, 14px);
+  }
+  .fuwari-input:hover,
+  .fuwari-field-shell:hover {
+    background: color-mix(
+      in srgb,
+      var(--fuwari-fg-50) 15%,
+      var(--fuwari-card-bg)
+    );
+  }
+  .fuwari-input:focus,
+  .fuwari-field-shell:focus-within {
+    background: var(--fuwari-btn-regular-bg);
+    border-color: color-mix(in srgb, var(--fuwari-primary) 55%, transparent);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--fuwari-primary) 12%, transparent);
+  }
+  .fuwari-input[aria-invalid="true"] {
+    border-color: color-mix(in srgb, var(--fuwari-danger-fg) 60%, transparent);
+  }
+  .fuwari-input::placeholder,
+  .fuwari-field-shell input::placeholder {
+    color: var(--fuwari-fg-30);
+    opacity: 1;
+  }
+  .fuwari-input:disabled,
+  .fuwari-field-shell:has(> input:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  textarea.fuwari-input {
+    min-height: calc(var(--fuwari-field-height, 44px) * 2);
+    resize: vertical;
+  }
+  .fuwari-input[data-mono] {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 13px;
+  }
+  /* Secrets that are not passwords stay out of password managers. */
+  .fuwari-input[data-masked] {
+    -webkit-text-security: disc;
+  }
+  .fuwari-input::-ms-reveal,
+  .fuwari-input::-ms-clear {
+    display: none;
+  }
+
+  /* A field with an icon or buttons beside its input. */
+  .fuwari-field-shell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-inline: var(--fuwari-field-padding-x, 14px) 4px;
+    color: var(--fuwari-fg-50);
+  }
+  .fuwari-field-shell > svg {
+    flex-shrink: 0;
+  }
+  .fuwari-field-shell > input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+    border: 0;
+    background: transparent;
+    color: var(--fuwari-fg);
+    font: inherit;
+    outline: none;
+    box-shadow: none;
+  }
+  .fuwari-field-shell > input::-webkit-search-cancel-button {
+    appearance: none;
+  }
+  .fuwari-field-shell[data-size="lg"] {
+    --fuwari-field-height: 52px;
+    --fuwari-field-font-size: 18px;
+    gap: 12px;
+  }
+
+  /* A small button inside a field: reveal, clear. */
+  .fuwari-field-button {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    padding: 0;
+    border-radius: 9px;
+    color: var(--fuwari-fg-50);
+    background: transparent;
+    transition:
+      color 180ms,
+      background-color 180ms;
+  }
+  .fuwari-field-button:hover {
+    color: var(--fuwari-primary);
+    background: color-mix(in srgb, var(--fuwari-primary) 8%, transparent);
+  }
+  .fuwari-field-button:focus-visible {
+    outline: 2px solid var(--fuwari-primary);
+    outline-offset: -3px;
+  }
+  .fuwari-field-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .fuwari-password-input {
+    position: relative;
+    min-width: 0;
+  }
+  .fuwari-password-input > .fuwari-input {
+    padding-inline-end: 46px;
+  }
+  .fuwari-password-input > .fuwari-field-button {
+    position: absolute;
+    inset-inline-end: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Label, control, hint and error stacked. */
+  .fuwari-form-field {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+  }
+  .fuwari-form-field-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--fuwari-fg-75);
+    font-size: var(--fuwari-label-font-size, 14px);
+    font-weight: 500;
+  }
+  .fuwari-form-field-label small {
+    margin-inline-start: 6px;
+    color: var(--fuwari-fg-50);
+    font-size: 0.9em;
+    font-weight: 400;
+  }
+  .fuwari-form-field-label abbr {
+    margin-inline-start: 2px;
+    color: var(--fuwari-danger-fg);
+    text-decoration: none;
+  }
+  .fuwari-form-field-hint {
+    color: var(--fuwari-fg-50);
+    font-size: var(--fuwari-hint-font-size, 12px);
+    line-height: 1.6;
+  }
+  .fuwari-form-field-error {
+    color: var(--fuwari-danger-fg);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .fuwari-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    color: var(--fuwari-fg-90);
+    text-align: start;
+  }
+  .fuwari-switch[data-label] {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .fuwari-switch:disabled {
+    cursor: not-allowed;
+  }
+  .fuwari-switch:disabled > .fuwari-switch-track {
+    opacity: 0.5;
+  }
+  .fuwari-switch:focus-visible {
+    outline: 2px solid var(--fuwari-primary);
+    outline-offset: 2px;
+  }
+  .fuwari-switch-track {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--fuwari-btn-regular-bg);
+    transition: background-color 200ms;
+  }
+  .fuwari-switch[aria-checked="true"] > .fuwari-switch-track {
+    background: var(--fuwari-primary);
+  }
+  .fuwari-switch-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: white;
+    color: var(--fuwari-primary);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+    transition: transform 250ms var(--fuwari-motion-ease, ease);
+  }
+  .fuwari-switch[aria-checked="true"] .fuwari-switch-thumb {
+    transform: translateX(18px);
+  }
+
+  @media (max-width: 639px) {
+    /* Below 16px, iOS zooms the page on focus into a text field. */
+    input.fuwari-input,
+    textarea.fuwari-input,
+    .fuwari-field-shell {
+      font-size: max(16px, var(--fuwari-field-font-size, 15px));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fuwari-input,
+    .fuwari-field-shell,
+    .fuwari-field-button,
+    .fuwari-switch-track,
+    .fuwari-switch-thumb {
+      transition: none;
+    }
+  }
+}

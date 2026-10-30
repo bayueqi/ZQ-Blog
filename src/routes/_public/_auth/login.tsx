@@ -1,0 +1,62 @@
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { z } from "zod";
+import { Turnstile, useTurnstile } from "@/components/common/turnstile";
+import { LoginPage } from "@/features/auth/components/login-page";
+import { useLoginForm, useSocialLogin } from "@/features/auth/hooks";
+import { m } from "@/paraglide/messages";
+
+export const Route = createFileRoute("/_public/_auth/login")({
+  validateSearch: z.object({
+    redirectTo: z.string().optional(),
+  }),
+  component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: m.login_title(),
+      },
+    ],
+  }),
+});
+
+function RouteComponent() {
+  const { isEmailConfigured } = useRouteContext({ from: "/_public/_auth" });
+  const search = Route.useSearch();
+  const {
+    isPending: turnstilePending,
+    token: turnstileToken,
+    reset: resetTurnstile,
+    turnstileProps,
+  } = useTurnstile("login");
+
+  const resolvedRedirectTo = search.redirectTo;
+
+  const loginForm = useLoginForm({
+    turnstileToken,
+    turnstilePending,
+    resetTurnstile,
+    redirectTo: resolvedRedirectTo,
+  });
+
+  const socialLogin = useSocialLogin({
+    redirectTo: resolvedRedirectTo,
+  });
+
+  const turnstileElement = isEmailConfigured ? (
+    <div className="flex justify-center">
+      <Turnstile {...turnstileProps} />
+    </div>
+  ) : null;
+
+  return (
+    <LoginPage
+      isEmailConfigured={isEmailConfigured}
+      loginForm={{
+        ...loginForm,
+        turnstilePending,
+      }}
+      socialLogin={socialLogin}
+      turnstileElement={turnstileElement}
+    />
+  );
+}

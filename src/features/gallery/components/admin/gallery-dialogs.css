@@ -1,0 +1,62 @@
+/* 类别 / 相册的新建与编辑弹窗，宽度与内边距对齐其它后台弹窗。 */
+.fuwari-modal.gallery-dialog {
+  width: min(36rem, calc(100% - 32px));
+}
+.gallery-dialog .fuwari-modal-content {
+  padding: clamp(22px, 1.6vw, 30px);
+}
+.gallery-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.gallery-dialog-header h2 {
+  font-size: clamp(17px, 1.15vw, 20px);
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--fuwari-fg-90);
+}
+.gallery-dialog-header p {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fuwari-fg-50);
+}
+.gallery-dialog-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.gallery-cover-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gallery-cover-preview {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 70px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--fuwari-btn-regular-bg);
+  color: var(--fuwari-fg-30);
+}
+.gallery-cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gallery-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 18px;
+  border-top: 1px solid var(--fuwari-input-border);
+}

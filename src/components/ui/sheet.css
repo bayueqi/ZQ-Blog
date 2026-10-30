@@ -1,0 +1,86 @@
+@layer components {
+  .fuwari-sheet {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 23rem);
+    background: var(--fuwari-card-bg);
+    outline: none;
+  }
+  .fuwari-sheet[data-size="lg"] {
+    width: min(100%, 25rem);
+  }
+  .fuwari-sheet[data-side="left"] {
+    --fuwari-sheet-offset: -24px;
+    left: 0;
+  }
+  .fuwari-sheet[data-side="right"] {
+    --fuwari-sheet-offset: 24px;
+    right: 0;
+  }
+  .fuwari-sheet[data-state="closed"] {
+    visibility: hidden;
+  }
+  .fuwari-sheet[data-state="open"] {
+    animation: fuwari-sheet-in var(--fuwari-motion-panel)
+      var(--fuwari-motion-ease) both;
+  }
+  .fuwari-sheet[data-state="closing"] {
+    animation: fuwari-sheet-out var(--fuwari-motion-panel)
+      var(--fuwari-motion-ease) both;
+    pointer-events: none;
+  }
+  .fuwari-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgb(0 0 0 / 0.2);
+    backdrop-filter: blur(4px);
+  }
+  .fuwari-sheet-backdrop[data-state="open"] {
+    animation: fuwari-sheet-fade var(--fuwari-motion-panel) ease-out both;
+  }
+  .fuwari-sheet-backdrop[data-state="closing"] {
+    animation: fuwari-sheet-fade var(--fuwari-motion-panel) ease-out reverse
+      both;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fuwari-sheet,
+    .fuwari-sheet-backdrop {
+      animation: none !important;
+    }
+  }
+}
+
+@keyframes fuwari-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--fuwari-sheet-offset));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes fuwari-sheet-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(var(--fuwari-sheet-offset));
+  }
+}
+@keyframes fuwari-sheet-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

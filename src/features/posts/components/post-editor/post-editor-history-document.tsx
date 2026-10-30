@@ -1,0 +1,64 @@
+import { Editor } from "@/components/tiptap-editor";
+import { Spinner } from "@/components/ui/spinner";
+import { editorSchema } from "@/features/posts/editor/config";
+import { CodeBlockHighlightProvider } from "@/features/posts/editor/extensions/code-block/code-block-highlight-context";
+import { normalizePostContent } from "@/features/posts/utils/normalize-content";
+import type { PostRevisionSnapshot } from "@/features/posts/schema/post-revisions.schema";
+import { m } from "@/paraglide/messages";
+import { PostEditorSummary } from "./post-editor-summary";
+
+export function PostEditorHistoryDocument({
+  snapshot,
+  isLoading,
+  editorKey,
+  viewingTime,
+}: {
+  snapshot: PostRevisionSnapshot | null;
+  isLoading: boolean;
+  editorKey: string;
+  viewingTime: string;
+}) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 py-16 text-sm fuwari-text-50">
+        <Spinner size={16} />
+        {m.editor_history_loading()}
+      </div>
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <p className="py-16 text-sm fuwari-text-50">{m.editor_history_empty()}</p>
+    );
+  }
+
+  const title = snapshot.title.trim() || m.common_untitled();
+
+  return (
+    <CodeBlockHighlightProvider snapshotContent={null}>
+      <Editor
+        key={editorKey}
+        className="post-editor-surface"
+        documentClassName="post-editor-document post-history-document custom-scrollbar"
+        documentHeader={
+          <>
+            <h2 className="post-editor-title fuwari-text-90">{title}</h2>
+            <p className="mb-4 text-xs fuwari-text-50">
+              {m.editor_history_banner_title({ time: viewingTime })}
+            </p>
+            <PostEditorSummary
+              categoryId={snapshot.categoryId}
+              tagIds={snapshot.tagIds}
+              hasCover={snapshot.coverMediaId !== null}
+            />
+          </>
+        }
+        contentClassName="min-h-0"
+        extensions={editorSchema}
+        content={normalizePostContent(snapshot.contentJson) ?? ""}
+        editable={false}
+      />
+    </CodeBlockHighlightProvider>
+  );
+}

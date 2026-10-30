@@ -1,0 +1,45 @@
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+
+type AdminPrimaryAction = {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+} | null;
+
+type AdminChromeValue = {
+  primaryAction: AdminPrimaryAction;
+  setPrimaryAction: (action: AdminPrimaryAction) => void;
+  mobileTitle: string | null;
+  setMobileTitle: (title: string | null) => void;
+};
+
+const AdminChromeContext = createContext<AdminChromeValue | null>(null);
+
+export function AdminChromeProvider({ children }: { children: ReactNode }) {
+  const [primaryAction, setPrimaryAction] = useState<AdminPrimaryAction>(null);
+  const [mobileTitle, setMobileTitle] = useState<string | null>(null);
+  const value = useMemo(
+    () => ({ primaryAction, setPrimaryAction, mobileTitle, setMobileTitle }),
+    [primaryAction, mobileTitle],
+  );
+
+  return (
+    <AdminChromeContext.Provider value={value}>
+      {children}
+    </AdminChromeContext.Provider>
+  );
+}
+
+export function useAdminChrome() {
+  const value = useContext(AdminChromeContext);
+  if (!value) {
+    throw new Error("useAdminChrome must be used within AdminChromeProvider");
+  }
+  return value;
+}

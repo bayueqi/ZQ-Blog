@@ -1,0 +1,19 @@
+.comments-workspace {
+  --dashboard-pad: calc(26 * var(--admin-unit));
+  display: flex;
+  flex-direction: column;
+  gap: calc(18 * var(--admin-unit));
+  min-height: 100%;
+}
+
+.comments-admin-filters {
+  align-self: flex-start;
+  /* 五个页签在窄屏上放不下时横向滚动，不要撑破卡片。 */
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.comments-admin-more {
+  padding-top: calc(6 * var(--admin-unit));
+}

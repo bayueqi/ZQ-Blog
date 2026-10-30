@@ -1,0 +1,224 @@
+import { ClientOnly, Link } from "@tanstack/react-router";
+import { Clock, FileText, Lock, Pencil } from "lucide-react";
+import { useRef } from "react";
+import { PUBLIC_IMAGE_WIDTH } from "@/features/media/utils/media.utils";
+import { CommentSection } from "@/features/comments/components/comment-section";
+import { ContentRenderer } from "@/features/posts/components/content/content-renderer";
+import type { PostWithToc } from "@/features/posts/schema/posts.schema";
+import type { SearchHitTarget } from "@/features/search/use-search-hit";
+import { useSearchHit } from "@/features/search/use-search-hit";
+import "@/features/search/search-hit.css";
+import { authClient } from "@/lib/auth/auth-client";
+import { m } from "@/paraglide/messages";
+import { usePhotoSwipeGallery } from "./content/photo-swipe";
+import { useHeadingAnchors } from "./content/use-heading-anchors";
+import ZoomableImage from "./content/zoomable-image";
+import { PostAdjacentNav } from "./post-adjacent-nav";
+import { PostLock } from "./post-lock";
+import { PostMeta } from "./post-meta";
+import { PostOutdatedNotice } from "./post-outdated-notice";
+import { PostSummary } from "./post-summary";
+import { ShareButton } from "@/features/share/share-dialog";
+import TableOfContents from "./table-of-contents";
+
+interface PostPageProps {
+  post: Exclude<PostWithToc, null>;
+  /** A Comment to scroll to and highlight, from `?comment=` in the URL. */
+  highlightCommentId?: number;
+  /** 从搜索结果点进来的命中词，用来标出并滚动到那一处。 */
+  searchHit?: SearchHitTarget | null;
+}
+
+function enterDelay(extraMs: number) {
+  return `calc(var(--fuwari-content-delay) + ${extraMs}ms * var(--fuwari-stagger, 1))`;
+}
+
+export function PostPage({
+  post,
+  highlightCommentId,
+  searchHit,
+}: PostPageProps) {
+  const { data: session } = authClient.useSession();
+  // The cover opens on its own; body images form one gallery.
+  const coverRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  usePhotoSwipeGallery(coverRef, post.id);
+  usePhotoSwipeGallery(contentRef, post.id);
+  useHeadingAnchors(contentRef);
+  useSearchHit(searchRef, searchHit ?? null);
+  // Approximate word count
+  const wordCount = post.readTimeInMinutes * 300;
+  // 隐私保护：解锁前连标题、时间、分类标签都不出现在页面上。
+  const concealed = post.locked && post.privacyProtected;
+
+  return (
+    <div className="relative flex flex-col rounded-(--fuwari-radius-large) py-1 md:py-0 md:bg-transparent gap-4 mb-4 w-full">
+      <TableOfContents headers={concealed ? [] : post.toc} />
+
+      {/* Main Post Container */}
+      <div className="fuwari-card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full">
+        {/* Word count and reading time */}
+        <div
+          className={
+            concealed
+              ? "hidden"
+              : "flex flex-row flex-wrap fuwari-text-30 gap-5 mb-3 transition fuwari-onload-animation"
+          }
+          style={{ animationDelay: enterDelay(0) }}
+        >
+          {" "}
+          <div className="flex flex-row items-center">
+            <div className="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 fuwari-text-50 flex items-center justify-center mr-2">
+              <FileText strokeWidth={1.5} size={16} />
+            </div>
+            <div className="text-sm">
+              {m.post_word_count({ count: wordCount })}
+            </div>
+          </div>
+          <div className="flex flex-row items-center">
+            <div className="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 fuwari-text-50 flex items-center justify-center mr-2">
+              <Clock strokeWidth={1.5} size={16} />
+            </div>
+            <div className="text-sm">
+              {m.read_time({ count: post.readTimeInMinutes })}
+            </div>
+          </div>
+          <ClientOnly>
+            {session?.user.role === "admin" && (
+              <Link
+                to="/admin/posts/edit/$id"
+                params={{ id: String(post.id) }}
+                className="flex flex-row items-center fuwari-text-30 hover:fuwari-text-90 transition animate-in fade-in duration-500"
+              >
+                <div className="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 fuwari-text-50 flex items-center justify-center mr-2">
+                  <Pencil strokeWidth={1.5} size={16} />
+                </div>
+                <div className="text-sm">{m.post_edit()}</div>
+              </Link>
+            )}
+          </ClientOnly>
+        </div>
+
+        {/* Title */}
+        <div
+          className={concealed ? "hidden" : "relative fuwari-onload-animation"}
+          style={{ animationDelay: enterDelay(50) }}
+        >
+          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1
+              className="transition block font-bold
+                text-3xl md:text-[2.25rem]/[2.75rem]
+                fuwari-text-90
+                md:before:w-1 before:h-5 before:rounded-md before:bg-(--fuwari-primary)
+                before:absolute before:top-3 before:-left-4.5"
+              style={{ viewTransitionName: `post-title-${post.slug}` }}
+            >
+              {post.title}
+            </h1>
+            {post.visibility === "password" && (
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-black/5 px-2.5 py-1 text-xs fuwari-text-50 dark:bg-white/10">
+                <Lock size={12} strokeWidth={2} />
+                {m.post_locked_badge()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Metadata */}
+        <div
+          className={concealed ? "hidden" : "fuwari-onload-animation"}
+          style={{
+            animationDelay: enterDelay(100),
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <PostMeta post={post} className="mb-5 min-w-0 flex-1" />
+            <ShareButton
+              className="mt-1 shrink-0"
+              path={`/post/${post.slug}`}
+            />
+          </div>
+          {!post.cover && (
+            <div className="border-(--fuwari-meta-divider) border-dashed border-b mb-5" />
+          )}
+        </div>
+
+        {post.cover && (
+          <div
+            ref={coverRef}
+            id="post-cover"
+            className="mb-8 rounded-xl overflow-hidden fuwari-onload-animation"
+            style={{
+              animationDelay: enterDelay(175),
+            }}
+          >
+            <ZoomableImage
+              src={post.cover.url}
+              displayWidth={PUBLIC_IMAGE_WIDTH.cover}
+              alt={post.title}
+              width={post.cover.width ?? undefined}
+              height={post.cover.height ?? undefined}
+              className="w-full h-auto object-cover"
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
+        )}
+
+        {/* 搜索命中定位的统计范围：摘要 + 正文，不含标题与元信息。 */}
+        <div ref={searchRef} className="contents">
+          {/* Summary */}
+          {concealed ? null : <PostSummary summary={post.summary} />}
+
+          {post.locked ? (
+            <PostLock slug={post.slug} />
+          ) : (
+            <>
+              {/* Markdown Content */}
+              <div
+                className="fuwari-onload-animation"
+                style={{
+                  animationDelay: enterDelay(325),
+                }}
+              >
+                <PostOutdatedNotice
+                  publishedAt={post.publishedAt}
+                  updatedAt={post.updatedAt}
+                />
+                <div
+                  ref={contentRef}
+                  className="mb-6 prose dark:prose-invert prose-base max-w-none! fuwari-custom-md"
+                >
+                  <ContentRenderer content={post.contentJson} />
+                </div>
+                <div className="my-8 flex items-center justify-center w-full">
+                  <div className="h-px w-full bg-linear-to-r from-transparent via-(--fuwari-meta-divider) to-transparent opacity-20" />
+                  <span className="mx-4 text-sm font-mono tracking-widest text-(--fuwari-meta-divider) opacity-50 whitespace-nowrap">
+                    END
+                  </span>
+                  <div className="h-px w-full bg-linear-to-r from-(--fuwari-meta-divider) via-transparent to-transparent opacity-20" />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {concealed ? null : <PostAdjacentNav slug={post.slug} />}
+
+      {/* Comments Section */}
+      {!post.locked && (
+        <div
+          className="fuwari-card-base p-6 fuwari-onload-animation"
+          style={{ animationDelay: enterDelay(450) }}
+        >
+          <CommentSection
+            target={{ targetType: "post", targetId: post.id }}
+            highlightCommentId={highlightCommentId}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

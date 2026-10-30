@@ -1,0 +1,127 @@
+import jetbrainsMonoCss from "@fontsource-variable/jetbrains-mono/wght.css?url";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import katexCss from "katex/dist/katex.min.css?url";
+import { z } from "zod";
+import { NotFound } from "@/components/common/not-found";
+import { siteConfigQuery, siteDomainQuery } from "@/features/config/queries";
+import { PostPage } from "@/features/posts/components/post-page";
+import { PostPageSkeleton } from "@/features/posts/components/post-page-skeleton";
+import { adjacentPostsQuery, postBySlugQuery } from "@/features/posts/queries";
+import { jsonContentHasType } from "@/features/posts/utils/content";
+import { m } from "@/paraglide/messages";
+import {
+  buildArticleJsonLd,
+  buildCanonicalUrl,
+  canonicalLink,
+} from "@/lib/seo";
+
+const searchSchema = z.object({
+  comment: z.coerce.number().optional(),
+  /** 搜索结果点进来的命中词，以及它在全文里第几次出现。 */
+  hit: z.string().trim().min(1).max(80).optional(),
+  n: z.coerce.number().int().min(1).optional(),
+});
+
+export const Route = createFileRoute("/_public/post/$slug")({
+  validateSearch: searchSchema,
+  component: RouteComponent,
+  notFoundComponent: NotFound,
+  loader: async ({ context, params }) => {
+    const [post, domain, siteConfig] = await Promise.all([
+      context.queryClient.ensureQueryData(postBySlugQuery(params.slug)),
+      context.queryClient.ensureQueryData(siteDomainQuery),
+      context.queryClient.ensureQueryData(siteConfigQuery),
+      context.queryClient.ensureQueryData(adjacentPostsQuery(params.slug)),
+    ]);
+
+    if (!post) throw notFound();
+
+    return {
+      post,
+      authorName: siteConfig.author,
+      canonicalHref: buildCanonicalUrl(
+        domain,
+        `/post/${encodeURIComponent(post.slug)}`,
+      ),
+    };
+  },
+  head: ({ loaderData }) => {
+    const post = loaderData?.post;
+    // 开了隐私保护又没解锁，标题、描述、封面一律不下发。
+    const concealed = Boolean(post?.locked && post.privacyProtected);
+    const title = concealed ? m.post_private_placeholder() : post?.title;
+    const description = concealed ? "" : (post?.summary ?? "");
+    const canonicalHref = loaderData?.canonicalHref ?? "";
+    const coverUrl =
+      post?.cover && canonicalHref
+        ? new URL(post.cover.url, canonicalHref).toString()
+        : undefined;
+
+    const contentStylesheets: Array<{ rel: "stylesheet"; href: string }> = [];
+    if (jsonContentHasType(post?.contentJson, ["inlineMath", "blockMath"])) {
+      contentStylesheets.push({ rel: "stylesheet", href: katexCss });
+    }
+    if (jsonContentHasType(post?.contentJson, "codeBlock")) {
+      contentStylesheets.push({ rel: "stylesheet", href: jetbrainsMonoCss });
+    }
+
+    return {
+      meta: [
+        {
+          title,
+        },
+        {
+          name: "description",
+          content: description,
+        },
+        { property: "og:title", content: title ?? "" },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: canonicalHref },
+        ...(coverUrl
+          ? [
+              { property: "og:image", content: coverUrl },
+              { name: "twitter:card", content: "summary_large_image" },
+              { name: "twitter:image", content: coverUrl },
+            ]
+          : []),
+      ],
+      links: [canonicalLink(canonicalHref), ...contentStylesheets],
+      scripts:
+        post && !concealed
+          ? [
+              {
+                type: "application/ld+json",
+                children: buildArticleJsonLd({
+                  authorName: loaderData.authorName,
+                  canonicalHref,
+                  post: {
+                    ...post,
+                    image: coverUrl,
+                  },
+                }),
+              },
+            ]
+          : [],
+    };
+  },
+  pendingComponent: () => <PostPageSkeleton />,
+  pendingMs: 0,
+});
+
+function RouteComponent() {
+  const { slug } = Route.useParams();
+  const { comment, hit, n } = Route.useSearch();
+  const { data: post } = useSuspenseQuery(postBySlugQuery(slug));
+
+  if (!post) throw notFound();
+
+  return (
+    <PostPage
+      post={post}
+      highlightCommentId={comment}
+      searchHit={hit ? { term: hit, occurrence: n ?? 1 } : null}
+    />
+  );
+}

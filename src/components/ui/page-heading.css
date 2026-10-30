@@ -1,0 +1,112 @@
+/*
+ * Page and section headings. Admin headings scale with the workspace's
+ * --admin-unit; a page places them through its own class.
+ */
+@layer components {
+  .fuwari-page-header,
+  .fuwari-section-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+  .fuwari-page-header {
+    align-items: flex-start;
+  }
+  .fuwari-section-heading {
+    align-items: center;
+  }
+  .fuwari-heading-text {
+    min-width: 0;
+  }
+  .fuwari-page-header h1 {
+    font-size: calc(28 * var(--admin-unit, 1px));
+    font-weight: 650;
+    line-height: 1.4;
+    color: var(--fuwari-fg-90);
+  }
+  .fuwari-section-heading :is(h2, h3) {
+    font-size: calc(22 * var(--admin-unit, 1px));
+    font-weight: 650;
+    line-height: 1.4;
+    color: var(--fuwari-fg-90);
+    overflow-wrap: anywhere;
+  }
+  .fuwari-section-heading[data-size="md"] :is(h2, h3) {
+    font-size: calc(17 * var(--admin-unit, 1px));
+  }
+  .fuwari-section-heading[data-size="sm"] :is(h2, h3) {
+    font-size: calc(16 * var(--admin-unit, 1px));
+    font-weight: 600;
+  }
+  .fuwari-heading-text > p {
+    margin-top: 8px;
+    font-size: calc(13 * var(--admin-unit, 1px));
+    line-height: 1.6;
+    color: var(--fuwari-fg-50);
+  }
+  .fuwari-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  @media (max-width: 767px) {
+    .fuwari-page-header h1 {
+      font-size: 23px;
+    }
+  }
+
+  .fuwari-public-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 20px;
+    margin-bottom: 32px;
+  }
+  .fuwari-public-heading h1 {
+    position: relative;
+    padding-left: 20px;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .fuwari-public-heading h1::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 5px;
+    height: 1em;
+    border-radius: 4px;
+    background: var(--fuwari-primary);
+  }
+  .fuwari-public-heading > a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-size: 14px;
+    color: var(--fuwari-primary);
+  }
+  .fuwari-public-heading > p {
+    grid-column: 1 / -1;
+    padding-left: 20px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--fuwari-fg-50);
+  }
+  @media (max-width: 639px) {
+    .fuwari-public-heading {
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .fuwari-public-heading h1 {
+      font-size: 24px;
+    }
+    .fuwari-public-heading > a {
+      font-size: 12px;
+    }
+    .fuwari-public-heading > p {
+      padding-left: 0;
+    }
+  }
+}

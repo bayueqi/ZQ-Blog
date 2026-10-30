@@ -1,0 +1,205 @@
+import { runDurableObjectAlarm } from "cloudflare:test";
+import { env, exports } from "cloudflare:workers";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { handleAuthRequest } from "@/lib/http/handle-auth-request";
+
+vi.mock("@/lib/turnstile", () => ({
+  verifyTurnstileToken: vi.fn(() => Promise.resolve({ success: true })),
+}));
+
+describe("Durable Objects Integration", () => {
+  describe("RateLimiter", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should allow request if there are enough tokens", async () => {
+      const rateLimiter = exports.RateLimiter.getByName("user-1");
+
+      const result = await rateLimiter.checkLimit({
+        capacity: 5,
+        interval: "1m",
+      });
+
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
+      expect(result.retryAfterMs).toBe(0);
+    });
+
+    it("should reject request if there are not enough tokens", async () => {
+      const rateLimiter = exports.RateLimiter.getByName("user-2");
+
+      for (let i = 0; i < 5; i++) {
+        await rateLimiter.checkLimit({ capacity: 5, interval: "1m" });
+      }
+
+      const result = await rateLimiter.checkLimit({
+        capacity: 5,
+        interval: "1m",
+      });
+
+      expect(result.allowed).toBe(false);
+      expect(result.remaining).toBe(0);
+    });
+
+    it("should reject request if cost is greater than capacity", async () => {
+      const rateLimiter = exports.RateLimiter.getByName("user-3");
+
+      const result = await rateLimiter.checkLimit({
+        capacity: 5,
+        interval: "1m",
+        cost: 6,
+      });
+
+      expect(result.allowed).toBe(false);
+      expect(result.remaining).toBe(0);
+      expect(result.retryAfterMs).toBe(-1);
+    });
+
+    it("should refill tokens after time passes", async () => {
+      const rateLimiter = exports.RateLimiter.getByName("user-4");
+
+      const config = { capacity: 5, interval: "1m" as const };
+
+      for (let i = 0; i < 5; i++) {
+        await rateLimiter.checkLimit(config);
+      }
+
+      await vi.advanceTimersByTimeAsync(11900);
+
+      const result = await rateLimiter.checkLimit(config);
+      expect(result.allowed).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(200);
+
+      const resultSuccess = await rateLimiter.checkLimit(config);
+      expect(resultSuccess.allowed).toBe(true);
+    });
+
+    it("should correctly calculate retry after time", async () => {
+      const rateLimiter = exports.RateLimiter.getByName("user-5");
+
+      const result = await rateLimiter.checkLimit({
+        capacity: 5,
+        interval: "1m",
+      });
+
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
+      expect(result.retryAfterMs).toBe(0);
+
+      for (let i = 0; i < 4; i++) {
+        await rateLimiter.checkLimit({ capacity: 5, interval: "1m" });
+      }
+
+      const rejected = await rateLimiter.checkLimit({
+        capacity: 5,
+        interval: "1m",
+      });
+
+      expect(rejected.allowed).toBe(false);
+      expect(rejected.remaining).toBe(0);
+      expect(rejected.retryAfterMs).toBe(12 * 1000);
+    });
+
+    it("should handle custom cost", async () => {
+      const rateLimiter = exports.RateLimiter.getByName("user-6");
+
+      const result = await rateLimiter.checkLimit({
+        capacity: 5,
+        interval: "1m",
+        cost: 2,
+      });
+
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(3);
+      expect(result.retryAfterMs).toBe(0);
+    });
+
+    describe("alarm cleanup", () => {
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+      it("should clean up inactive DO after 7 days", async () => {
+        const rateLimiter = exports.RateLimiter.getByName("cleanup-1");
+
+        await rateLimiter.checkLimit({ capacity: 5, interval: "1m" });
+
+        await vi.advanceTimersByTimeAsync(SEVEN_DAYS_MS + 1000);
+
+        const alarmRan = await runDurableObjectAlarm(rateLimiter);
+        expect(alarmRan).toBe(true);
+
+        const result = await rateLimiter.checkLimit({
+          capacity: 5,
+          interval: "1m",
+        });
+
+        expect(result.allowed).toBe(true);
+        expect(result.remaining).toBe(4);
+      });
+
+      it("should renew alarm if DO is still active", async () => {
+        const rateLimiter = exports.RateLimiter.getByName("cleanup-2");
+
+        await rateLimiter.checkLimit({ capacity: 5, interval: "1m" });
+
+        await vi.advanceTimersByTimeAsync(3 * 24 * 60 * 60 * 1000);
+
+        await rateLimiter.checkLimit({ capacity: 5, interval: "1m" });
+
+        await vi.advanceTimersByTimeAsync(5 * 24 * 60 * 60 * 1000);
+
+        const alarmRan = await runDurableObjectAlarm(rateLimiter);
+        expect(alarmRan).toBe(true);
+
+        const result = await rateLimiter.checkLimit({
+          capacity: 5,
+          interval: "1m",
+        });
+
+        expect(result.allowed).toBe(true);
+        expect(result.remaining).toBe(4);
+      });
+    });
+  });
+
+  describe("Auth rate limit", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should block requests when rate limit exceeded", async () => {
+      const reqInit = {
+        method: "POST",
+        headers: {
+          "cf-connecting-ip": "bad-ip",
+          "X-Turnstile-Token": "test-token",
+        },
+      };
+
+      const url = "http://localhost/api/auth/sign-in/email";
+
+      for (let i = 0; i < 5; i++) {
+        const res = await handleAuthRequest(new Request(url, reqInit), env);
+        expect(res.status).not.toBe(429);
+      }
+
+      const res = await handleAuthRequest(new Request(url, reqInit), env);
+      expect(res.status).toBe(429);
+      expect(await res.json()).toEqual({
+        code: "RATE_LIMITED",
+        message: "Too Many Requests",
+        retryAfterMs: expect.any(Number),
+      });
+      expect(res.headers.get("Retry-After")).toBeDefined();
+    });
+  });
+});

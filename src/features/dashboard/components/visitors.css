@@ -1,0 +1,465 @@
+/* 访客构成：左边环形图，右边趋势线和当前维度的排行。 */
+.dashboard-visitors {
+  container: visitors / inline-size;
+}
+
+/* 放大弹层挂在 body 上，不在 .dashboard-visitors 里，配色得再挂一份。 */
+.dashboard-visitors,
+.fuwari-modal.visitor-zoom {
+  --visitor-1: var(--fuwari-primary);
+  --visitor-2: #f59e0b;
+  --visitor-3: #8b5cf6;
+  --visitor-4: #10b981;
+  --visitor-5: #64748b;
+  --visitor-6: #ec4899;
+  --visitor-7: #14b8a6;
+  --visitor-8: #84cc16;
+}
+
+.visitor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: calc(-4 * var(--admin-unit));
+}
+.visitor-tab {
+  padding: calc(5 * var(--admin-unit)) calc(11 * var(--admin-unit));
+  border: 0;
+  border-radius: calc(8 * var(--admin-unit));
+  background: transparent;
+  color: var(--fuwari-fg-50);
+  font-size: calc(13 * var(--admin-unit));
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.visitor-tab:hover {
+  background: var(--dashboard-hover);
+  color: var(--fuwari-fg);
+}
+.visitor-tab[aria-selected="true"] {
+  background: color-mix(in oklab, var(--fuwari-primary) 12%, transparent);
+  color: var(--fuwari-primary);
+  font-weight: 600;
+}
+.visitor-tab:focus-visible {
+  outline: 2px solid var(--fuwari-primary);
+  outline-offset: 1px;
+}
+
+.visitor-body {
+  display: grid;
+  grid-template-areas:
+    "donut trend"
+    "donut legend";
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: calc(12 * var(--admin-unit)) calc(30 * var(--admin-unit));
+  margin-top: calc(2 * var(--admin-unit));
+}
+
+.visitor-donut {
+  position: relative;
+  grid-area: donut;
+  width: calc(164 * var(--admin-unit));
+  max-width: 100%;
+}
+.visitor-donut svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.visitor-donut-track {
+  stroke: color-mix(in oklab, var(--fuwari-fg) 9%, transparent);
+}
+.visitor-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0 18%;
+  text-align: center;
+  pointer-events: none;
+}
+.visitor-donut-label {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--fuwari-fg-75);
+  font-size: calc(11.5 * var(--admin-unit));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.visitor-donut-value {
+  color: var(--fuwari-fg);
+  font-size: calc(26 * var(--admin-unit));
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.visitor-donut-share {
+  color: var(--fuwari-fg-50);
+  font-size: calc(11.5 * var(--admin-unit));
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-trend-block {
+  grid-area: trend;
+  align-self: end;
+  min-width: 0;
+}
+.visitor-trend-title {
+  color: var(--fuwari-fg-50);
+  font-size: calc(12 * var(--admin-unit));
+}
+.visitor-trend {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: calc(2 * var(--admin-unit));
+}
+/* 折线图同样可点开放大。 */
+.visitor-trend-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.visitor-trend-trigger:focus-visible {
+  outline: 2px solid var(--fuwari-primary);
+  outline-offset: 4px;
+  border-radius: calc(6 * var(--admin-unit));
+}
+.visitor-trend-grid {
+  stroke: color-mix(in oklab, var(--fuwari-fg) 9%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.visitor-trend-caption {
+  fill: var(--fuwari-fg-50);
+  font-family: inherit;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+/* 指针靠近某一天：竖线定位，这一列的点放大，并弹出当天的人数。 */
+.visitor-trend-wrap {
+  position: relative;
+}
+.visitor-trend-cursor {
+  stroke: color-mix(in oklab, var(--fuwari-fg) 26%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.visitor-trend-tip {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--admin-unit));
+  min-width: calc(70 * var(--admin-unit));
+  padding: calc(6 * var(--admin-unit)) calc(9 * var(--admin-unit));
+  border: 1px solid color-mix(in oklab, var(--fuwari-fg) 10%, transparent);
+  border-radius: calc(8 * var(--admin-unit));
+  background: var(--fuwari-card-bg);
+  box-shadow: 0 8px 24px color-mix(in oklab, var(--fuwari-fg) 12%, transparent);
+  font-size: calc(11 * var(--admin-unit));
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.visitor-trend-tip-day {
+  color: var(--fuwari-fg-50);
+  font-variant-numeric: tabular-nums;
+}
+.visitor-trend-tip-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--admin-unit));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.visitor-trend-tip-list li {
+  display: flex;
+  align-items: center;
+  gap: calc(6 * var(--admin-unit));
+}
+.visitor-trend-tip-label {
+  overflow: hidden;
+  max-width: calc(104 * var(--admin-unit));
+  color: var(--fuwari-fg-75);
+  text-overflow: ellipsis;
+}
+.visitor-trend-tip-value {
+  margin-left: auto;
+  padding-left: calc(6 * var(--admin-unit));
+  color: var(--fuwari-fg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-legend {
+  display: flex;
+  grid-area: legend;
+  flex-direction: column;
+  gap: calc(7 * var(--admin-unit));
+  align-self: start;
+  /* 固定三行高度：条数多少都不再改变卡片高度。 */
+  min-height: calc(73 * var(--admin-unit));
+  max-height: calc(73 * var(--admin-unit));
+  overflow: hidden;
+}
+/* 展开后列表自己滚动，展开按钮始终留在底部。 */
+.visitor-legend.is-expanded {
+  max-height: calc(215 * var(--admin-unit));
+}
+.visitor-legend-list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: calc(7 * var(--admin-unit));
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.visitor-legend-toggle {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: calc(4 * var(--admin-unit));
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fuwari-primary);
+  font-size: calc(13 * var(--admin-unit));
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+.visitor-legend-toggle:hover {
+  opacity: 0.75;
+}
+.visitor-legend-toggle:focus-visible {
+  outline: 2px solid var(--fuwari-primary);
+  outline-offset: 2px;
+  border-radius: calc(4 * var(--admin-unit));
+}
+.visitor-legend-list > li {
+  display: block;
+}
+/* 图例每行都是按钮：点一下只看这一条的趋势，再点一下还原。 */
+.visitor-legend-item {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: calc(9 * var(--admin-unit));
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: calc(4 * var(--admin-unit));
+  background: transparent;
+  color: inherit;
+  font-size: calc(13 * var(--admin-unit));
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.visitor-legend-item:hover {
+  background: color-mix(in oklab, var(--fuwari-fg) 7%, transparent);
+}
+.visitor-legend-item[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--fuwari-primary) 13%, transparent);
+}
+.visitor-legend-item:focus-visible {
+  outline: 2px solid var(--fuwari-primary);
+  outline-offset: 1px;
+}
+.visitor-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.visitor-legend-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.visitor-legend-share {
+  color: var(--fuwari-fg-50);
+  font-variant-numeric: tabular-nums;
+}
+.visitor-legend-count {
+  color: var(--fuwari-fg-75);
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-empty {
+  margin-top: calc(6 * var(--admin-unit));
+  color: var(--fuwari-fg-50);
+  font-size: calc(13 * var(--admin-unit));
+}
+
+/* 放大后的趋势图。弹层挂在 body 上，拿不到 --admin-unit，尺寸一律用 px。 */
+.fuwari-modal.visitor-zoom {
+  width: min(62rem, calc(100% - 40px));
+}
+.visitor-zoom-body {
+  padding: 20px 24px 22px;
+}
+.visitor-zoom-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+.visitor-zoom-title {
+  color: var(--fuwari-fg);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.visitor-zoom-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fuwari-fg-50);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.visitor-zoom-close:hover {
+  background: color-mix(in oklab, var(--fuwari-fg) 8%, transparent);
+  color: var(--fuwari-fg);
+}
+.visitor-trend-lg {
+  margin: 12px 0 18px;
+}
+.visitor-trend-lg .visitor-trend {
+  margin-top: 0;
+}
+/* 弹层用更大的坐标系，字也跟着放大一档。 */
+.visitor-trend-caption-lg {
+  font-size: 12px;
+}
+/* 弹层里的图更大，提示框按弹层的固定字号走，不跟卡片缩放。 */
+.visitor-zoom .visitor-trend-tip {
+  min-width: 76px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.visitor-zoom .visitor-trend-tip-list li {
+  gap: 7px;
+}
+.visitor-zoom .visitor-trend-tip-label {
+  max-width: 132px;
+}
+.visitor-zoom-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 7px 20px;
+  max-height: 30vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.visitor-zoom-legend li {
+  display: block;
+}
+.visitor-zoom-legend .visitor-legend-item {
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.visitor-zoom-legend .visitor-swatch {
+  width: 10px;
+  height: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .visitor-zoom-close {
+    transition: none;
+  }
+}
+
+/* 弹层挂在 body 上，容器查询管不到，窄屏单独一档。 */
+@media (max-width: 520px) {
+  .fuwari-modal.visitor-zoom {
+    width: calc(100% - 20px);
+  }
+  .visitor-zoom-body {
+    padding: 16px 14px;
+  }
+  .visitor-trend-lg {
+    margin: 10px 0 14px;
+  }
+  .visitor-zoom-legend {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 38vh;
+    gap: 7px;
+  }
+  .visitor-zoom-legend .visitor-legend-item {
+    font-size: 13px;
+  }
+}
+
+/* 区块自己变窄时（单栏手机）就竖着排：环形图居中，趋势和排行各占一行。 */
+@container visitors (max-width: 420px) {
+  .visitor-body {
+    grid-template-areas:
+      "donut"
+      "trend"
+      "legend";
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: calc(16 * var(--admin-unit));
+    margin-top: calc(6 * var(--admin-unit));
+  }
+  .visitor-donut {
+    width: calc(152 * var(--admin-unit));
+  }
+  .visitor-trend-block,
+  .visitor-legend {
+    width: 100%;
+  }
+  /* 单列时卡片本来就会变高，图例不必再锁在固定三行里，整段铺开更好翻。 */
+  .visitor-legend,
+  .visitor-legend.is-expanded {
+    min-height: 0;
+    max-height: none;
+  }
+  .visitor-legend-list {
+    flex: none;
+    overflow: visible;
+  }
+  .visitor-trend-caption {
+    font-size: 10.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visitor-tab {
+    transition: none;
+  }
+}

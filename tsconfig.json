@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "resolveJsonModule": true,
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "tests/*": ["./tests/*"]
+    },
+    "types": ["vite/client", "@cloudflare/vitest-plugin/types"],
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": false,
+    "allowJs": true,
+    /* Linting */
+    "skipLibCheck": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".cloudflare/types/index.d.ts",
+    ".release-it.ts"
+  ],
+  "exclude": ["tmp"]
+}
