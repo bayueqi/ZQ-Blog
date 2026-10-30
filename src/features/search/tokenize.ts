@@ -10,6 +10,11 @@ export function tokenizeForSearch(...parts: Array<string | null | undefined>) {
     .join(" ");
 }
 
+/**
+ * 用户输入的整串就是一个关键词：分词后作为 FTS 短语，要求这些词连续出现。
+ * 搜「2026年1」只命中连着写「2026 年 1x」的地方，不会被拆成「2026」「年」「1」
+ * 三个词各自匹配，末尾补 * 让「2026年1」还能命中「2026年10月」。
+ */
 export function toFtsMatchQuery(query: string) {
   const tokens = Array.from(segmenter.segment(query))
     .filter((item) => item.isWordLike)
@@ -17,13 +22,10 @@ export function toFtsMatchQuery(query: string) {
     .filter((token) => token.length > 0);
 
   if (tokens.length === 0) return null;
-  // FTS5 默认整词匹配，补一个 * 号前缀通配：搜「11」才能命中「111」。
-  return tokens.map((token) => `"${token}"*`).join(" ");
+  return `"${tokens.join(" ")}"*`;
 }
 
+/** 关键词原样保留，不拆词：高亮、计数和 LIKE 都按用户输入的整串来。 */
 export function queryTerms(query: string) {
-  return Array.from(segmenter.segment(query))
-    .filter((item) => item.isWordLike)
-    .map((item) => item.segment)
-    .filter((token) => token.length > 0);
+  return query.split(/\s+/).filter((token) => token.length > 0);
 }

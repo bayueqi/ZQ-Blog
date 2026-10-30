@@ -77,6 +77,40 @@ function countHighlights(...htmls: Array<string | null | undefined>) {
   return total;
 }
 
+/** 卡片右下角那行日期的文字，和页面展示的完全一样。 */
+function hitDateText(date: Date | null | undefined) {
+  const text = formatPublicPostDate(date, { locale: "zh" });
+  return text === "-" ? "" : text;
+}
+
+/** 纯文本里关键词出现了几次；日期那行的统计用它。 */
+function countTextHits(text: string, terms: Array<string>) {
+  if (!text) return 0;
+  const lower = text.toLowerCase();
+  let total = 0;
+  for (const term of terms) {
+    const needle = term.toLowerCase();
+    if (!needle) continue;
+    let from = 0;
+    while (from + needle.length <= lower.length) {
+      const idx = lower.indexOf(needle, from);
+      if (idx === -1) break;
+      total += 1;
+      from = idx + needle.length;
+    }
+  }
+  return total;
+}
+
+/** 一条结果在页面上高亮了几处：标题片段里的 mark，加上日期那行的命中。 */
+function occurrencesOf(
+  date: Date | null | undefined,
+  terms: Array<string>,
+  ...htmls: Array<string | null | undefined>
+) {
+  return countHighlights(...htmls) + countTextHits(hitDateText(date), terms);
+}
+
 async function searchPosts(
   context: DbContext,
   query: string,
@@ -112,7 +146,9 @@ async function searchPosts(
       title: row.title,
       titleHtml,
       snippets,
-      occurrences: countHighlights(
+      occurrences: occurrencesOf(
+        row.publishedAt,
+        terms,
         titleHtml,
         ...snippets.map((line) => line.html),
       ),
@@ -164,7 +200,7 @@ export async function search(
       title: row.body.replaceAll("\n", " ").slice(0, 60),
       titleHtml,
       snippets: [],
-      occurrences: countHighlights(titleHtml),
+      occurrences: occurrencesOf(row.publishedAt, terms, titleHtml),
       category: null,
       tags: [],
       slug: null,
@@ -190,7 +226,9 @@ export async function search(
       title: row.name,
       titleHtml,
       snippets,
-      occurrences: countHighlights(
+      occurrences: occurrencesOf(
+        row.publishedAt,
+        terms,
         titleHtml,
         ...snippets.map((line) => line.html),
       ),
@@ -219,7 +257,9 @@ export async function search(
       title: row.siteName,
       titleHtml,
       snippets,
-      occurrences: countHighlights(
+      occurrences: occurrencesOf(
+        row.createdAt,
+        terms,
         titleHtml,
         ...snippets.map((line) => line.html),
       ),
