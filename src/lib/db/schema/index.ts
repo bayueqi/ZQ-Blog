@@ -1,6 +1,7 @@
 export * from "./auth.table";
 export * from "./comments.table";
 export * from "./config.table";
+export * from "./content-revisions.table";
 export * from "./friend-links.table";
 export * from "./gallery.table";
 export * from "./media.table";

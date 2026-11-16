@@ -10,7 +10,8 @@ import {
   useMediaUrlImport,
 } from "@/features/media/components/media-library/hooks";
 import type { MediaAsset } from "@/features/media/components/media-library/types";
-import { ACCEPTED_IMAGE_TYPES } from "@/features/media/media.schema";
+import { ACCEPTED_MEDIA_TYPES } from "@/features/media/media.schema";
+import { isVideoMime, isVideoUrl } from "@/features/media/utils/media.utils";
 import { useImagePicker } from "@/features/posts/editor/extensions/image-placeholder";
 import { m } from "@/paraglide/messages";
 import { EditorPopover } from "./editor-popover";
@@ -38,13 +39,21 @@ export function ImagePickerPopover({ editor }: { editor: Editor | null }) {
   const library = useMediaPicker(open);
 
   const fill = (asset: MediaAsset) => {
+    const size = {
+      width: asset.width || undefined,
+      height: asset.height || undefined,
+    };
+    if (isVideoMime(asset.mimeType) || isVideoUrl(asset.url)) {
+      editor
+        ?.chain()
+        .fillVideoPlaceholder({ src: asset.url, ...size })
+        .focus()
+        .run();
+      return;
+    }
     editor
       ?.chain()
-      .fillImagePlaceholder({
-        src: asset.url,
-        width: asset.width || undefined,
-        height: asset.height || undefined,
-      })
+      .fillImagePlaceholder({ src: asset.url, ...size })
       .focus()
       .run();
   };
@@ -79,7 +88,13 @@ export function ImagePickerPopover({ editor }: { editor: Editor | null }) {
       >
         {tab === "upload" ? (
           <UploadPanel
-            onFile={(file) => editor?.commands.uploadImageToPlaceholder(file)}
+            onFile={(file) => {
+              if (isVideoMime(file.type)) {
+                editor?.commands.uploadVideoToPlaceholder(file);
+                return;
+              }
+              editor?.commands.uploadImageToPlaceholder(file);
+            }}
           />
         ) : tab === "link" ? (
           <LinkPanel known={library.mediaItems} onImport={fill} />
@@ -112,7 +127,7 @@ function UploadPanel({ onFile }: { onFile: (file: File) => void }) {
       <input
         ref={fileRef}
         type="file"
-        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+        accept={ACCEPTED_MEDIA_TYPES.join(",")}
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];

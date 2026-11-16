@@ -2,7 +2,7 @@ import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/page-heading";
-import { ACCEPTED_IMAGE_TYPES } from "@/features/media/media.schema";
+import { ACCEPTED_MEDIA_TYPES } from "@/features/media/media.schema";
 import { cn, formatBytes } from "@/lib/utils";
 import {
   MOTION,
@@ -289,7 +289,7 @@ export function MediaLibrary() {
         ref={fileRef}
         type="file"
         multiple
-        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+        accept={ACCEPTED_MEDIA_TYPES.join(",")}
         className="hidden"
         onChange={(event) => {
           if (event.target.files) handleFiles(event.target.files);

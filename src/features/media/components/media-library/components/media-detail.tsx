@@ -28,6 +28,7 @@ import {
 } from "@/features/media/queries";
 import {
   getMediaThumbSrc,
+  isVideoMedia,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { formatBytes, formatDate } from "@/lib/utils";
@@ -124,17 +125,24 @@ export function MediaDetail({
       />
       <div ref={contentRef}>
         <div className="media-inspector-preview">
-          <img
-            src={previewSrc}
-            alt={asset.fileName}
-            onLoad={(event) => {
-              if (open && !reduced)
-                event.currentTarget.animate([{ opacity: 0 }, { opacity: 1 }], {
-                  duration: MOTION.content,
-                  easing: "ease-out",
-                });
-            }}
-          />
+          {isVideoMedia(asset.key, asset.mimeType) ? (
+            <video src={asset.url} controls playsInline preload="metadata" />
+          ) : (
+            <img
+              src={previewSrc}
+              alt={asset.fileName}
+              onLoad={(event) => {
+                if (open && !reduced)
+                  event.currentTarget.animate(
+                    [{ opacity: 0 }, { opacity: 1 }],
+                    {
+                      duration: MOTION.content,
+                      easing: "ease-out",
+                    },
+                  );
+              }}
+            />
+          )}
         </div>
         <div className="media-inspector-name">
           <span>{asset.fileName}</span>
@@ -143,8 +151,7 @@ export function MediaDetail({
           {asset.width && asset.height
             ? `${asset.width} × ${asset.height} · `
             : ""}
-          {formatBytes(asset.sizeInBytes)} ·{" "}
-          {formatDate(asset.createdAt, { includeTime: true })}
+          {formatBytes(asset.sizeInBytes)} · {formatDate(asset.createdAt)}
         </p>
         <section className="media-inspector-usage">
           {asset.postCount > 0 ? (

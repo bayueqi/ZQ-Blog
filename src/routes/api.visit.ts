@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { isVisitor, parseUserAgent } from "@/features/visits/visit-agent";
-import { utcDay } from "@/features/visits/visits";
+import { siteDay } from "@/features/visits/visits";
 import { recordVisit } from "@/features/visits/data/visits.data";
 import { getDb } from "@/lib/db";
 
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/visit")({
 
         try {
           await recordVisit(getDb(context.env), {
-            day: utcDay(new Date()),
+            day: siteDay(new Date()),
             country: country.slice(0, 8),
             ...parseUserAgent(userAgent ?? ""),
           });

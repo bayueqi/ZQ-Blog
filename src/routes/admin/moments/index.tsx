@@ -1,13 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ImagePlus, Lock, Pencil, Pin, PinOff, Trash2, X } from "lucide-react";
+import {
+  History,
+  ImagePlus,
+  Lock,
+  Pencil,
+  Pin,
+  PinOff,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import ConfirmationModal from "@/components/ui/confirmation-modal";
+import DatePicker from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FormField } from "@/components/ui/form-field";
 import { IconButton } from "@/components/ui/icon-button";
 import { PageHeader } from "@/components/ui/page-heading";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -17,14 +26,23 @@ import type {
   MomentImage,
 } from "@/features/moments/moments.schema";
 import "@/features/moments/components/admin/moments-workspace.css";
+import "@/features/posts/components/post-manager/post-manager.css";
+import { PostStatusBadge } from "@/features/posts/components/post-status-badge";
 import { adminMomentsQuery } from "@/features/moments/queries";
+import {
+  RevisionHistoryDialog,
+  type RevisionTarget,
+} from "@/features/revisions/components/revision-history-dialog";
 import { MediaPicker } from "@/features/media/components/media-library/components";
 import type { MediaAsset } from "@/features/media/components/media-library/types";
 import {
   getPublicImageSrc,
+  isVideoUrl,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { orpc, orpcClient } from "@/lib/orpc";
+import { handleORPCError } from "@/lib/orpc/error-handler";
+import { siteDateKey } from "@/lib/site-time";
 import { formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -50,7 +68,10 @@ interface FormState {
   passwordEnabled: boolean;
   /** 库里原本就有密码。 */
   hasPassword: boolean;
+  /** 是否发布；和发布时间各管各的。 */
   published: boolean;
+  /** 发布时间 YYYY-MM-DD；always 有值，不选就是今天。 */
+  publishedAt: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -61,9 +82,14 @@ const EMPTY_FORM: FormState = {
   passwordEnabled: false,
   hasPassword: false,
   published: true,
+  publishedAt: siteDateKey(),
 };
 
 type Patch = (current: FormState) => FormState;
+
+/** 时间戳换成站点时区的日历日；老数据没存日期就按今天算。 */
+const dateKeyOf = (iso: string | null) =>
+  iso ? siteDateKey(new Date(iso)) : siteDateKey();
 
 /** 新建卡片和就地编辑共用这一套字段。 */
 function MomentEditor({
@@ -118,11 +144,21 @@ function MomentEditor({
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
           {value.images.map((image, index) => (
             <div key={`${image.url}-${index}`} className="relative">
-              <img
-                src={getPublicImageSrc(image.url, PUBLIC_IMAGE_WIDTH.avatar)}
-                alt=""
-                className="aspect-square w-full rounded-lg object-cover"
-              />
+              {isVideoUrl(image.url) ? (
+                <video
+                  src={image.url}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="aspect-square w-full rounded-lg bg-black object-cover"
+                />
+              ) : (
+                <img
+                  src={getPublicImageSrc(image.url, PUBLIC_IMAGE_WIDTH.avatar)}
+                  alt=""
+                  className="aspect-square w-full rounded-lg object-cover"
+                />
+              )}
               <button
                 type="button"
                 onClick={() =>
@@ -141,66 +177,56 @@ function MomentEditor({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          ref={pickButtonRef}
-          variant="plain"
-          onClick={() => setPickerOpen(true)}
-          disabled={value.images.length >= 9}
-        >
-          <ImagePlus size={15} strokeWidth={2} />
-          {m.admin_moments_add_image()}
-        </Button>
-
-        <label className="flex items-center gap-1.5 text-sm fuwari-text-75">
-          <input
-            type="checkbox"
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
+            {m.admin_moments_published()}
+          </span>
+          <Switch
+            aria-label={m.admin_moments_published()}
             checked={value.published}
-            onChange={(event) =>
-              onChange((current) => ({
-                ...current,
-                published: event.target.checked,
-              }))
+            onCheckedChange={(checked) =>
+              onChange((current) => ({ ...current, published: checked }))
+            }
+            className="min-h-9"
+          />
+          <DatePicker
+            value={value.publishedAt}
+            onChange={(dateStr) =>
+              onChange((current) => ({ ...current, publishedAt: dateStr }))
             }
           />
-          {m.admin_moments_published()}
-        </label>
-
-        <div className="ml-auto flex items-center gap-2">
-          {onCancel ? (
-            <Button variant="text" onClick={onCancel}>
-              {m.admin_moments_cancel()}
-            </Button>
-          ) : null}
-          <Button variant="primary" onClick={onSubmit} disabled={pending}>
-            {submitLabel}
-          </Button>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2">
-        <Switch
-          label={m.editor_meta_visibility_password()}
-          checked={value.passwordEnabled}
-          onCheckedChange={(checked) =>
-            onChange((current) => ({
-              ...current,
-              passwordEnabled: checked,
-              password: checked ? current.password : "",
-            }))
-          }
-          className="min-h-10 w-auto text-sm"
-        />
+        <div className="flex items-center gap-2.5">
+          <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
+            {m.editor_meta_visibility_password()}
+          </span>
+          <Switch
+            aria-label={m.editor_meta_visibility_password()}
+            checked={value.passwordEnabled}
+            onCheckedChange={(checked) =>
+              onChange((current) => ({
+                ...current,
+                passwordEnabled: checked,
+                password: checked ? current.password : "",
+              }))
+            }
+            className="min-h-9"
+          />
+        </div>
+
         {value.passwordEnabled ? (
-          <FormField
-            label={m.editor_meta_access_password()}
-            className="max-w-xs"
-          >
+          <div className="flex items-center gap-2.5">
+            <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
+              {m.editor_meta_access_password()}
+            </span>
             <PasswordInput
               value={value.password}
               maxLength={100}
               secret
               autoComplete="new-password"
+              className="max-w-xs"
               placeholder={
                 value.hasPassword
                   ? m.editor_meta_access_password_keep()
@@ -213,8 +239,31 @@ function MomentEditor({
                 }))
               }
             />
-          </FormField>
+          </div>
         ) : null}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-(--admin-rule) pt-3">
+        <Button
+          ref={pickButtonRef}
+          variant="plain"
+          onClick={() => setPickerOpen(true)}
+          disabled={value.images.length >= 9}
+        >
+          <ImagePlus size={15} strokeWidth={2} />
+          {m.admin_moments_add_image()}
+        </Button>
+
+        <div className="ml-auto flex items-center gap-2">
+          {onCancel ? (
+            <Button variant="text" onClick={onCancel}>
+              {m.admin_moments_cancel()}
+            </Button>
+          ) : null}
+          <Button variant="primary" onClick={onSubmit} disabled={pending}>
+            {submitLabel}
+          </Button>
+        </div>
       </div>
 
       <MediaPicker
@@ -239,6 +288,8 @@ function AdminMomentsPage() {
   const [editing, setEditing] = useState<FormState | null>(null);
   /** 等待确认删除的那一条。 */
   const [deleting, setDeleting] = useState<AdminMoment | null>(null);
+  /** 正在翻历史版本的那一条。 */
+  const [history, setHistory] = useState<RevisionTarget | null>(null);
   const [pending, setPending] = useState<boolean>(false);
 
   const invalidate = () =>
@@ -250,6 +301,7 @@ function AdminMomentsPage() {
       images: Array<MomentImage>;
       password?: string;
       published: boolean;
+      publishedAt: string;
     }) => orpcClient.moments.admin.create(input),
     onSuccess: () => void invalidate(),
   });
@@ -261,6 +313,7 @@ function AdminMomentsPage() {
       images: Array<MomentImage>;
       password?: string;
       published: boolean;
+      publishedAt: string;
     }) => orpcClient.moments.admin.update(input),
     onSuccess: () => void invalidate(),
   });
@@ -306,6 +359,7 @@ function AdminMomentsPage() {
       passwordEnabled: target.hasPassword,
       hasPassword: target.hasPassword,
       published: target.published,
+      publishedAt: dateKeyOf(target.publishedAt),
     });
     requestAnimationFrame(() => {
       document
@@ -323,6 +377,7 @@ function AdminMomentsPage() {
       passwordEnabled: moment.hasPassword,
       hasPassword: moment.hasPassword,
       published: moment.published,
+      publishedAt: dateKeyOf(moment.publishedAt),
     });
 
   const save = async (state: FormState) => {
@@ -334,6 +389,7 @@ function AdminMomentsPage() {
         body: state.body,
         images: state.images,
         published: state.published,
+        publishedAt: state.publishedAt,
         // 填了新密码就换；开关留着但没填表示保持原密码；关掉开关传空串表示取消密码。
         ...(protectedNow
           ? state.password.trim()
@@ -349,8 +405,17 @@ function AdminMomentsPage() {
         setEditing(null);
       }
       toast.success(m.admin_moments_saved());
-    } catch {
-      toast.error(m.admin_moments_save_failed());
+    } catch (error) {
+      handleORPCError(error, {
+        defined: {
+          EMPTY: () => toast.error(m.admin_moments_empty_content()),
+          NOT_FOUND: () => toast.error(m.admin_moments_save_failed()),
+        },
+        fallback: (unknown) => {
+          const detail = unknown instanceof Error ? unknown.message.trim() : "";
+          toast.error(detail || m.admin_moments_save_failed());
+        },
+      });
     } finally {
       setPending(false);
     }
@@ -391,117 +456,169 @@ function AdminMomentsPage() {
         {isLoading ? null : moments.length === 0 ? (
           <EmptyState description={m.admin_moments_empty()} />
         ) : (
-          <ul className="moments-list">
-            {moments.map((moment) => {
-              const active = editing?.id === moment.id ? editing : null;
-              if (active) {
-                return (
-                  <li
-                    key={moment.id}
-                    id={`admin-moment-${moment.id}`}
-                    className="moments-item moments-item-editing"
-                  >
-                    <MomentEditor
-                      value={active}
-                      onChange={(patch) =>
-                        setEditing((current) =>
-                          current ? patch(current) : current,
-                        )
-                      }
-                      onSubmit={() => void save(active)}
-                      onCancel={() => setEditing(null)}
-                      submitLabel={m.admin_moments_save()}
-                      pending={pending}
-                      autoFocus
-                    />
-                  </li>
-                );
-              }
-              return (
-                <li
-                  key={moment.id}
-                  id={`admin-moment-${moment.id}`}
-                  className="moments-item"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 font-mono text-xs fuwari-text-50">
-                      <span>
-                        {formatDate(moment.publishedAt, { includeTime: true })}
-                      </span>
-                      {moment.pinned ? (
-                        <Pin
-                          size={12}
-                          strokeWidth={2}
-                          aria-label={m.pinned_badge()}
-                        />
-                      ) : null}
-                      {moment.hasPassword ? (
-                        <Lock
-                          size={12}
-                          strokeWidth={2}
-                          aria-label={m.admin_moments_locked()}
-                        />
-                      ) : null}
-                      {moment.published ? null : (
-                        <span className="rounded bg-(--fuwari-meta-divider)/20 px-1.5 py-0.5">
-                          {m.admin_moments_draft()}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 line-clamp-2 whitespace-pre-wrap break-words text-sm fuwari-text-90">
-                      {moment.body || m.admin_moments_image_only()}
-                    </p>
-                    {moment.images.length > 0 ? (
-                      <div className="mt-2 flex gap-1.5">
-                        {moment.images.slice(0, 6).map((image, index) => (
-                          <img
-                            key={`${image.url}-${index}`}
-                            src={getPublicImageSrc(
-                              image.url,
-                              PUBLIC_IMAGE_WIDTH.avatar,
-                            )}
-                            alt=""
-                            className="h-10 w-10 rounded object-cover"
+          <div className="post-list-table-wrap moments-table">
+            <table className="post-list-table">
+              <colgroup>
+                <col style={{ width: "44%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "15%" }} />
+                <col style={{ width: "15%" }} />
+                <col style={{ width: "14%" }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">{m.admin_moments_col_body()}</th>
+                  <th scope="col">{m.admin_posts_filter_status()}</th>
+                  <th scope="col">{m.admin_posts_time_published()}</th>
+                  <th scope="col">{m.admin_posts_time_modified()}</th>
+                  <th scope="col">{m.admin_posts_col_actions()}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {moments.map((moment) => {
+                  const active = editing?.id === moment.id ? editing : null;
+                  if (active) {
+                    return (
+                      <tr key={moment.id} id={`admin-moment-${moment.id}`}>
+                        <td colSpan={5}>
+                          <MomentEditor
+                            value={active}
+                            onChange={(patch) =>
+                              setEditing((current) =>
+                                current ? patch(current) : current,
+                              )
+                            }
+                            onSubmit={() => void save(active)}
+                            onCancel={() => setEditing(null)}
+                            submitLabel={m.admin_moments_save()}
+                            pending={pending}
+                            autoFocus
                           />
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <IconButton
-                      size="sm"
-                      label={
-                        moment.pinned
-                          ? m.admin_moments_unpin()
-                          : m.admin_moments_pin()
-                      }
-                      onClick={() => pinned.mutate(moment)}
-                    >
-                      {moment.pinned ? (
-                        <PinOff size={15} strokeWidth={2} />
-                      ) : (
-                        <Pin size={15} strokeWidth={2} />
-                      )}
-                    </IconButton>
-                    <IconButton
-                      size="sm"
-                      label={m.admin_moments_edit()}
-                      onClick={() => startEdit(moment)}
-                    >
-                      <Pencil size={15} strokeWidth={2} />
-                    </IconButton>
-                    <IconButton
-                      size="sm"
-                      label={m.admin_moments_delete()}
-                      onClick={() => setDeleting(moment)}
-                    >
-                      <Trash2 size={15} strokeWidth={2} />
-                    </IconButton>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  const scheduled =
+                    moment.published &&
+                    moment.publishedAt != null &&
+                    new Date(moment.publishedAt).getTime() > Date.now();
+                  return (
+                    <tr key={moment.id} id={`admin-moment-${moment.id}`}>
+                      <td>
+                        <div className="post-list-title-cell">
+                          <span className="post-list-pin">
+                            {moment.pinned ? (
+                              <Pin size={18} aria-label={m.pinned_badge()} />
+                            ) : null}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 whitespace-pre-wrap break-words text-sm fuwari-text-90">
+                              {moment.body || m.admin_moments_image_only()}
+                              {moment.hasPassword ? (
+                                <Lock
+                                  size={12}
+                                  strokeWidth={2}
+                                  className="post-list-lock ml-1.5 inline align-middle"
+                                  aria-label={m.admin_moments_locked()}
+                                />
+                              ) : null}
+                            </p>
+                            {moment.images.length > 0 ? (
+                              <div className="mt-1.5 flex gap-1">
+                                {moment.images
+                                  .slice(0, 4)
+                                  .map((image, index) =>
+                                    isVideoUrl(image.url) ? (
+                                      <video
+                                        key={`${image.url}-${index}`}
+                                        src={image.url}
+                                        muted
+                                        playsInline
+                                        preload="metadata"
+                                        className="h-8 w-8 rounded bg-black object-cover"
+                                      />
+                                    ) : (
+                                      <img
+                                        key={`${image.url}-${index}`}
+                                        src={getPublicImageSrc(
+                                          image.url,
+                                          PUBLIC_IMAGE_WIDTH.avatar,
+                                        )}
+                                        alt=""
+                                        className="h-8 w-8 rounded object-cover"
+                                      />
+                                    ),
+                                  )}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <PostStatusBadge
+                          published={moment.published}
+                          scheduled={scheduled}
+                        />
+                      </td>
+                      <td className="post-list-date">
+                        {moment.publishedAt
+                          ? formatDate(moment.publishedAt)
+                          : "—"}
+                      </td>
+                      <td className="post-list-date">
+                        {moment.updatedAt ? formatDate(moment.updatedAt) : "—"}
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-0.5">
+                          <IconButton
+                            size="sm"
+                            label={
+                              moment.pinned
+                                ? m.admin_moments_unpin()
+                                : m.admin_moments_pin()
+                            }
+                            onClick={() => pinned.mutate(moment)}
+                          >
+                            {moment.pinned ? (
+                              <PinOff size={15} strokeWidth={2} />
+                            ) : (
+                              <Pin size={15} strokeWidth={2} />
+                            )}
+                          </IconButton>
+                          <IconButton
+                            size="sm"
+                            label={m.admin_moments_edit()}
+                            onClick={() => startEdit(moment)}
+                          >
+                            <Pencil size={15} strokeWidth={2} />
+                          </IconButton>
+                          <IconButton
+                            size="sm"
+                            label={m.admin_revisions_open()}
+                            onClick={() =>
+                              setHistory({
+                                type: "moment",
+                                id: moment.id,
+                              })
+                            }
+                          >
+                            <History size={15} strokeWidth={2} />
+                          </IconButton>
+                          <IconButton
+                            size="sm"
+                            label={m.admin_moments_delete()}
+                            onClick={() => setDeleting(moment)}
+                          >
+                            <Trash2 size={15} strokeWidth={2} />
+                          </IconButton>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -516,6 +633,12 @@ function AdminMomentsPage() {
           if (!remove.isPending) setDeleting(null);
         }}
         onConfirm={() => void confirmDelete()}
+      />
+
+      <RevisionHistoryDialog
+        target={history}
+        onClose={() => setHistory(null)}
+        onRestored={() => void invalidate()}
       />
     </div>
   );

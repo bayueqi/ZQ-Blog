@@ -34,6 +34,10 @@
   margin-top: calc(18 * var(--admin-unit));
   border-top: 1px solid var(--admin-rule);
 }
+/* 列表换成了和文章一样的表格，和上面的新建区拉开距离。 */
+.moments-table {
+  margin-top: calc(18 * var(--admin-unit));
+}
 .moments-item {
   display: flex;
   align-items: flex-start;

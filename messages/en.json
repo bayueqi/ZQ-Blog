@@ -116,14 +116,6 @@
       }
     }
   ],
-  "format_datetime": [
-    {
-      "declarations": ["input date", "local formattedDateTimeEn = date: datetime year=numeric month=2-digit day=2-digit hour=2-digit minute=2-digit"],
-      "match": {
-        "date=*": "{formattedDateTimeEn}"
-      }
-    }
-  ],
   "time_ago_just_now": "just now",
   "time_ago_minutes": [
     {
@@ -393,6 +385,7 @@
   "common_expand_all": "Expand all",
   "common_collapse": "Collapse",
   "common_select_date": "Select date",
+  "common_clear": "Clear",
   "common_switch_language": "Switch language",
   "common_untitled": "Untitled",
   "common_plain_text": "Plain Text",
@@ -401,14 +394,6 @@
   "theme_dark": "Dark",
   "theme_system": "System",
   "theme_toggle_title": "Theme: {theme}",
-  "format_month_day_time": [
-    {
-      "declarations": ["input date", "local formattedDateTimeEn = date: datetime month=2-digit day=2-digit hour=2-digit minute=2-digit hour12=true"],
-      "match": {
-        "date=*": "{formattedDateTimeEn}"
-      }
-    }
-  ],
   "admin_layout_title": "Admin",
   "admin_layout_settings": "Settings",
   "admin_layout_back_to_site": "Back to Site",
@@ -488,9 +473,10 @@
   "admin_posts_toast_delete_success": "Deleted",
   "admin_posts_toast_delete_success_desc": "Deleted \"{title}\"",
   "admin_posts_status_published": "Published",
+  "admin_posts_status_scheduled": "Scheduled",
   "admin_posts_status_draft": "Draft",
-  "admin_posts_time_published": "Published",
-  "admin_posts_time_modified": "Modified",
+  "admin_posts_time_published": "Published on",
+  "admin_posts_time_modified": "Last modified",
   "admin_pagination_info": [
     {
       "declarations": ["input startItem", "input endItem", "input totalItems"],
@@ -622,7 +608,7 @@
   "editor_toolbar_table": "Insert Table",
   "editor_toolbar_table_size": "{cols} columns × {rows} rows",
   "editor_toolbar_link": "Insert Link",
-  "editor_toolbar_image": "Insert Image",
+  "editor_toolbar_image": "Insert image or video",
   "editor_toolbar_undo": "Undo",
   "editor_toolbar_redo": "Redo",
   "editor_link_url": "Link URL",
@@ -666,14 +652,14 @@
   "post_video_play_title": "Play {provider} video: {title}",
   "post_video_player": "{provider} video player",
   "post_video_open": "Open on {provider}",
-  "editor_image_picker_title": "Choose image",
-  "editor_image_url": "Image URL",
+  "editor_image_picker_title": "Choose image or video",
+  "editor_image_url": "Image or video URL",
   "editor_image_import": "Import",
-  "editor_image_placeholder": "Add an image",
+  "editor_image_placeholder": "Add an image or video",
   "editor_image_tab_upload": "Upload",
   "editor_image_tab_link": "Link",
   "editor_image_tab_library": "Files",
-  "editor_image_upload_choose": "Choose an image file",
+  "editor_image_upload_choose": "Choose an image or video file",
   "editor_formula_edit": "Edit Formula",
   "editor_formula_insert": "Insert Formula",
   "editor_formula_inline": "Inline",
@@ -755,8 +741,8 @@
   "media_upload_status_uploading": "Uploading",
   "media_preview_size": "Size",
   "media_toast_delete_fail": "Delete Failed",
-  "media_validation_file_too_large": "File size must be less than 10MB",
-  "media_validation_file_invalid_type": "Only image files are supported",
+  "media_validation_file_too_large": "File size must be less than 50MB",
+  "media_validation_file_invalid_type": "Only images and videos are supported",
   "media_upload_fail": [
     {
       "declarations": ["input name"],
@@ -825,7 +811,7 @@
   "friend_links_toast_delete_success": "Friend link deleted",
   "settings_toast_save_success": "Settings saved",
   "settings_toast_save_error": "Failed to save settings, please try again",
-  "settings_header_title": "System Settings",
+  "settings_header_title": "Settings",
   "settings_saving": "Saving",
   "settings_nav_site": "Site",
   "settings_nav_notify": "Notifications",
@@ -1394,6 +1380,7 @@
   "admin_gallery_edit": "Edit",
   "admin_gallery_published": "Publish",
   "admin_gallery_draft": "Draft",
+  "admin_gallery_col_name": "Collection",
   "admin_gallery_delete": "Delete",
   "admin_gallery_delete_confirm": "Delete “{name}”? Its photos go with it.",
   "admin_gallery_saved": "Saved",
@@ -1401,7 +1388,7 @@
   "admin_gallery_failed": "That did not work",
   "admin_gallery_empty_photos": "No photos in this collection yet",
   "admin_gallery_new": "New collection",
-  "admin_gallery_upload": "Upload photos",
+  "admin_gallery_upload": "Upload photos and videos",
   "admin_gallery_empty": "No albums",
   "admin_gallery_overview": "Albums: {collections} · Photos: {photos}",
   "media_badge_gallery": "Gallery",
@@ -1430,21 +1417,31 @@
   "admin_moments_manage_title": "Moments",
   "admin_moments_description": "Moments: {count}",
   "admin_moments_body_placeholder": "Write something",
-  "admin_moments_add_image": "Images",
-  "admin_moments_pick_image": "Choose image",
-  "admin_moments_remove_image": "Remove image",
+  "admin_moments_add_image": "Images and videos",
+  "admin_moments_pick_image": "Choose image or video",
+  "admin_moments_remove_image": "Remove",
   "admin_moments_published": "Publish",
   "admin_moments_cancel": "Cancel",
   "admin_moments_save": "Save",
   "admin_moments_saved": "Saved",
   "admin_moments_save_failed": "Could not save",
+  "admin_moments_empty_content": "Add text, an image or a video",
   "admin_moments_empty": "No moments yet",
   "admin_moments_locked": "Protected",
   "admin_moments_draft": "Draft",
-  "admin_moments_image_only": "Images only",
+  "admin_moments_col_body": "Content",
+  "admin_moments_image_only": "Images and videos only",
   "admin_moments_edit": "Edit",
   "admin_moments_delete": "Delete",
   "admin_moments_delete_confirm": "This can't be undone. Delete this moment?",
   "admin_moments_deleted": "Deleted",
-  "admin_moments_delete_failed": "Could not delete"
+  "admin_moments_delete_failed": "Could not delete",
+  "admin_revisions_open": "Version history",
+  "admin_revisions_current": "Current",
+  "admin_revisions_restore_message": "The current content is saved first, then replaced by this version.",
+  "admin_revisions_restored": "Restored",
+  "admin_revisions_restore_failed": "Could not restore",
+  "admin_revisions_deleted": "Deleted",
+  "admin_revisions_delete_failed": "Could not delete",
+  "admin_revisions_delete_message": "This can't be undone. The current content is not affected."
 }

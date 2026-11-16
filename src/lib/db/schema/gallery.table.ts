@@ -21,7 +21,11 @@ export const GalleryCategoriesTable = sqliteTable(
     sortOrder: integer("sort_order").notNull().default(0),
     /** 有值即置顶，排在 sortOrder 之前。 */
     pinnedAt: integer("pinned_at", { mode: "timestamp" }),
-    /** 有值才在前台出现；空着是草稿。 */
+    /** 是否发布，与发布时间互不影响。 */
+    published: integer("published", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    /** 对外显示的发布时间；空着表示发布即当期。 */
     publishedAt: integer("published_at", { mode: "timestamp" }),
     createdAt,
     updatedAt,

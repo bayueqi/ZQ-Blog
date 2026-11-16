@@ -15,6 +15,7 @@ import mediaRouter from "@/features/media/server/router";
 import momentsRouter from "@/features/moments/server/router";
 import mutedUsersRouter from "@/features/muted-users/server/router";
 import postsRouter from "@/features/posts/server/router";
+import revisionsRouter from "@/features/revisions/server/router";
 import searchRouter from "@/features/search/server/router";
 import statsRouter from "@/features/stats/server/router";
 import tagsRouter from "@/features/tags/server/router";
@@ -32,6 +33,7 @@ export const router = {
   friendLinks: friendLinksRouter,
   gallery: galleryRouter,
   moments: momentsRouter,
+  revisions: revisionsRouter,
   email: emailRouter,
   search: searchRouter,
   stats: statsRouter,

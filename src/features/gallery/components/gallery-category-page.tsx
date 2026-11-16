@@ -1,7 +1,16 @@
 import { ClientOnly, Link } from "@tanstack/react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Images,
+  Pencil,
+  Play,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { PublicDateMeta } from "@/components/common/public-date-meta";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CommentSection } from "@/features/comments/components/comment-section";
 import { GalleryLock } from "@/features/gallery/components/gallery-lock";
@@ -12,6 +21,7 @@ import type {
 } from "@/features/gallery/gallery.schema";
 import {
   getPublicImageSrc,
+  isVideoMime,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { ShareButton } from "@/features/share/share-dialog";
@@ -63,16 +73,16 @@ export function GalleryCategoryPage({
 
   return (
     <section className="fuwari-card-base fuwari-content-enter">
-      <header className="space-y-1 p-6">
+      <header className="space-y-3 p-6">
         <Link
           to="/gallery"
-          className="mb-2 flex w-fit items-center gap-1 text-sm fuwari-text-50 hover:text-(--fuwari-primary)"
+          className="flex w-fit items-center gap-1 text-sm fuwari-text-50 hover:text-(--fuwari-primary)"
         >
           <ArrowLeft size={15} strokeWidth={1.8} />
           {m.gallery_back_to_all()}
         </Link>
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-semibold fuwari-text-90">
+          <h1 className="text-3xl font-bold fuwari-text-90 md:text-[2.25rem]/[2.75rem]">
             {concealed ? m.gallery_private_placeholder() : category.name}
           </h1>
           <div className="flex shrink-0 items-center gap-3">
@@ -95,10 +105,22 @@ export function GalleryCategoryPage({
           <p className="text-sm fuwari-text-50">{category.description}</p>
         )}
         {!concealed && (
-          <p className="text-xs fuwari-text-50">
-            {m.gallery_photo_count({ count: category.photoCount })}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <PublicDateMeta
+              publishedAt={category.publishedAt}
+              updatedAt={category.updatedAt}
+            />
+            <div className="flex items-center">
+              <div className="fuwari-meta-icon">
+                <Images strokeWidth={1.5} size={20} />
+              </div>
+              <span className="text-sm font-medium fuwari-text-50">
+                {m.gallery_photo_count({ count: category.photoCount })}
+              </span>
+            </div>
+          </div>
         )}
+        <div className="border-b border-dashed border-(--fuwari-meta-divider)" />
       </header>
 
       {locked ? (
@@ -116,14 +138,35 @@ export function GalleryCategoryPage({
               <button
                 type="button"
                 onClick={() => setActive(index)}
-                className="block aspect-square w-full overflow-hidden rounded-xl"
+                className="relative block aspect-square w-full overflow-hidden rounded-xl"
               >
-                <img
-                  src={getPublicImageSrc(photo.url, PUBLIC_IMAGE_WIDTH.cover)}
-                  alt={photo.caption ?? category.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
-                />
+                {isVideoMime(photo.mimeType) ? (
+                  <>
+                    <video
+                      src={photo.url}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      aria-label={photo.caption ?? category.name}
+                      className="h-full w-full object-cover"
+                      onLoadedMetadata={(event) => {
+                        event.currentTarget.currentTime = 0.1;
+                      }}
+                    />
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white">
+                        <Play size={18} fill="currentColor" />
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  <img
+                    src={getPublicImageSrc(photo.url, PUBLIC_IMAGE_WIDTH.cover)}
+                    alt={photo.caption ?? category.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                  />
+                )}
               </button>
               {photo.caption && (
                 <p className="mt-1 truncate px-1 text-xs fuwari-text-50">
@@ -170,12 +213,23 @@ export function GalleryCategoryPage({
             >
               <ChevronLeft size={20} />
             </button>
-            <img
-              src={getPublicImageSrc(current.url, PUBLIC_IMAGE_WIDTH.zoom)}
-              alt={current.caption ?? category.name}
-              onClick={(event) => event.stopPropagation()}
-              className="max-h-[90vh] max-w-full rounded-lg object-contain"
-            />
+            {isVideoMime(current.mimeType) ? (
+              <video
+                src={current.url}
+                controls
+                autoPlay
+                playsInline
+                onClick={(event) => event.stopPropagation()}
+                className="max-h-[90vh] max-w-full rounded-lg"
+              />
+            ) : (
+              <img
+                src={getPublicImageSrc(current.url, PUBLIC_IMAGE_WIDTH.zoom)}
+                alt={current.caption ?? category.name}
+                onClick={(event) => event.stopPropagation()}
+                className="max-h-[90vh] max-w-full rounded-lg object-contain"
+              />
+            )}
             <button
               type="button"
               onClick={(event) => {

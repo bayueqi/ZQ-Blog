@@ -29,6 +29,14 @@ type EntryConfig<
   address?: ReadonlyArray<keyof TParams & string>;
   namespace?: string;
   ttl?: Duration;
+  /**
+   * 返回一个毫秒时间戳，缓存必须在该时刻之前过期。
+   * 用于“到点内容才变”的场景，例如定时发布的文章。
+   */
+  ttlCap?: (
+    context: PublicCacheReadContext,
+    data: z.infer<TSchema>,
+  ) => Promise<number | null>;
   hydrate?: (data: z.infer<TSchema>) => z.infer<TSchema>;
 };
 
@@ -49,6 +57,10 @@ type RegisteredEntry = {
     context: PublicCacheReadContext,
     params: Record<string, unknown>,
   ) => Promise<unknown>;
+  ttlCap?: (
+    context: PublicCacheReadContext,
+    data: unknown,
+  ) => Promise<number | null>;
   hydrate?: (data: unknown) => unknown;
 };
 
@@ -172,8 +184,18 @@ async function readEntry<T>(
   );
 
   const persist = async (value: unknown) => {
+    // 有“到点才生效”的内容时，缓存不能活过那个时刻，否则到点也看不到变化。
+    let ttlMs = ms(entry.ttl);
+    if (entry.ttlCap) {
+      const cap = await entry.ttlCap(context, value).catch(() => null);
+      if (cap !== null && cap > Date.now()) {
+        ttlMs = Math.min(ttlMs, cap - Date.now());
+      }
+    }
+    // KV 的 expirationTtl 下限是 60 秒。
+    const expirationTtl = Math.max(60, Math.floor(ttlMs / 1000));
     await context.env.KV.put(serializedKey, JSON.stringify(value), {
-      expirationTtl: Math.floor(ms(entry.ttl) / 1000),
+      expirationTtl,
     }).catch((err) =>
       console.error(
         JSON.stringify({
@@ -257,6 +279,10 @@ export function defineEntry<
     key: (params) => config.key(params as TParams),
     schema: config.schema,
     load: (context, params) => config.load(context, params as TParams),
+    ttlCap: config.ttlCap
+      ? (context, data) =>
+          config.ttlCap!(context, data as z.infer<TSchema>)
+      : undefined,
     hydrate: config.hydrate
       ? (data) => config.hydrate!(data as z.infer<TSchema>)
       : undefined,

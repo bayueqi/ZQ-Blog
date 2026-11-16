@@ -132,6 +132,7 @@ export function ProfilePage({
           <MediaPicker
             open
             title={m.account_avatar_pick_media()}
+            imagesOnly
             onClose={() => setPickingAvatar(false)}
             onSelect={(asset) => {
               profileForm.setImage(

@@ -15,6 +15,8 @@ import {
   getTransformSourceUrl,
   parseImageTransform,
   isGifKey,
+  isVideoKey,
+  isVideoMime,
 } from "@/features/media/utils/media.utils";
 import * as PostMediaRepo from "@/features/posts/data/post-media.data";
 import { CACHE_CONTROL } from "@/lib/constants";
@@ -26,7 +28,10 @@ export async function upload(
 ) {
   const { file } = input;
 
-  const dimensions = getImageDimensions(await file.arrayBuffer());
+  // 视频没有可取的长宽，也不该为了读尺寸把整段文件拉进内存。
+  const dimensions = isVideoMime(file.type)
+    ? null
+    : getImageDimensions(await file.arrayBuffer());
   const width = dimensions?.width;
   const height = dimensions?.height;
 
@@ -290,6 +295,19 @@ function fileNameFromUrl(url: URL, mimeType: string) {
   return `image.${ext}`;
 }
 
+/** `bytes=start-end` 的单段解析；多段和其它写法一律当成没带。 */
+function parseByteRange(header: string | null) {
+  if (!header) return null;
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+  if (!match) return null;
+  const [, from, to] = match;
+  if (from === "" && to === "") return null;
+  return {
+    start: from === "" ? null : Number(from),
+    end: to === "" ? null : Number(to),
+  };
+}
+
 export async function handleImageRequest(
   env: Env,
   key: string,
@@ -299,6 +317,56 @@ export async function handleImageRequest(
   const searchParams = url.searchParams;
 
   const serveOriginal = async () => {
+    // 视频靠 Range 分段加载和拖动进度条，Safari 不给 206 就直接放不出来。
+    const requested = parseByteRange(request.headers.get("range"));
+
+    if (requested) {
+      const head = await env.R2.head(key);
+      if (!head) {
+        return new Response("Image not found", { status: 404 });
+      }
+
+      const { start, end } = requested;
+      const range =
+        start === null
+          ? { suffix: end ?? 0 }
+          : { offset: start, length: (end ?? head.size - 1) - start + 1 };
+
+      const size = head.size;
+      const from = start === null ? Math.max(size - (end ?? 0), 0) : start;
+      const to = start === null ? size - 1 : Math.min(end ?? size - 1, size - 1);
+
+      if (start !== null && (start >= size || from > to)) {
+        return new Response(null, {
+          status: 416,
+          headers: { "Content-Range": `bytes */${size}` },
+        });
+      }
+
+      const object = await env.R2.get(key, { range });
+      if (!object) {
+        return new Response("Image not found", { status: 404 });
+      }
+
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set(
+        "Content-Type",
+        object.httpMetadata?.contentType ||
+          getContentTypeFromKey(key) ||
+          "application/octet-stream",
+      );
+      headers.set("ETag", object.httpEtag);
+      headers.set("Accept-Ranges", "bytes");
+      headers.set("Content-Range", `bytes ${from}-${to}/${size}`);
+      headers.set("Content-Length", String(to - from + 1));
+      Object.entries(CACHE_CONTROL.public).forEach(([k, v]) => {
+        headers.set(k, v);
+      });
+
+      return new Response(object.body, { status: 206, headers });
+    }
+
     const object = await env.R2.get(key);
     if (!object) {
       return new Response("Image not found", { status: 404 });
@@ -313,6 +381,7 @@ export async function handleImageRequest(
     object.writeHttpMetadata(headers);
     headers.set("Content-Type", contentType);
     headers.set("ETag", object.httpEtag);
+    headers.set("Accept-Ranges", "bytes");
     Object.entries(CACHE_CONTROL.public).forEach(([k, v]) => {
       headers.set(k, v);
     });
@@ -341,6 +410,8 @@ export async function handleImageRequest(
     wantsOriginal ||
     isLocalDev ||
     isGifKey(key) ||
+    // 视频没有值得变换的东西，交给图片处理只会报错。
+    isVideoKey(key) ||
     !transformOptions
   ) {
     return await serveOriginal();

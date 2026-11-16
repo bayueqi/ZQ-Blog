@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { Images, Lock, Pin } from "lucide-react";
+import { PublicDateMeta } from "@/components/common/public-date-meta";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { GalleryCategoryCard } from "@/features/gallery/gallery.schema";
 import {
   getPublicImageSrc,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
-import { formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export function GalleryIndexPage({
@@ -25,7 +25,7 @@ export function GalleryIndexPage({
       {categories.length === 0 ? (
         <EmptyState description={m.gallery_empty()} />
       ) : (
-        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-5 sm:grid-cols-2">
           {categories.map((category) => {
             // 锁着又开了隐私保护：名称、描述、封面、张数、时间都不露。
             const concealed = category.locked && category.privacyProtected;
@@ -73,8 +73,8 @@ export function GalleryIndexPage({
                       </span>
                     )}
                   </div>
-                  <div className="space-y-1 p-4">
-                    <h2 className="font-medium fuwari-text-90">
+                  <div className="space-y-3 p-5">
+                    <h2 className="text-xl font-bold fuwari-text-90 transition group-hover:text-(--fuwari-primary)">
                       {concealed
                         ? m.gallery_private_placeholder()
                         : category.name}
@@ -85,17 +85,22 @@ export function GalleryIndexPage({
                       </p>
                     )}
                     {!concealed && (
-                      <p className="pt-1 text-xs fuwari-text-50">
-                        {m.gallery_photo_count({ count: category.photoCount })}
-                        {category.createdAt ? (
-                          <>
-                            {" · "}
-                            {m.gallery_created_at({
-                              date: formatDate(category.createdAt),
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <PublicDateMeta
+                          publishedAt={category.publishedAt}
+                          updatedAt={category.updatedAt}
+                        />
+                        <div className="flex items-center">
+                          <div className="fuwari-meta-icon">
+                            <Images strokeWidth={1.5} size={20} />
+                          </div>
+                          <span className="text-sm font-medium fuwari-text-50">
+                            {m.gallery_photo_count({
+                              count: category.photoCount,
                             })}
-                          </>
-                        ) : null}
-                      </p>
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </Link>

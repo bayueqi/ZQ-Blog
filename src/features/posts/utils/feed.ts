@@ -1,11 +1,13 @@
-import { desc, isNotNull, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { Feed } from "feed";
 import type { SiteConfig } from "@/features/config/config.schema";
 import * as ConfigService from "@/features/config/service/config.service";
+import { publicVisible } from "@/features/posts/data/helper";
 import { convertToPlainText } from "@/features/posts/utils/content";
 import { getDb } from "@/lib/db";
 import { PostsTable } from "@/lib/db/schema";
 import { serverEnv } from "@/lib/env/server.env";
+import { siteYear } from "@/lib/site-time";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,7 +43,7 @@ export async function buildFeed(env: Env, executionCtx: ExecutionContext) {
       updatedAt: PostsTable.updatedAt,
     })
     .from(PostsTable)
-    .where(isNotNull(PostsTable.publicSnapshotJson))
+    .where(publicVisible())
     .orderBy(
       desc(
         sql`json_extract(${PostsTable.publicSnapshotJson}, '$.publishedAt')`,
@@ -49,7 +51,7 @@ export async function buildFeed(env: Env, executionCtx: ExecutionContext) {
     )
     .limit(100);
   const { DOMAIN } = serverEnv(env);
-  const year = new Date().getUTCFullYear();
+  const year = siteYear();
   const feedAuthor = {
     name: siteConfig.author,
     email: getPublicFeedEmail(siteConfig.social),

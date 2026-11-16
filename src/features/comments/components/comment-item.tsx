@@ -102,7 +102,7 @@ export const CommentItem = memo(
             </div>
             <time dateTime={new Date(comment.createdAt).toISOString()}>
               <ClientOnly fallback="—">
-                {formatDate(comment.createdAt, { includeTime: true })}
+                {formatDate(comment.createdAt)}
               </ClientOnly>
             </time>
           </header>

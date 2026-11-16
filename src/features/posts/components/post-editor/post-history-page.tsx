@@ -7,7 +7,7 @@ import { Button, buttonClass } from "@/components/ui/button";
 import ConfirmationModal from "@/components/ui/confirmation-modal";
 import { SectionHeading } from "@/components/ui/page-heading";
 import { postRevisionListQuery } from "@/features/posts/queries";
-import { formatMonthDayTime } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { usePostHistory } from "./hooks";
 import { PostEditorHistoryDocument } from "./post-editor-history-document";
@@ -52,7 +52,7 @@ export function PostHistoryPage({
   });
 
   const viewingTime = history.selectedRevision
-    ? formatMonthDayTime(history.selectedRevision.createdAt)
+    ? formatDate(history.selectedRevision.createdAt)
     : "";
 
   const restoreRef = useRef(history.requestRestore);

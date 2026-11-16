@@ -1,4 +1,7 @@
 import { and, count, eq, isNotNull, max, sql } from "drizzle-orm";
+import { galleryVisible } from "@/features/gallery/data/helper";
+import { momentVisible } from "@/features/moments/data/helper";
+import { publicVisible } from "@/features/posts/data/helper";
 import {
   FriendLinksTable,
   GalleryCategoriesTable,
@@ -9,7 +12,7 @@ import {
 
 const postIsPublic = and(
   isNotNull(PostsTable.publicSlug),
-  isNotNull(PostsTable.publicSnapshotJson),
+  publicVisible(),
 );
 
 export async function countPublishedPosts(db: DB) {
@@ -31,7 +34,7 @@ export async function countPublishedMoments(db: DB) {
   const [row] = await db
     .select({ total: count(), latest: max(MomentsTable.publishedAt) })
     .from(MomentsTable)
-    .where(isNotNull(MomentsTable.publishedAt));
+    .where(momentVisible());
 
   return { total: row?.total ?? 0, latest: row?.latest ?? null };
 }
@@ -42,7 +45,7 @@ export async function countPublicGallery(db: DB) {
     db
       .select({ total: count() })
       .from(GalleryCategoriesTable)
-      .where(eq(GalleryCategoriesTable.privacyProtected, false)),
+      .where(and(galleryVisible(), eq(GalleryCategoriesTable.privacyProtected, false))),
     db
       .select({ total: count() })
       .from(GalleryPhotosTable)
@@ -50,7 +53,7 @@ export async function countPublicGallery(db: DB) {
         GalleryCategoriesTable,
         eq(GalleryPhotosTable.categoryId, GalleryCategoriesTable.id),
       )
-      .where(eq(GalleryCategoriesTable.privacyProtected, false)),
+      .where(and(galleryVisible(), eq(GalleryCategoriesTable.privacyProtected, false))),
   ]);
 
   return {

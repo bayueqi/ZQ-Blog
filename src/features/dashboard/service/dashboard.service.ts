@@ -26,7 +26,7 @@ import { versionChecker } from "@/features/version/service/version.service";
 import * as VisitRepo from "@/features/visits/data/visits.data";
 import {
   buildVisitorStats,
-  utcDay,
+  siteDay,
   VISIT_RANGE_DAYS,
 } from "@/features/visits/visits";
 
@@ -50,7 +50,7 @@ export async function getDashboardOverview(
   /** Comments and media share one "recent" window on the overview. */
   const recentSince = new Date(now - DASHBOARD_RECENT_COMMENT_DAYS * DAY_MS);
   const writingSince = new Date(now - DASHBOARD_WRITING_LOOKBACK_DAYS * DAY_MS);
-  const visitorsSince = utcDay(new Date(now - (VISIT_RANGE_DAYS - 1) * DAY_MS));
+  const visitorsSince = siteDay(new Date(now - (VISIT_RANGE_DAYS - 1) * DAY_MS));
 
   const [
     cachedUpdate,

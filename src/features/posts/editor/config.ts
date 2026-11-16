@@ -11,17 +11,21 @@ import { createSchemaExtensions } from "@/features/posts/editor/schema";
 import { LinkEditing } from "@/features/posts/editor/extensions/link-editing";
 import { SlashMenu } from "@/features/posts/editor/extensions/slash-menu";
 import { VideoEditing } from "@/features/posts/editor/extensions/video";
+import { VideoFileBlock } from "@/features/posts/editor/extensions/video-file";
 import type { ImageUploadResult } from "@/features/posts/editor/extensions/upload-image";
 import { ImageUpload } from "@/features/posts/editor/extensions/upload-image";
+import { isVideoMime } from "@/features/media/utils/media.utils";
 import { orpcClient } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
-const ALLOWED_IMAGE_MIME_TYPES = [
+const ALLOWED_UPLOAD_MIME_TYPES = [
   "image/png",
   "image/jpeg",
   "image/jpg",
   "image/gif",
   "image/webp",
+  "video/mp4",
+  "video/webm",
 ];
 
 async function handleImageUpload(file: File): Promise<ImageUploadResult> {
@@ -37,17 +41,17 @@ async function handleImageUpload(file: File): Promise<ImageUploadResult> {
 
 function handleFileDrop(editor: TiptapEditor, files: Array<File>, pos: number) {
   files.forEach((file) => {
-    if (ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
-      editor.commands.uploadImage(file, pos);
-    }
+    if (!ALLOWED_UPLOAD_MIME_TYPES.includes(file.type)) return;
+    if (isVideoMime(file.type)) editor.commands.uploadVideo(file, pos);
+    else editor.commands.uploadImage(file, pos);
   });
 }
 
 function handleFilePaste(editor: TiptapEditor, files: Array<File>) {
   files.forEach((file) => {
-    if (ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
-      editor.commands.uploadImage(file);
-    }
+    if (!ALLOWED_UPLOAD_MIME_TYPES.includes(file.type)) return;
+    if (isVideoMime(file.type)) editor.commands.uploadVideo(file);
+    else editor.commands.uploadImage(file);
   });
 }
 
@@ -66,6 +70,7 @@ export const editorSchema = createSchemaExtensions({
         })
         .catch(() => null),
   }),
+  videoFile: VideoFileBlock,
 });
 
 export const extensions = [
@@ -84,7 +89,7 @@ export const extensions = [
   }),
   ImagePlaceholder,
   FileHandler.configure({
-    allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+    allowedMimeTypes: ALLOWED_UPLOAD_MIME_TYPES,
     onDrop: handleFileDrop,
     onPaste: handleFilePaste,
   }),

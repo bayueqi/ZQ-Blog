@@ -31,7 +31,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { SectionHeading } from "@/components/ui/page-heading";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export function NotifyStudio() {
@@ -251,10 +251,10 @@ function EmailChannel() {
             <p className="settings-muted">
               {savedTestState === "verified"
                 ? m.settings_email_last_test_verified({
-                    time: formatTestedAt(savedTest.data.testedAt),
+                    time: formatDate(savedTest.data.testedAt),
                   })
                 : m.settings_email_last_test_failed({
-                    time: formatTestedAt(savedTest.data.testedAt),
+                    time: formatDate(savedTest.data.testedAt),
                     error:
                       savedTest.data.error ?? m.settings_email_unknown_error(),
                   })}
@@ -293,13 +293,6 @@ function EmailChannel() {
       </aside>
     </section>
   );
-}
-
-function formatTestedAt(testedAt: string) {
-  return new Date(testedAt).toLocaleString([], {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 }
 
 function emailTestInput(

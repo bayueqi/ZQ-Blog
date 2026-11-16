@@ -5,8 +5,10 @@ import { FuwariModal } from "@/components/ui/fuwari-modal";
 import { IconButton } from "@/components/ui/icon-button";
 import {
   ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_MEDIA_TYPES,
   MAX_FILE_SIZE,
 } from "@/features/media/media.schema";
+import { isVideoMedia } from "@/features/media/utils/media.utils";
 import { m } from "@/paraglide/messages";
 import { useMediaPicker, useMediaUpload } from "../hooks";
 import type { MediaAsset } from "../types";
@@ -18,16 +20,22 @@ export function MediaPicker({
   onClose,
   onSelect,
   returnFocus,
+  imagesOnly = false,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   onSelect: (asset: MediaAsset) => void;
   returnFocus?: () => HTMLElement | null;
+  /** 封面、头像这类只能是图片的地方用。 */
+  imagesOnly?: boolean;
 }) {
   const picker = useMediaPicker(open);
   const { uploadFiles, isUploading } = useMediaUpload();
   const fileRef = useRef<HTMLInputElement>(null);
+  const accept = (imagesOnly ? ACCEPTED_IMAGE_TYPES : ACCEPTED_MEDIA_TYPES).join(
+    ",",
+  );
 
   return (
     <FuwariModal
@@ -54,19 +62,28 @@ export function MediaPicker({
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-5 pb-5 min-h-0">
-          <MediaPickerGrid picker={picker} onSelect={onSelect} />
+          <MediaPickerGrid
+            picker={picker}
+            onSelect={onSelect}
+            filter={
+              imagesOnly
+                ? (asset) => !isVideoMedia(asset.key, asset.mimeType)
+                : undefined
+            }
+          />
         </div>
         <input
           ref={fileRef}
           type="file"
           multiple
-          accept={ACCEPTED_IMAGE_TYPES.join(",")}
+          accept={accept}
           className="hidden"
           onChange={(event) => {
             const files = Array.from(event.target.files ?? []).filter(
               (file) => file.size <= MAX_FILE_SIZE,
             );
-            if (files.length > 0) void uploadFiles(files);
+            if (files.length > 0)
+              void uploadFiles(files, { imagesOnly });
             event.target.value = "";
           }}
         />

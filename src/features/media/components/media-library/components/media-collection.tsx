@@ -4,6 +4,7 @@ import { formatBytes, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import {
   getMediaThumbSrc,
+  isVideoMedia,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { useMediaGridMotion } from "../hooks/use-media-grid-motion";
@@ -16,10 +17,23 @@ function MediaThumbnail({ asset }: { asset: MediaAsset }) {
     () => getMediaThumbSrc(asset.url, PUBLIC_IMAGE_WIDTH.thumb),
     [asset.url],
   );
+  const isVideo = isVideoMedia(asset.key, asset.mimeType);
   return (
     <span className="media-thumbnail">
       {failed ? (
         <ImageOff size={24} aria-label={m.media_image_unavailable()} />
+      ) : isVideo ? (
+        <video
+          src={thumbSrc}
+          muted
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          onLoadedMetadata={(event) => {
+            event.currentTarget.currentTime = 0.1;
+          }}
+          onError={() => setFailed(true)}
+        />
       ) : (
         <img
           src={thumbSrc}

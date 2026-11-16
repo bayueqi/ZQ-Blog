@@ -16,6 +16,11 @@ import type {
   CreateGalleryCategoryInput,
   UpdateGalleryCategoryInput,
 } from "@/features/gallery/gallery.schema";
+import {
+  deleteContentRevisions,
+  recordGallery,
+} from "@/features/revisions/service/revisions.service";
+import { siteDayStart } from "@/lib/site-time";
 
 type GalleryContext = DbContext & {
   headers?: Headers;
@@ -26,6 +31,16 @@ type CategoryRow = Awaited<ReturnType<typeof Repo.listCategories>>[number];
 type CategoryBaseRow = Omit<CategoryRow, "createdAt"> & {
   createdAt?: Date | null;
 };
+
+/**
+ * 发布时间换成北京时间零点，填未来就是定时发布。
+ * undefined 表示这次不改发布时间，空串表示不指定。
+ */
+function publishedAtOf(value: string | null | undefined) {
+  if (value === undefined) return undefined;
+  const key = (value ?? "").trim();
+  return key ? siteDayStart(key) : null;
+}
 
 function coverOf(row: {
   coverId: number | null;
@@ -60,6 +75,8 @@ async function unlocked(
 function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
   // 锁着又开了隐私保护：名称、描述、封面、张数、时间都不下发。
   const concealed = isLocked && row.privacyProtected;
+  // 没指定发布时间就按创建时刻对外显示。
+  const shownAt = row.publishedAt ?? row.createdAt ?? null;
   return {
     id: row.id,
     name: concealed ? "" : row.name,
@@ -70,8 +87,10 @@ function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
     locked: isLocked,
     pinned: row.pinnedAt != null,
     privacyProtected: row.privacyProtected,
-    published: row.publishedAt != null,
+    published: row.published,
+    publishedAt: concealed || !shownAt ? null : shownAt.toISOString(),
     createdAt: concealed || !row.createdAt ? null : row.createdAt.toISOString(),
+    updatedAt: concealed || !row.updatedAt ? null : row.updatedAt.toISOString(),
   };
 }
 
@@ -79,6 +98,8 @@ function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
 function toCategoryAdminCard(row: CategoryRow) {
   return {
     ...toCategoryCard(row, false),
+    // 后台编辑要拿库里的原值，不能被展示用的兜底日期带跑。
+    publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
     locked: Boolean(row.accessPasswordHash),
     hasAccessPassword: Boolean(row.accessPasswordHash),
     sortOrder: row.sortOrder,
@@ -111,8 +132,12 @@ export async function getCategory(
 ) {
   const row = await Repo.findCategoryBySlug(context.db, input.slug);
   if (!row) return null;
-  // 草稿相册对访客就是不存在。
-  if (row.publishedAt == null && context.session?.user.role !== "admin")
+  // 草稿和还没到发布日的相册对访客就是不存在。
+  if (
+    context.session?.user.role !== "admin" &&
+    (!row.published ||
+      (row.publishedAt != null && row.publishedAt.getTime() > Date.now()))
+  )
     return null;
 
   const isUnlocked = await unlocked(context, row);
@@ -135,6 +160,7 @@ export async function getCategory(
       width: photo.width,
       height: photo.height,
       caption: photo.caption,
+      mimeType: photo.mimeType,
     })),
     locked: false,
   };
@@ -193,9 +219,13 @@ export async function createCategory(
       ? await hashGalleryPassword(input.password)
       : null,
     privacyProtected: Boolean(input.password && input.privacyProtected),
-    // 没勾发布就是草稿，前台看不到。
-    publishedAt: input.published ? new Date() : null,
+    published: input.published ?? false,
+    publishedAt: publishedAtOf(input.publishedAt) ?? null,
   });
+
+  // 发布出去的那一版才进历史，草稿由 recordGallery 自己跳过。
+  await recordGallery(context.db, row);
+
   return ok(row);
 }
 
@@ -227,16 +257,15 @@ export async function updateCategory(
   if (input.privacyProtected !== undefined) {
     data.privacyProtected = input.privacyProtected;
   }
-  if (input.published !== undefined) {
-    // 已经发布过的保留原发布时间，取消发布就清空。
-    data.publishedAt = input.published
-      ? (existing.publishedAt ?? new Date())
-      : null;
-  }
+  const publishedAt = publishedAtOf(input.publishedAt);
+  if (publishedAt !== undefined) data.publishedAt = publishedAt;
+  if (input.published !== undefined) data.published = input.published;
   // 密码没了，隐私保护也就没有意义。
   if (data.accessPasswordHash === null) data.privacyProtected = false;
 
   const row = await Repo.updateCategory(context.db, input.id, data);
+  // 发布出去的那一版才进历史，草稿由 recordGallery 自己跳过。
+  if (row) await recordGallery(context.db, row);
   return ok(row);
 }
 
@@ -262,6 +291,7 @@ export async function deleteCategory(context: GalleryContext, id: number) {
     targetId: id,
   });
   await Repo.deleteCategory(context.db, id);
+  await deleteContentRevisions(context.db, "gallery", id);
   return ok({ id });
 }
 
@@ -278,6 +308,7 @@ export async function listPhotosAdmin(
       width: photo.width,
       height: photo.height,
       caption: photo.caption,
+      mimeType: photo.mimeType,
     })),
   };
 }
@@ -291,11 +322,20 @@ export async function addPhoto(
     mediaId: input.mediaId,
     caption: input.caption ?? null,
   });
+
+  // 照片也是相册的内容，增减都留一版历史。
+  const category = await Repo.findCategoryById(context.db, input.categoryId);
+  if (category) await recordGallery(context.db, category);
   return ok(row);
 }
 
 export async function deletePhoto(context: GalleryContext, id: number) {
+  const photo = await Repo.findPhotoById(context.db, id);
   await Repo.deletePhoto(context.db, id);
+  if (photo) {
+    const category = await Repo.findCategoryById(context.db, photo.categoryId);
+    if (category) await recordGallery(context.db, category);
+  }
   return ok({ id });
 }
 
@@ -308,5 +348,8 @@ export async function updatePhoto(
     sortOrder: input.sortOrder,
   });
   if (!row) return err({ reason: "NOT_FOUND" as const });
+
+  const category = await Repo.findCategoryById(context.db, row.categoryId);
+  if (category) await recordGallery(context.db, category);
   return ok(row);
 }

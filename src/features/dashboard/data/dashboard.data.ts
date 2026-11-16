@@ -16,6 +16,8 @@ import {
 } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { keepUpdatedAt } from "@/features/comments/data/comments.data";
+import { momentVisible } from "@/features/moments/data/helper";
+
 import {
   CommentsTable,
   GalleryCategoriesTable,
@@ -52,7 +54,7 @@ const targetIsOpen = or(
   and(eq(CommentsTable.targetType, "post"), postIsPublic),
   and(
     eq(CommentsTable.targetType, "moment"),
-    isNotNull(MomentsTable.publishedAt),
+    momentVisible(),
     isNull(MomentsTable.accessPasswordHash),
   ),
   and(
@@ -169,8 +171,8 @@ export async function listRecentEdits(
 export async function countMoments(db: DB) {
   const [row] = await db
     .select({
-      published: sql<number>`coalesce(sum(case when ${MomentsTable.publishedAt} is not null then 1 else 0 end), 0)`,
-      draft: sql<number>`coalesce(sum(case when ${MomentsTable.publishedAt} is null then 1 else 0 end), 0)`,
+      published: sql<number>`coalesce(sum(case when ${MomentsTable.published} then 1 else 0 end), 0)`,
+      draft: sql<number>`coalesce(sum(case when not ${MomentsTable.published} then 1 else 0 end), 0)`,
     })
     .from(MomentsTable);
 

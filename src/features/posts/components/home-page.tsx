@@ -6,12 +6,14 @@ import {
   Clock,
   Images,
   Lock,
+  Play,
   Tag,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { GalleryCategoryCard } from "@/features/gallery/gallery.schema";
 import {
   getPublicImageSrc,
+  isVideoUrl,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import type { MomentCard } from "@/features/moments/moments.schema";
@@ -184,17 +186,40 @@ function PinnedMomentCard({ moment }: { moment: MomentCard }) {
 
       {moment.images.length > 0 ? (
         <div className="mt-4 grid grid-cols-4 gap-2">
-          {moment.images.slice(0, 4).map((image) => (
-            <img
-              key={image.url}
-              src={image.url}
-              alt=""
-              width={image.width ?? undefined}
-              height={image.height ?? undefined}
-              loading="lazy"
-              className="aspect-square w-full rounded-xl object-cover"
-            />
-          ))}
+          {moment.images.slice(0, 4).map((image, index) =>
+            isVideoUrl(image.url) ? (
+              <span
+                key={`${image.url}-${index}`}
+                className="relative block aspect-square w-full overflow-hidden rounded-xl bg-black"
+              >
+                <video
+                  src={image.url}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                  onLoadedMetadata={(event) => {
+                    event.currentTarget.currentTime = 0.1;
+                  }}
+                />
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white">
+                    <Play size={14} fill="currentColor" />
+                  </span>
+                </span>
+              </span>
+            ) : (
+              <img
+                key={`${image.url}-${index}`}
+                src={image.url}
+                alt=""
+                width={image.width ?? undefined}
+                height={image.height ?? undefined}
+                loading="lazy"
+                className="aspect-square w-full rounded-xl object-cover"
+              />
+            ),
+          )}
         </div>
       ) : null}
     </Link>

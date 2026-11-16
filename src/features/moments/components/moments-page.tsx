@@ -3,6 +3,7 @@ import { ClientOnly, Link } from "@tanstack/react-router";
 import { ChevronDown, Lock, MessageSquare, Pencil, Pin } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { PublicDateMeta } from "@/components/common/public-date-meta";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CommentReveal } from "@/features/comments/components/comment-reveal";
 import { CommentSection } from "@/features/comments/components/comment-section";
@@ -10,10 +11,11 @@ import { commentCountsQuery } from "@/features/comments/queries";
 import type { MomentCard } from "@/features/moments/moments.schema";
 import {
   getPublicImageSrc,
+  isVideoUrl,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { ShareButton } from "@/features/share/share-dialog";
-import { cn, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth/auth-client";
 import { m } from "@/paraglide/messages";
 
@@ -101,20 +103,34 @@ function ImageGrid({ images }: { images: Array<MomentImage> }) {
         images.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3",
       )}
     >
-      {images.map((image, index) => (
-        <img
-          key={`${image.url}-${index}`}
-          src={getPublicImageSrc(image.url, PUBLIC_IMAGE_WIDTH.body)}
-          alt=""
-          width={image.width ?? undefined}
-          height={image.height ?? undefined}
-          loading="lazy"
-          className={cn(
-            "w-full rounded-lg object-cover bg-(--fuwari-meta-divider)/20",
-            images.length === 1 ? "max-h-[32rem]" : "aspect-square",
-          )}
-        />
-      ))}
+      {images.map((image, index) =>
+        isVideoUrl(image.url) ? (
+          <video
+            key={`${image.url}-${index}`}
+            src={image.url}
+            controls
+            playsInline
+            preload="metadata"
+            className={cn(
+              "w-full rounded-lg bg-black",
+              images.length === 1 ? "max-h-[32rem]" : "aspect-square object-cover",
+            )}
+          />
+        ) : (
+          <img
+            key={`${image.url}-${index}`}
+            src={getPublicImageSrc(image.url, PUBLIC_IMAGE_WIDTH.body)}
+            alt=""
+            width={image.width ?? undefined}
+            height={image.height ?? undefined}
+            loading="lazy"
+            className={cn(
+              "w-full rounded-lg object-cover bg-(--fuwari-meta-divider)/20",
+              images.length === 1 ? "max-h-[32rem]" : "aspect-square",
+            )}
+          />
+        ),
+      )}
     </div>
   );
 }
@@ -223,13 +239,11 @@ function MomentItem({
         !first && "border-t border-dashed border-(--fuwari-meta-divider)",
       )}
     >
-      <div className="flex items-center gap-2">
-        <time
-          dateTime={moment.publishedAt ?? undefined}
-          className="font-mono text-xs fuwari-text-50"
-        >
-          {formatDate(moment.publishedAt, { includeTime: true })}
-        </time>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <PublicDateMeta
+          publishedAt={moment.publishedAt}
+          updatedAt={moment.updatedAt}
+        />
         {moment.pinned ? (
           <span className="flex items-center gap-1 text-xs font-medium text-(--fuwari-primary)">
             <Pin size={12} strokeWidth={2} className="fill-current" />
@@ -262,7 +276,7 @@ function MomentItem({
       ) : (
         <>
           {body ? (
-            <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed fuwari-text-90">
+            <p className="mt-2 whitespace-pre-wrap break-words text-base leading-relaxed fuwari-text-90">
               {body}
             </p>
           ) : null}

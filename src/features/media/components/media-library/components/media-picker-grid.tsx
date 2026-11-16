@@ -14,13 +14,17 @@ export function MediaPickerGrid({
   picker,
   onSelect,
   columnsClassName,
+  filter,
 }: {
   picker: ReturnType<typeof useMediaPicker>;
   onSelect: (asset: MediaAsset) => void;
   /** Grid columns, for pickers narrower than the viewport. */
   columnsClassName?: string;
+  /** 只让某类素材出现在选择器里，比如封面只能是图片。 */
+  filter?: (asset: MediaAsset) => boolean;
 }) {
   const { mediaItems, loadMore, hasMore, isLoadingMore, isPending } = picker;
+  const shown = filter ? mediaItems.filter(filter) : mediaItems;
 
   if (isPending) {
     return (
@@ -36,7 +40,7 @@ export function MediaPickerGrid({
       </div>
     );
   }
-  if (mediaItems.length === 0) {
+  if (shown.length === 0) {
     return (
       <EmptyState
         size="compact"
@@ -47,7 +51,7 @@ export function MediaPickerGrid({
   }
   return (
     <MediaGrid
-      media={mediaItems}
+      media={shown}
       onSelect={onSelect}
       onLoadMore={loadMore}
       hasMore={hasMore}

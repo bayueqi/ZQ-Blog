@@ -1,3 +1,4 @@
+import { SITE_TIME_ZONE } from "@/lib/site-time";
 import { getLocale } from "@/paraglide/runtime";
 
 function intlLocale() {
@@ -16,7 +17,10 @@ function dateFormat(key: string, options: Intl.DateTimeFormatOptions) {
   const id = `${tag}|${key}`;
   let formatter = dateFormats.get(id);
   if (!formatter) {
-    formatter = new Intl.DateTimeFormat(tag, options);
+    formatter = new Intl.DateTimeFormat(tag, {
+      timeZone: SITE_TIME_ZONE,
+      ...options,
+    });
     dateFormats.set(id, formatter);
   }
   return formatter;

@@ -1165,6 +1165,58 @@
       }
     }
   },
+  "revisions": {
+    "admin": {
+      "list": {
+        "~orpc": {
+          "errorMap": {},
+          "meta": {},
+          "route": {
+            "method": "GET",
+            "path": "/admin/revisions",
+            "summary": "List revisions of a moment or a gallery collection",
+            "tags": ["Admin Revisions"]
+          }
+        }
+      },
+      "get": {
+        "~orpc": {
+          "errorMap": {},
+          "meta": {},
+          "route": {
+            "method": "GET",
+            "path": "/admin/revisions/{revisionId}",
+            "summary": "Get one revision of a moment or a gallery collection",
+            "tags": ["Admin Revisions"]
+          }
+        }
+      },
+      "restore": {
+        "~orpc": {
+          "errorMap": {},
+          "meta": {},
+          "route": {
+            "method": "POST",
+            "path": "/admin/revisions/restore",
+            "summary": "Restore a moment or a gallery collection to an older revision",
+            "tags": ["Admin Revisions"]
+          }
+        }
+      },
+      "remove": {
+        "~orpc": {
+          "errorMap": {},
+          "meta": {},
+          "route": {
+            "method": "DELETE",
+            "path": "/admin/revisions",
+            "summary": "Delete revisions of a moment or a gallery collection",
+            "tags": ["Admin Revisions"]
+          }
+        }
+      }
+    }
+  },
   "email": {
     "configured": {
       "~orpc": {

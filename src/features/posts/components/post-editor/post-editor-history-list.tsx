@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Spinner } from "@/components/ui/spinner";
-import { cn, formatMonthDayTime } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import {
   getRevisionReasonLabel,
@@ -59,7 +59,7 @@ export function PostEditorHistoryList({
               dateTime={revision.createdAt.toISOString()}
               className="block text-sm font-medium"
             >
-              {formatMonthDayTime(revision.createdAt)}
+              {formatDate(revision.createdAt)}
             </time>
             <p className="mt-1 text-sm">
               {getRevisionReasonLabel(revision.reason)}

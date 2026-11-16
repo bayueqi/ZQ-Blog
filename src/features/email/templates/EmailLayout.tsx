@@ -1,5 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { Locale } from "@/lib/i18n";
+import { siteYear } from "@/lib/site-time";
 import { emailTheme, type EmailSite, type EmailTheme } from "./email-theme";
 
 const FONT_FAMILY =
@@ -109,7 +110,7 @@ export const EmailLayout = ({
                   fontSize: "12px",
                 }}
               >
-                &copy; {new Date().getUTCFullYear()} {site.title}
+                &copy; {siteYear()} {site.title}
               </td>
             </tr>
           </tbody>

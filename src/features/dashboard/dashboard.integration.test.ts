@@ -20,7 +20,7 @@ import * as kvStore from "@/features/cache/kv-store";
 import { VERSION_CACHE_KEYS } from "@/features/version/version.schema";
 import * as PostRevisionRepo from "@/features/posts/data/post-revisions.data";
 import { recordVisit } from "@/features/visits/data/visits.data";
-import { utcDay } from "@/features/visits/visits";
+import { siteDay } from "@/features/visits/visits";
 import { CommentsTable, PostRevisionsTable, PostsTable } from "@/lib/db/schema";
 import { unwrap } from "@/lib/errors";
 
@@ -190,7 +190,7 @@ describe("Dashboard overview", () => {
 
   it("counts page views into the visitor breakdown", async () => {
     const visit = {
-      day: utcDay(new Date()),
+      day: siteDay(new Date()),
       country: "CN",
       browser: "Chrome",
       device: "desktop",

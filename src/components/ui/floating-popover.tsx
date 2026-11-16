@@ -126,6 +126,25 @@ export function FloatingPopover({
   const focusTarget = useRef(initialFocus);
   focusTarget.current = initialFocus;
 
+  /*
+   * 原生 dialog 打开后整层都进了 top layer，portal 到 body 的浮层会被压在
+   * 下面，既看不见也点不到。把面板挂成 manual popover 就能一起进 top layer，
+   * 关闭仍然由这里控制，不走浏览器的 light dismiss。
+   *
+   * 必须在测量之前打开：popover 未打开时 display 是 none，量出来宽高为 0。
+   */
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !present) return;
+    if (typeof panel.showPopover !== "function") return;
+    if (panel.matches(":popover-open")) return;
+    try {
+      panel.showPopover();
+    } catch {
+      // 已经打开或浏览器不接受，保持普通定位即可。
+    }
+  }, [present]);
+
   useLayoutEffect(() => {
     const panel = panelRef.current;
     if (!present || !reference || !panel) {
@@ -181,6 +200,7 @@ export function FloatingPopover({
   }, [present, reference, placement, matchTriggerWidth, maxHeight]);
 
   const positioned = position !== null;
+
   // A layout effect, so a keystroke can never reach the page between the
   // popover appearing and its focus moving in.
   useLayoutEffect(() => {
@@ -229,21 +249,37 @@ export function FloatingPopover({
 
   if (!present || !reference) return null;
 
+  /*
+   * 弹窗开着的时候整页只有 dialog 还能交互，portal 到 body 的浮层会被一起
+   * 挡住，连 showPopover 都进不去。挂到最近的 dialog 里，浮层和触发它的
+   * 输入框同处一层，打开、点击都正常；不在弹窗里时仍然挂到 body。
+   */
+  const host =
+    anchor instanceof Element
+      ? (anchor.closest("dialog") ?? document.body)
+      : document.body;
+
   return createPortal(
     <div
       {...rest}
       ref={panelRef}
       data-state={open ? (positioned ? "open" : undefined) : "closing"}
-      inert={!open}
+      popover="manual"
+      inert={open ? undefined : true}
       aria-hidden={!open || undefined}
       style={{
+        // popover 自带的 inset/margin 会把定位推开，先清掉再叠真正的位置。
+        inset: "auto",
+        margin: 0,
         ...(position ?? { position: "fixed", left: 0, top: 0, maxHeight }),
+        // 还没定位时不接收点击，免得误触到下面的遮罩把弹窗关掉。
         visibility: positioned ? undefined : "hidden",
+        pointerEvents: positioned ? undefined : "none",
       }}
       className={cn(POPOVER_PANEL_CLASS, className)}
     >
       {children}
     </div>,
-    document.body,
+    host,
   );
 }

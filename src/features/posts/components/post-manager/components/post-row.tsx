@@ -1,67 +1,29 @@
-import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
 import { ClientOnly, Link } from "@tanstack/react-router";
-import { ExternalLink, EyeOff, Lock, Pin, PinOff, Trash2 } from "lucide-react";
-import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu";
+import { History, Lock, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
+import { iconButtonClass, IconButton } from "@/components/ui/icon-button";
 import { PostStatusBadge } from "@/features/posts/components/post-status-badge";
-import { openPublicPost } from "@/features/posts/utils/open-public-post";
 import { formatDate } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-import type { AdminPostListItem, SortField } from "../types";
+import type { AdminPostListItem } from "../types";
 
 interface PostRowProps {
   post: AdminPostListItem;
-  sortBy: SortField;
   onDelete: (
     post: AdminPostListItem,
     trigger: HTMLButtonElement | null,
   ) => void;
   onTogglePin?: (post: AdminPostListItem) => void;
   pinPending?: boolean;
-  onUnpublish?: (post: AdminPostListItem, trigger: HTMLButtonElement) => void;
 }
 
 export function PostRow({
   post,
-  sortBy,
   onDelete,
   onTogglePin,
   pinPending,
-  onUnpublish,
 }: PostRowProps) {
   const title = post.title.trim() || m.common_untitled();
-  const date = post[sortBy];
   const published = post.status === "published";
-  const { publicSlug } = post;
-  const actions: Array<ActionMenuItem> = [];
-  if (published && publicSlug)
-    actions.push({
-      label: m.admin_posts_action_view_live(),
-      icon: ExternalLink,
-      onSelect: () => openPublicPost(publicSlug),
-    });
-  if (onTogglePin)
-    actions.push({
-      label: post.pinnedAt
-        ? m.admin_posts_action_unpin()
-        : m.admin_posts_action_pin(),
-      icon: post.pinnedAt ? PinOff : Pin,
-      disabled: pinPending,
-      onSelect: () => onTogglePin(post),
-    });
-  if (published && onUnpublish)
-    actions.push({
-      label: m.editor_header_unpublish(),
-      icon: EyeOff,
-      danger: true,
-      onSelect: (trigger) => onUnpublish(post, trigger),
-    });
-  actions.push({
-    label: m.admin_posts_action_delete_post(),
-    icon: Trash2,
-    danger: true,
-    separator: actions.length > 0,
-    onSelect: (trigger) => onDelete(post, trigger),
-  });
   return (
     <tr>
       <td>
@@ -94,39 +56,82 @@ export function PostRow({
         </div>
       </td>
       <td>
-        <PostStatusBadge published={post.status === "published"} />
+        <PostStatusBadge
+          published={published}
+          scheduled={
+            published &&
+            post.publishedAt != null &&
+            post.publishedAt.getTime() > Date.now()
+          }
+        />
       </td>
       <td className="post-list-date">
         <span className="post-list-mobile-date-label">
-          {sortBy === "publishedAt"
-            ? m.admin_posts_time_published()
-            : m.admin_posts_time_modified()}{" "}
+          {m.admin_posts_time_published()}{" "}
         </span>
-        {date ? (
-          <time dateTime={date.toISOString()}>
-            {sortBy === "publishedAt" ? (
-              formatPublicPostDate(date)
-            ) : (
-              <ClientOnly fallback="—">{formatDate(date)}</ClientOnly>
-            )}
+        {post.publishedAt ? (
+          <time dateTime={post.publishedAt.toISOString()}>
+            <ClientOnly fallback="—">{formatDate(post.publishedAt)}</ClientOnly>
+          </time>
+        ) : (
+          "—"
+        )}
+      </td>
+      <td className="post-list-date">
+        {post.updatedAt ? (
+          <time dateTime={post.updatedAt.toISOString()}>
+            <ClientOnly fallback="—">{formatDate(post.updatedAt)}</ClientOnly>
           </time>
         ) : (
           "—"
         )}
       </td>
       <td>
-        <div className="post-list-row-actions">
+        <div className="flex items-center gap-0.5">
+          {onTogglePin ? (
+            <IconButton
+              size="sm"
+              label={
+                post.pinnedAt
+                  ? m.admin_posts_action_unpin()
+                  : m.admin_posts_action_pin()
+              }
+              disabled={pinPending}
+              onClick={() => onTogglePin(post)}
+            >
+              {post.pinnedAt ? (
+                <PinOff size={15} strokeWidth={2} />
+              ) : (
+                <Pin size={15} strokeWidth={2} />
+              )}
+            </IconButton>
+          ) : null}
           <Link
             to="/admin/posts/edit/$id"
             params={{ id: String(post.id) }}
             aria-label={m.admin_posts_edit_named({ title })}
+            title={m.admin_posts_action_edit()}
+            className={iconButtonClass({ size: "sm" })}
           >
-            {m.admin_posts_action_edit()}
+            <Pencil size={15} strokeWidth={2} />
           </Link>
-          <ActionMenu
-            label={m.admin_posts_more_named({ title })}
-            items={actions}
-          />
+          <Link
+            to="/admin/posts/edit/$id/history"
+            params={{ id: String(post.id) }}
+            aria-label={m.admin_revisions_open()}
+            title={m.admin_revisions_open()}
+            className={iconButtonClass({ size: "sm" })}
+          >
+            <History size={15} strokeWidth={2} />
+          </Link>
+          <IconButton
+            size="sm"
+            tone="danger"
+            label={m.admin_posts_action_delete_post()}
+            onClick={(event) => onDelete(post, event.currentTarget)}
+          >
+            <Trash2 size={15} strokeWidth={2} />
+          </IconButton>
         </div>
       </td>
     </tr>

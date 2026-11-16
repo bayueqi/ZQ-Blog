@@ -109,7 +109,7 @@ export function ApiKeySettingsSection() {
                   </td>
                   <td>
                     <ClientOnly fallback="—">
-                      {formatDate(key.createdAt, { includeTime: true })}
+                      {formatDate(key.createdAt)}
                     </ClientOnly>
                   </td>
                   <td>

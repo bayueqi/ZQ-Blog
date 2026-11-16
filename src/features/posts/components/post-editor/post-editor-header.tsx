@@ -15,7 +15,6 @@ interface PostEditorHeaderProps {
   saveStatus: SaveStatus;
   lastSaved: Date | null;
   processState: "IDLE" | "PROCESSING" | "SUCCESS";
-  canPublish: boolean;
   hasPublicSnapshot: boolean;
   publicSlug: string | null;
   title: string;
@@ -53,7 +52,6 @@ export function PostEditorHeader({
   saveStatus,
   lastSaved,
   processState,
-  canPublish,
   hasPublicSnapshot,
   publicSlug,
   title,
@@ -150,7 +148,7 @@ export function PostEditorHeader({
         <Button
           variant="primary"
           onClick={onPublish}
-          disabled={busy || !canPublish}
+          disabled={busy}
           loading={processState === "PROCESSING"}
           className="hidden lg:inline-flex"
         >

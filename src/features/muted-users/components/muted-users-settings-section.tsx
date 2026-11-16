@@ -134,7 +134,7 @@ export function MutedUsersSettingsSection() {
                     <p>
                       <ClientOnly fallback="—">
                         {m.muted_users_muted_at({
-                          date: formatDate(user.mutedAt, { includeTime: true }),
+                          date: formatDate(user.mutedAt),
                         })}
                       </ClientOnly>
                     </p>

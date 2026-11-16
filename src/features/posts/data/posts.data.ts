@@ -22,6 +22,7 @@ import {
   adminPostTextColumns,
   buildPostOrderByClause,
   buildPostWhereClause,
+  publicVisible,
 } from "@/features/posts/data/helper";
 import { mapSnapshotToPublicPost } from "@/features/posts/public-snapshot";
 import type { PostItem } from "@/features/posts/schema/posts.schema";
@@ -371,7 +372,7 @@ export async function getPublishedPostsForSitemapBatch(
     .from(PostsTable)
     .where(
       and(
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
         cursor && cursorPublishedAt
           ? or(
               lt(snapshotPublishedAt, cursorPublishedAt),
@@ -428,7 +429,7 @@ export async function findPublishedPostAccessBySlug(db: DB, slug: string) {
     .where(
       and(
         eq(PostsTable.publicSlug, slug),
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
       ),
     )
     .limit(1);
@@ -463,7 +464,7 @@ export async function findPinnedPosts(db: DB) {
     .from(PostsTable)
     .where(
       and(
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
         sql`${snapshotPinnedAt} IS NOT NULL`,
       ),
     )
@@ -488,7 +489,7 @@ export async function findPostsByIds(db: DB, ids: number[]) {
     .from(PostsTable)
     .where(
       and(
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
         inArray(PostsTable.id, ids),
       ),
     );
@@ -507,7 +508,7 @@ export async function findPostBySlug(
     const row = await db.query.PostsTable.findFirst({
       where: and(
         eq(PostsTable.publicSlug, slug),
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
       ),
     });
     if (!row?.publicSnapshotJson) return null;
@@ -659,7 +660,7 @@ export async function findAdjacentPublicPosts(db: DB, slug: string) {
   const currentPost = await db.query.PostsTable.findFirst({
     where: and(
       eq(PostsTable.publicSlug, slug),
-      isNotNull(PostsTable.publicSnapshotJson),
+      publicVisible(),
     ),
     columns: { id: true, publicSnapshotJson: true },
   });
@@ -679,7 +680,7 @@ export async function findAdjacentPublicPosts(db: DB, slug: string) {
     .from(PostsTable)
     .where(
       and(
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
         isNotNull(PostsTable.publicSlug),
         or(
           gt(snapshotPublishedAt, publishedAt),
@@ -701,7 +702,7 @@ export async function findAdjacentPublicPosts(db: DB, slug: string) {
     .from(PostsTable)
     .where(
       and(
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
         isNotNull(PostsTable.publicSlug),
         or(
           lt(snapshotPublishedAt, publishedAt),
@@ -719,4 +720,24 @@ export async function findAdjacentPublicPosts(db: DB, slug: string) {
     newer: newer?.slug ? { slug: newer.slug, title: newer.title } : null,
     older: older?.slug ? { slug: older.slug, title: older.title } : null,
   };
+}
+
+/**
+ * 最近一条已排期、还没到点的文章的发布时刻（毫秒时间戳），没有则返回 null。
+ * 公开缓存用它给 TTL 封顶，保证到点那一刻缓存自然过期。
+ */
+export async function nextScheduledPublishAt(
+  db: DB,
+): Promise<number | null> {
+  const [row] = await db
+    .select({ next: sql<number | null>`min(${PostsTable.publishedAt})` })
+    .from(PostsTable)
+    .where(
+      and(
+        isNotNull(PostsTable.publicSnapshotJson),
+        gt(PostsTable.publishedAt, sql`unixepoch()`),
+      ),
+    );
+
+  return row?.next ? Number(row.next) * 1000 : null;
 }

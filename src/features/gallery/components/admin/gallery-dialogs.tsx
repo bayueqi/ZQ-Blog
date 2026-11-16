@@ -3,6 +3,7 @@ import { ImagePlus, X } from "lucide-react";
 import { useRef, useState, type FormEvent, type RefObject } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import DatePicker from "@/components/ui/date-picker";
 import { FormField } from "@/components/ui/form-field";
 import { FuwariModal } from "@/components/ui/fuwari-modal";
 import { IconButton } from "@/components/ui/icon-button";
@@ -16,6 +17,7 @@ import {
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { orpcClient } from "@/lib/orpc";
+import { siteDateKey } from "@/lib/site-time";
 import { m } from "@/paraglide/messages";
 import "./gallery-dialogs.css";
 
@@ -24,6 +26,10 @@ type Cover = GalleryCategoryCard["cover"];
 export type GalleryCategoryRow = GalleryCategoryCard & {
   hasAccessPassword: boolean;
 };
+
+/** 时间戳换成站点时区的日历日；老数据没存日期就按今天算。 */
+const dateKeyOf = (iso: string | null) =>
+  iso ? siteDateKey(new Date(iso)) : siteDateKey();
 
 function CoverField({
   cover,
@@ -77,8 +83,11 @@ export function GalleryCategoryDialog({
     Boolean(row?.hasAccessPassword),
   );
   const [privacy, setPrivacy] = useState(Boolean(row?.privacyProtected));
-  // 新建时默认发布，编辑时沿用原来的状态。
+  // 发布状态与发布时间各管各的：草稿即使填了日期也不会上线。
   const [published, setPublished] = useState(row?.published ?? true);
+  const [publishedAt, setPublishedAt] = useState(
+    row ? dateKeyOf(row.publishedAt) : siteDateKey(),
+  );
   const [cover, setCover] = useState<Cover>(row?.cover ?? null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -102,6 +111,7 @@ export function GalleryCategoryDialog({
         coverMediaId: cover?.id ?? null,
         privacyProtected: passwordProtected && privacy,
         published,
+        publishedAt,
         ...passwordField,
       };
       if (row) {
@@ -115,8 +125,9 @@ export function GalleryCategoryDialog({
       toast.success(m.admin_gallery_saved());
       await onSaved();
       onClose();
-    } catch {
-      toast.error(m.admin_gallery_failed());
+    } catch (error) {
+      const detail = error instanceof Error ? error.message.trim() : "";
+      toast.error(detail || m.admin_gallery_failed());
     } finally {
       setSaving(false);
     }
@@ -167,18 +178,29 @@ export function GalleryCategoryDialog({
             buttonRef={coverRef}
             onPick={() => setPickerOpen(true)}
           />
-          <Switch
-            label={m.admin_gallery_published()}
-            checked={published}
-            onCheckedChange={setPublished}
-            className="min-h-10 w-auto text-sm"
-          />
-          <Switch
-            label={m.editor_meta_visibility_password()}
-            checked={passwordProtected}
-            onCheckedChange={setPasswordProtected}
-            className="min-h-10 w-auto text-sm"
-          />
+          <div className="flex items-center gap-2.5">
+            <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
+              {m.admin_gallery_published()}
+            </span>
+            <Switch
+              aria-label={m.admin_gallery_published()}
+              checked={published}
+              onCheckedChange={setPublished}
+              className="min-h-9"
+            />
+            <DatePicker value={publishedAt} onChange={setPublishedAt} />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
+              {m.editor_meta_visibility_password()}
+            </span>
+            <Switch
+              aria-label={m.editor_meta_visibility_password()}
+              checked={passwordProtected}
+              onCheckedChange={setPasswordProtected}
+              className="min-h-10"
+            />
+          </div>
           {passwordProtected ? (
             <>
               <FormField label={m.admin_gallery_password()}>
@@ -195,12 +217,17 @@ export function GalleryCategoryDialog({
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </FormField>
-              <Switch
-                label={m.editor_meta_privacy()}
-                checked={privacy}
-                onCheckedChange={setPrivacy}
-                className="min-h-10 w-auto text-sm"
-              />
+              <div className="flex items-center gap-2.5">
+                <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
+                  {m.editor_meta_privacy()}
+                </span>
+                <Switch
+                  aria-label={m.editor_meta_privacy()}
+                  checked={privacy}
+                  onCheckedChange={setPrivacy}
+                  className="min-h-10"
+                />
+              </div>
               {privacy ? (
                 <p className="text-xs fuwari-text-50">
                   {m.admin_gallery_privacy_hint()}
@@ -227,6 +254,7 @@ export function GalleryCategoryDialog({
         <MediaPicker
           open={pickerOpen}
           title={m.admin_gallery_pick_cover()}
+          imagesOnly
           onClose={() => setPickerOpen(false)}
           returnFocus={() => coverRef.current}
           onSelect={(media) => {

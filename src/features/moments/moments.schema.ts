@@ -12,6 +12,7 @@ export const MomentCardSchema = z.object({
   body: z.string(),
   images: z.array(MomentImageSchema),
   publishedAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
   locked: z.boolean(),
   pinned: z.boolean(),
 });
@@ -34,7 +35,13 @@ export const MomentWriteInputSchema = z.object({
   images: z.array(MomentImageSchema).max(9).default([]),
   /** 空字符串（或 null）表示取消密码；不传表示保持原密码不变。 */
   password: z.string().max(100).nullable().optional(),
-  published: z.boolean().default(true),
+  /**
+   * 发布时间，YYYY-MM-DD，按北京时间零点入库；可以填未来的日期，那就是定时发布。
+   * 空字符串表示没有指定发布时间，也就是发布即当期。不传表示保持原状。
+   */
+  publishedAt: z.string().max(10).nullable().optional(),
+  /** 是否发布。不传表示保持原状。 */
+  published: z.boolean().optional(),
 });
 
 export const MomentUpdateInputSchema = MomentWriteInputSchema.extend({
@@ -44,7 +51,6 @@ export const MomentUpdateInputSchema = MomentWriteInputSchema.extend({
 export const AdminMomentSchema = MomentCardSchema.extend({
   hasPassword: z.boolean(),
   published: z.boolean(),
-  updatedAt: z.string().nullable(),
 });
 
 export const AdminMomentListSchema = z.object({

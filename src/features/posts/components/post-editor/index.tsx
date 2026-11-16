@@ -163,7 +163,6 @@ export function PostEditor({
     handlePublish,
     handleUnpublish,
     processState,
-    canPublish,
   } = usePostActions({
     postId: initialData.id,
     post,
@@ -235,11 +234,10 @@ export function PostEditor({
         onClick: () => {
           void publishRef.current();
         },
-        disabled: processState !== "IDLE" || !canPublish,
+        disabled: processState !== "IDLE",
       });
     }
   }, [
-    canPublish,
     closeInfo,
     infoOpen,
     post.title,
@@ -280,7 +278,6 @@ export function PostEditor({
           saveStatus={saveStatus}
           lastSaved={lastSaved}
           processState={processState}
-          canPublish={canPublish}
           hasPublicSnapshot={post.hasPublicSnapshot}
           publicSlug={post.hasPublicSnapshot ? publicSlug : null}
           title={post.title}

@@ -24,6 +24,7 @@ export const homePosts = defineEntry({
   schema: HomePostsResponseSchema,
   ttl: "7d",
   invalidatedBy: POST_PUBLIC_REASONS,
+  ttlCap: (context) => PostRepo.nextScheduledPublishAt(context.db),
   load: (context, { page }) => PostRepo.getHomePosts(context.db, page),
 });
 
@@ -34,6 +35,7 @@ export const pinnedPosts = defineEntry({
   schema: PostItemSchema.array(),
   ttl: "7d",
   invalidatedBy: POST_PUBLIC_REASONS,
+  ttlCap: (context) => PostRepo.nextScheduledPublishAt(context.db),
   load: (context) => PostRepo.findPinnedPosts(context.db),
 });
 
@@ -65,6 +67,7 @@ export const postsList = defineEntry({
   schema: PostListResponseSchema,
   ttl: "7d",
   invalidatedBy: POST_PUBLIC_REASONS,
+  ttlCap: (context) => PostRepo.nextScheduledPublishAt(context.db),
   load: (
     context,
     { limit, cursor, tagName, categoryName, uncategorized, excludePinned },

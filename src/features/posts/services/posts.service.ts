@@ -43,10 +43,7 @@ import {
   verifyPostAccess,
 } from "@/features/posts/utils/post-access";
 import { serverEnv } from "@/lib/env/server.env";
-import {
-  isFuturePublishDate,
-  serverUtcDateString,
-} from "@/features/posts/utils/date";
+import { serverTodayKey } from "@/features/posts/utils/date";
 import { calculatePostHash } from "@/features/posts/utils/sync";
 import { generateTableOfContents } from "@/features/posts/utils/toc";
 import * as SearchService from "@/features/search/service/search.service";
@@ -488,7 +485,7 @@ export async function findPostById(
     hasPublicSnapshot: post.publicSnapshotJson != null,
     hasAccessPassword: post.accessPasswordHash != null,
     publicSnapshotContentJson: post.publicSnapshotJson?.contentJson ?? null,
-    serverToday: serverUtcDateString(),
+    serverToday: serverTodayKey(),
   };
 }
 
@@ -669,8 +666,6 @@ export async function publishPost(
       return err({ reason: "POST_NOT_FOUND" });
     }
     publishedPost = updated;
-  } else if (isFuturePublishDate(publishedPost.publishedAt.toISOString())) {
-    return err({ reason: "PUBLISHED_AT_IN_FUTURE" });
   }
 
   const slugTaken = await PostRepo.publicSlugExists(

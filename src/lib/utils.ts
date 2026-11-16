@@ -10,23 +10,10 @@ export function cn(...inputs: Array<ClassValue>) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(
-  date: Date | undefined | null | string | number,
-  options: { includeTime?: boolean } = {},
-) {
+/** 年月日，全站统一用这个。 */
+export function formatDate(date: Date | undefined | null | string | number) {
   if (!date) return "";
-  const d = new Date(date);
-  if (options.includeTime) {
-    return m.format_datetime({ date: d });
-  }
-  return m.format_date({ date: d });
-}
-
-export function formatMonthDayTime(
-  date: Date | undefined | null | string | number,
-) {
-  if (!date) return "";
-  return m.format_month_day_time({ date: new Date(date) });
+  return m.format_date({ date: new Date(date) });
 }
 
 export function formatTimeAgo(date: Date | null | string) {

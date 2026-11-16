@@ -60,6 +60,23 @@ export function renderReact(
             <VideoEmbed source={source} meta={videoMetaOf(node.attrs)} />
           ) : null;
         },
+        videoFile: ({ node }) => {
+          const attrs = node.attrs as {
+            src?: string | null;
+            poster?: string | null;
+          };
+          if (!attrs.src) return null;
+          return (
+            <video
+              src={attrs.src}
+              poster={attrs.poster ?? undefined}
+              controls
+              playsInline
+              preload="metadata"
+              className="my-6 max-h-[70vh] w-full rounded-xl bg-black"
+            />
+          );
+        },
         image: ({ node }) => {
           const attrs = node.attrs as {
             src: string;

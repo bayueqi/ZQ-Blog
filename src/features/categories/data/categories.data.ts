@@ -4,11 +4,11 @@ import {
   count,
   desc,
   eq,
-  isNotNull,
   isNull,
   ne,
   sql,
 } from "drizzle-orm";
+import { publicVisible } from "@/features/posts/data/helper";
 import { CategoriesTable, PostsTable } from "@/lib/db/schema";
 
 export async function insertCategory(
@@ -60,7 +60,7 @@ export async function getAllCategoriesWithCount(
     })
     .from(CategoriesTable)
     .leftJoin(PostsTable, eq(PostsTable.categoryId, CategoriesTable.id))
-    .where(publicOnly ? isNotNull(PostsTable.publicSnapshotJson) : undefined)
+    .where(publicOnly ? publicVisible() : undefined)
     .groupBy(CategoriesTable.id)
     .$dynamic();
 
@@ -82,7 +82,7 @@ export async function countUncategorizedPosts(db: DB, publicOnly = false) {
     .where(
       publicOnly
         ? and(
-            isNotNull(PostsTable.publicSnapshotJson),
+            publicVisible(),
             isNull(PostsTable.categoryId),
           )
         : isNull(PostsTable.categoryId),
@@ -119,7 +119,7 @@ export async function getPublishedPostsByCategoryId(
     .from(PostsTable)
     .where(
       and(
-        isNotNull(PostsTable.publicSnapshotJson),
+        publicVisible(),
         eq(PostsTable.categoryId, categoryId),
       ),
     );

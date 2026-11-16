@@ -15,12 +15,7 @@ import ConfirmationModal from "@/components/ui/confirmation-modal";
 import { PageHeader } from "@/components/ui/page-heading";
 import { Spinner } from "@/components/ui/spinner";
 import { useListScroll } from "./hooks/use-list-scroll";
-import {
-  useDeletePost,
-  usePosts,
-  useTogglePostPin,
-  useUnpublishPost,
-} from "./hooks";
+import { useDeletePost, usePosts, useTogglePostPin } from "./hooks";
 import { PostManagerSkeleton } from "./post-manager-skeleton";
 import type {
   AdminPostListItem,
@@ -70,8 +65,6 @@ export function PostManager({
   const [postToDelete, setPostToDelete] = useState<AdminPostListItem | null>(
     null,
   );
-  const [postToUnpublish, setPostToUnpublish] =
-    useState<AdminPostListItem | null>(null);
   const [taxonomyOpen, setTaxonomyOpen] = useState(false);
   const deleteTriggerRef = useRef<HTMLButtonElement | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -152,9 +145,6 @@ export function PostManager({
     onSuccess: () => setPostToDelete(null),
   });
   const hasTaxonomyFilter = category !== undefined || tag !== undefined;
-  const unpublishMutation = useUnpublishPost({
-    onSuccess: () => setPostToUnpublish(null),
-  });
   const pinMutation = useTogglePostPin();
   const hasContentFilter =
     status !== "ALL" || Boolean(search.trim()) || hasTaxonomyFilter;
@@ -227,6 +217,7 @@ export function PostManager({
                 <colgroup>
                   <col className="post-list-title-col" />
                   <col className="post-list-status-col" />
+                  <col className="post-list-published-col" />
                   <col className="post-list-date-col" />
                   <col className="post-list-actions-col" />
                 </colgroup>
@@ -234,11 +225,8 @@ export function PostManager({
                   <tr>
                     <th scope="col">{m.admin_posts_col_title()}</th>
                     <th scope="col">{m.admin_posts_filter_status()}</th>
-                    <th scope="col">
-                      {sortBy === "updatedAt"
-                        ? m.admin_posts_sort_recent_upd()
-                        : m.admin_posts_sort_recent_pub()}
-                    </th>
+                    <th scope="col">{m.admin_posts_time_published()}</th>
+                    <th scope="col">{m.admin_posts_time_modified()}</th>
                     <th scope="col">{m.admin_posts_col_actions()}</th>
                   </tr>
                 </thead>
@@ -250,7 +238,6 @@ export function PostManager({
                       <PostRow
                         key={post.id}
                         post={post}
-                        sortBy={sortBy}
                         onDelete={(target, trigger) => {
                           deleteTriggerRef.current = trigger;
                           setPostToDelete(target);
@@ -260,10 +247,6 @@ export function PostManager({
                           pinMutation.isPending &&
                           pinMutation.variables.id === post.id
                         }
-                        onUnpublish={(target, trigger) => {
-                          deleteTriggerRef.current = trigger;
-                          setPostToUnpublish(target);
-                        }}
                       />
                     ))
                   )}
@@ -326,23 +309,6 @@ export function PostManager({
         onClose={() => setPostToDelete(null)}
         onConfirm={() => {
           if (postToDelete) deleteMutation.mutate(postToDelete);
-        }}
-        returnFocus={() =>
-          deleteTriggerRef.current?.isConnected
-            ? deleteTriggerRef.current
-            : searchRef.current
-        }
-      />
-      <ConfirmationModal
-        isOpen={!!postToUnpublish}
-        title={m.editor_unpublish_confirm_title()}
-        message={m.editor_unpublish_confirm_desc()}
-        confirmLabel={m.editor_header_unpublish()}
-        isDanger
-        isLoading={unpublishMutation.isPending}
-        onClose={() => setPostToUnpublish(null)}
-        onConfirm={() => {
-          if (postToUnpublish) unpublishMutation.mutate(postToUnpublish.id);
         }}
         returnFocus={() =>
           deleteTriggerRef.current?.isConnected

@@ -1,11 +1,13 @@
-/** 概览只展示最近这些天，网页上取哪一天按 UTC 算。 */
+import { siteDateKey } from "@/lib/site-time";
+
+/** 概览只展示最近这些天，网页上取哪一天按北京时间算。 */
 export const VISIT_RANGE_DAYS = 7;
 
 export const VISIT_DIMENSIONS = ["browser", "device", "os", "country"] as const;
 
 export type VisitDimensionKey = (typeof VISIT_DIMENSIONS)[number];
 
-/** 一行就是某个维度组合在某个 UTC 日的访问次数。 */
+/** 一行就是某个维度组合在某个站点日的访问次数。 */
 export type VisitRow = {
   day: string;
   country: string;
@@ -24,7 +26,7 @@ export type VisitorItem = {
 };
 
 export type VisitorStats = {
-  /** 最近 VISIT_RANGE_DAYS 个 UTC 日，旧的在前。 */
+  /** 最近 VISIT_RANGE_DAYS 个站点日，旧的在前。 */
   days: Array<string>;
   total: number;
   dimensions: Array<{ key: VisitDimensionKey; items: Array<VisitorItem> }>;
@@ -32,14 +34,14 @@ export type VisitorStats = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function utcDay(date: Date) {
-  return date.toISOString().slice(0, 10);
+export function siteDay(date: Date) {
+  return siteDateKey(date);
 }
 
-export function lastUtcDays(today: Date, days: number) {
-  const current = Date.parse(`${utcDay(today)}T00:00:00Z`);
+export function lastSiteDays(today: Date, days: number) {
+  const current = Date.parse(`${siteDay(today)}T00:00:00Z`);
   return Array.from({ length: days }, (_, index) =>
-    utcDay(new Date(current - (days - 1 - index) * DAY_MS)),
+    siteDay(new Date(current - (days - 1 - index) * DAY_MS)),
   );
 }
 
@@ -48,7 +50,7 @@ export function buildVisitorStats(
   rows: ReadonlyArray<VisitRow>,
   today: Date,
 ): VisitorStats {
-  const days = lastUtcDays(today, VISIT_RANGE_DAYS);
+  const days = lastSiteDays(today, VISIT_RANGE_DAYS);
   const dayIndex = new Map(days.map((day, index) => [day, index]));
   const buckets = new Map<VisitDimensionKey, Map<string, Array<number>>>();
   let total = 0;

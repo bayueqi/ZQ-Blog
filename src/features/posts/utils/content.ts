@@ -56,7 +56,10 @@ export function extractAllImageKeys(doc: JSONContent | null): Array<string> {
   const keys: Array<string> = [];
 
   function traverse(node: JSONContent) {
-    if (node.type === "image" && node.attrs?.src) {
+    if (
+      (node.type === "image" || node.type === "videoFile") &&
+      typeof node.attrs?.src === "string"
+    ) {
       const key = extractImageKey(node.attrs.src);
       if (key) keys.push(key);
     }
@@ -81,7 +84,7 @@ export function replaceImageSrc(
   function traverse(node: JSONContent): JSONContent {
     let next = node;
     if (
-      node.type === "image" &&
+      (node.type === "image" || node.type === "videoFile") &&
       typeof node.attrs?.src === "string" &&
       extractImageKey(node.attrs.src) === key &&
       node.attrs.src !== src
@@ -121,6 +124,10 @@ export function convertToPlainText(doc: JSONContent | null): string {
           `\n${title ? `${title} ` : ""}${videoPageUrl(source)}\n`,
         );
       }
+    }
+    // 上传的视频同样没有文字，给出它的地址
+    else if (node.type === "videoFile" && typeof node.attrs?.src === "string") {
+      textParts.push(`\n${node.attrs.src}\n`);
     }
 
     // 3. 递归遍历子节点 (处理 Heading, Blockquote, List 等容器)

@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
+import { Play } from "lucide-react";
 import { cn, formatBytes } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { m } from "@/paraglide/messages";
 import {
   getMediaThumbSrc,
+  isVideoMedia,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import type { MediaAsset } from "../types";
@@ -21,6 +23,7 @@ export function MediaTile({
   onSelect: (asset: MediaAsset) => void;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const isVideo = isVideoMedia(asset.key, asset.mimeType);
   const thumbSrc = useMemo(
     () => getMediaThumbSrc(asset.url, PUBLIC_IMAGE_WIDTH.thumb),
     [asset.url],
@@ -86,16 +89,42 @@ export function MediaTile({
         )}
       >
         {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
-        <img
-          src={thumbSrc}
-          alt={asset.fileName}
-          className={cn(
-            "h-full w-full object-cover",
-            loaded ? "opacity-100" : "opacity-0",
-          )}
-          loading="lazy"
-          onLoad={() => setLoaded(true)}
-        />
+        {isVideo ? (
+          <>
+            {/* 只读元数据再跳到 0.1 秒，拿第一帧当封面，不整段加载。 */}
+            <video
+              src={thumbSrc}
+              muted
+              playsInline
+              preload="metadata"
+              aria-label={asset.fileName}
+              className={cn(
+                "h-full w-full object-cover",
+                loaded ? "opacity-100" : "opacity-0",
+              )}
+              onLoadedMetadata={(event) => {
+                event.currentTarget.currentTime = 0.1;
+                setLoaded(true);
+              }}
+            />
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white">
+                <Play size={16} fill="currentColor" />
+              </span>
+            </span>
+          </>
+        ) : (
+          <img
+            src={thumbSrc}
+            alt={asset.fileName}
+            className={cn(
+              "h-full w-full object-cover",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+          />
+        )}
         {unused ? (
           <Badge tone="warning" size="sm" className="absolute top-2 left-2">
             {m.media_badge_unused()}

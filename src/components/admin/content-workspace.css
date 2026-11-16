@@ -2,6 +2,8 @@
 .admin-workspace {
   --admin-unit: clamp(1px, 0.07vw, 1.5px);
   --admin-rule: color-mix(in srgb, var(--fuwari-fg-50) 20%, transparent);
+  /* 列表行的分隔线，文章列表与日常、相册列表共用。 */
+  --list-rule: color-mix(in srgb, var(--fuwari-fg) 9%, transparent);
   --fuwari-tabs-gap: calc(28 * var(--admin-unit));
   --fuwari-tabs-rule: var(--admin-rule);
   --fuwari-tab-height: calc(46 * var(--admin-unit));

@@ -2,12 +2,13 @@ import {
   and,
   desc,
   eq,
-  isNotNull,
   isNull,
   sql,
   type SQL,
   type SQLWrapper,
 } from "drizzle-orm";
+import { galleryVisible } from "@/features/gallery/data/helper";
+import { momentVisible } from "@/features/moments/data/helper";
 import {
   FriendLinksTable,
   GalleryCategoriesTable,
@@ -97,6 +98,8 @@ export async function matchSearchDocuments(
   const visibilityFilter = includeLocked
     ? ""
     : " AND p.visibility <> 'password'";
+  // 定时发布的文章发布时就进了索引，到点之前不能出现在结果里。
+  const nowSeconds = Math.floor(Date.now() / 1000);
   const result = await env.DB.prepare(
     `SELECT d.post_id AS postId, d.slug, d.title, d.summary, d.content, d.tags,
             p.published_at AS publishedAt, c.name AS category
@@ -105,10 +108,11 @@ export async function matchSearchDocuments(
      JOIN posts p ON p.id = d.post_id${visibilityFilter}
      LEFT JOIN categories c ON c.id = p.category_id
      WHERE search_documents_fts MATCH ?
+       AND (p.published_at IS NULL OR p.published_at <= ?)
      ORDER BY rank
      LIMIT ?`,
   )
-    .bind(match, limit)
+    .bind(match, nowSeconds, limit)
     .all<{
       postId: number;
       slug: string;
@@ -223,7 +227,7 @@ export async function matchMoments(
     .from(MomentsTable)
     .where(
       and(
-        isNotNull(MomentsTable.publishedAt),
+        momentVisible(),
         includeLocked ? undefined : isNull(MomentsTable.accessPasswordHash),
         ...conditions,
       ),
@@ -267,7 +271,7 @@ export async function matchGalleryCategories(
     .from(GalleryCategoriesTable)
     .where(
       and(
-        isNotNull(GalleryCategoriesTable.publishedAt),
+        galleryVisible(),
         includeLocked
           ? undefined
           : eq(GalleryCategoriesTable.privacyProtected, false),

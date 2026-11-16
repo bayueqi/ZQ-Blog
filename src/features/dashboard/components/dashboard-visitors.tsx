@@ -5,6 +5,7 @@ import { FuwariModal } from "@/components/ui/fuwari-modal";
 import { SectionHeading } from "@/components/ui/page-heading";
 import type { DashboardOverview } from "@/features/dashboard/dashboard.schema";
 import { cn } from "@/lib/utils";
+import { SITE_TIME_ZONE } from "@/lib/site-time";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 import { formatCount } from "./format";
@@ -102,7 +103,7 @@ function createFormatters(tag: string) {
     day: new Intl.DateTimeFormat(tag, {
       month: "numeric",
       day: "numeric",
-      timeZone: "UTC",
+      timeZone: SITE_TIME_ZONE,
     }),
   };
 }

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_MEDIA_TYPES,
   MAX_FILE_SIZE,
 } from "@/features/media/media.schema";
 import { orpc, orpcClient } from "@/lib/orpc";
@@ -19,10 +20,15 @@ export function useMediaUpload() {
     mutationFn: (file: File) => orpcClient.media.upload({ image: file }),
   });
 
-  const uploadFiles = async (files: Array<File>) => {
-    const images = files.filter((file) =>
-      ACCEPTED_IMAGE_TYPES.includes(file.type),
-    );
+  /** `imagesOnly` 给封面、头像这类只能是图片的场合。 */
+  const uploadFiles = async (
+    files: Array<File>,
+    options?: { imagesOnly?: boolean },
+  ) => {
+    const accepted = options?.imagesOnly
+      ? ACCEPTED_IMAGE_TYPES
+      : ACCEPTED_MEDIA_TYPES;
+    const images = files.filter((file) => accepted.includes(file.type));
     if (images.length === 0) {
       toast.error(m.media_validation_file_invalid_type());
       return;

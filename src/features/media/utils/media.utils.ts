@@ -56,6 +56,28 @@ export function isGifKey(key: string, contentType?: string | null) {
   return key.toLowerCase().endsWith(".gif") || contentType === "image/gif";
 }
 
+const VIDEO_EXTENSIONS = ["mp4", "webm", "m4v", "mov", "ogv"];
+
+export function isVideoMime(mimeType?: string | null) {
+  return Boolean(mimeType?.startsWith("video/"));
+}
+
+export function isVideoKey(key: string) {
+  const extension = key.split(".").pop()?.toLowerCase();
+  return extension ? VIDEO_EXTENSIONS.includes(extension) : false;
+}
+
+/** 视频不走图片变换，一律原文件直出。 */
+export function isVideoMedia(key: string, mimeType?: string | null) {
+  return isVideoMime(mimeType) || isVideoKey(key);
+}
+
+/** 手里只有 URL 时用；日常的图片数组没有存 mimeType。 */
+export function isVideoUrl(url: string) {
+  const key = extractImageKey(url);
+  return key ? isVideoKey(key) : isVideoKey(url.split("?")[0]);
+}
+
 export const PUBLIC_IMAGE_WIDTH = {
   banner: 1600,
   cover: 800,
@@ -85,7 +107,7 @@ export function getTransformSourceUrl(requestUrl: URL, key: string) {
 }
 
 export function getOptimizedImageUrl(key: string, width?: number) {
-  if (isGifKey(key)) {
+  if (isGifKey(key) || isVideoKey(key)) {
     return `/images/${key}?original=true`;
   }
   return `/images/${key}?quality=80${width ? `&width=${width}` : ""}`;
@@ -97,7 +119,7 @@ export function getPublicImageSrcSet(
   widths: ReadonlyArray<number>,
 ) {
   const key = extractImageKey(src);
-  if (!key || isGifKey(key)) return undefined;
+  if (!key || isGifKey(key) || isVideoKey(key)) return undefined;
   return widths
     .map((width) => `${getPublicImageSrc(src, width)} ${width}w`)
     .join(", ");
@@ -123,6 +145,7 @@ export function getMediaThumbSrc(src: string, width: number) {
   if (!key) return src;
   const lower = key.toLowerCase();
   if (lower.endsWith(".gif") || lower.endsWith(".svg")) return src;
+  if (isVideoKey(key)) return src;
   return getPublicImageSrc(src, width);
 }
 

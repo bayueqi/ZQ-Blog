@@ -7,6 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { CategorySelect } from "@/features/categories/components/category-select";
 import { TagSelector } from "@/features/tags/components/tag-selector";
+import { siteDateKey, siteDayStart } from "@/lib/site-time";
 import { m } from "@/paraglide/messages";
 import { PostEditorCover } from "./post-editor-cover";
 import type { PostEditorData } from "./types";
@@ -50,18 +51,12 @@ export function PostEditorMetadata({
           <FormField label={m.editor_meta_date()} className="min-w-0 flex-1">
             <DatePicker
               today={post.serverToday}
-              maxDate={post.serverToday}
               value={
-                post.publishedAt
-                  ? post.publishedAt.toISOString().slice(0, 10)
-                  : ""
+                post.publishedAt ? siteDateKey(post.publishedAt) : ""
               }
               onChange={(dateStr) => {
-                if (dateStr && dateStr > post.serverToday) return;
                 onPostChange({
-                  publishedAt: dateStr
-                    ? new Date(`${dateStr}T12:00:00Z`)
-                    : null,
+                  publishedAt: dateStr ? siteDayStart(dateStr) : null,
                 });
               }}
             />

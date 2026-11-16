@@ -6,13 +6,14 @@ import "./post-manager.css";
 function PostRowSkeleton() {
   return (
     <tr aria-hidden="true">
-      <td colSpan={4}>
+      <td colSpan={5}>
         <div className="flex items-center gap-8 py-2">
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-2/3 rounded" />
             <Skeleton className="h-3 w-1/3 rounded" />
           </div>
           <Skeleton className="h-5 w-14 rounded-full" />
+          <Skeleton className="hidden sm:block h-4 w-24 rounded" />
           <Skeleton className="hidden sm:block h-4 w-24 rounded" />
         </div>
       </td>

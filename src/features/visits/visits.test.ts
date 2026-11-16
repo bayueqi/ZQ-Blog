@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isVisitor, parseUserAgent } from "./visit-agent";
-import { buildVisitorStats, lastUtcDays, type VisitRow } from "./visits";
+import { buildVisitorStats, lastSiteDays, type VisitRow } from "./visits";
 
 const CHROME_WINDOWS =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
@@ -151,11 +151,11 @@ describe("buildVisitorStats", () => {
   });
 });
 
-describe("lastUtcDays", () => {
-  it("keeps the UTC day across a local evening", () => {
-    expect(lastUtcDays(new Date("2026-10-22T23:30:00Z"), 2)).toEqual([
-      "2026-10-21",
+describe("lastSiteDays", () => {
+  it("按北京时间划分日期，UTC 深夜已算作次日", () => {
+    expect(lastSiteDays(new Date("2026-10-22T23:30:00Z"), 2)).toEqual([
       "2026-10-22",
+      "2026-10-23",
     ]);
   });
 });

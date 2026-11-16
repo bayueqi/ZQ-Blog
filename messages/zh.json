@@ -113,14 +113,6 @@
       }
     }
   ],
-  "format_datetime": [
-    {
-      "declarations": ["input date", "local formattedDateZh = date: datetime year=numeric month=long day=numeric hour=2-digit minute=2-digit hour12=false"],
-      "match": {
-        "date=*": "{formattedDateZh}"
-      }
-    }
-  ],
   "time_ago_just_now": "刚刚",
   "time_ago_minutes": [
     {
@@ -387,6 +379,7 @@
   "common_expand_all": "展开全部",
   "common_collapse": "收起",
   "common_select_date": "选择日期",
+  "common_clear": "清除",
   "common_switch_language": "切换语言",
   "common_untitled": "未命名",
   "common_plain_text": "纯文本",
@@ -395,16 +388,8 @@
   "theme_dark": "深色",
   "theme_system": "跟随系统",
   "theme_toggle_title": "主题：{theme}",
-  "format_month_day_time": [
-    {
-      "declarations": ["input date", "local formattedDateTimeZh = date: datetime month=2-digit day=2-digit hour=2-digit minute=2-digit hour12=false"],
-      "match": {
-        "date=*": "{formattedDateTimeZh}"
-      }
-    }
-  ],
   "admin_layout_title": "管理后台",
-  "admin_layout_settings": "系统设置",
+  "admin_layout_settings": "设置",
   "admin_layout_back_to_site": "返回前台",
   "admin_layout_open_navigation": "打开导航",
   "admin_sidebar_close_navigation": "关闭导航",
@@ -482,9 +467,10 @@
   "admin_posts_toast_delete_success": "删除成功",
   "admin_posts_toast_delete_success_desc": "已删除「{title}」",
   "admin_posts_status_published": "已发布",
+  "admin_posts_status_scheduled": "待发布",
   "admin_posts_status_draft": "草稿",
-  "admin_posts_time_published": "发布",
-  "admin_posts_time_modified": "修改",
+  "admin_posts_time_published": "发布日期",
+  "admin_posts_time_modified": "最近修改",
   "admin_pagination_info": [
     {
       "declarations": ["input startItem", "input endItem", "input totalItems"],
@@ -616,7 +602,7 @@
   "editor_toolbar_table": "插入表格",
   "editor_toolbar_table_size": "{cols} 列 × {rows} 行",
   "editor_toolbar_link": "插入链接",
-  "editor_toolbar_image": "插入图片",
+  "editor_toolbar_image": "插入图片/视频",
   "editor_toolbar_undo": "撤销",
   "editor_toolbar_redo": "重做",
   "editor_link_url": "链接地址",
@@ -660,14 +646,14 @@
   "post_video_play_title": "播放{provider}视频：{title}",
   "post_video_player": "{provider}视频播放器",
   "post_video_open": "在{provider}打开",
-  "editor_image_picker_title": "选择图片",
-  "editor_image_url": "图片链接",
+  "editor_image_picker_title": "选择图片/视频",
+  "editor_image_url": "图片/视频链接",
   "editor_image_import": "导入",
-  "editor_image_placeholder": "添加图片",
+  "editor_image_placeholder": "添加图片/视频",
   "editor_image_tab_upload": "上传",
   "editor_image_tab_link": "链接",
   "editor_image_tab_library": "文件",
-  "editor_image_upload_choose": "选择本地图片",
+  "editor_image_upload_choose": "选择本地图片或视频",
   "editor_formula_edit": "编辑公式",
   "editor_formula_insert": "插入公式",
   "editor_formula_inline": "行内",
@@ -749,8 +735,8 @@
   "media_upload_status_uploading": "上传中",
   "media_preview_size": "大小",
   "media_toast_delete_fail": "删除失败",
-  "media_validation_file_too_large": "文件大小不能超过 10MB",
-  "media_validation_file_invalid_type": "仅支持上传图片文件",
+  "media_validation_file_too_large": "文件大小不能超过 50MB",
+  "media_validation_file_invalid_type": "仅支持上传图片或视频文件",
   "media_upload_fail": [
     {
       "declarations": ["input name"],
@@ -819,7 +805,7 @@
   "friend_links_toast_delete_success": "友链已删除",
   "settings_toast_save_success": "设置已保存",
   "settings_toast_save_error": "保存失败，请重试",
-  "settings_header_title": "系统设置",
+  "settings_header_title": "设置",
   "settings_saving": "保存中",
   "settings_nav_site": "站点",
   "settings_nav_notify": "通知",
@@ -1378,6 +1364,7 @@
   "admin_gallery_edit": "编辑",
   "admin_gallery_published": "发布",
   "admin_gallery_draft": "草稿",
+  "admin_gallery_col_name": "相册集",
   "admin_gallery_delete": "删除",
   "admin_gallery_delete_confirm": "确定删除「{name}」？里面的照片会一起删除。",
   "admin_gallery_saved": "已保存",
@@ -1385,7 +1372,7 @@
   "admin_gallery_failed": "操作失败",
   "admin_gallery_empty_photos": "这个相册集还没有照片",
   "admin_gallery_new": "新建相册集",
-  "admin_gallery_upload": "上传照片",
+  "admin_gallery_upload": "上传图片/视频",
   "admin_gallery_empty": "暂无相册",
   "admin_gallery_overview": "共 {collections} 个相册集 · {photos} 张照片",
   "media_badge_gallery": "相册",
@@ -1414,21 +1401,31 @@
   "admin_moments_manage_title": "日常管理",
   "admin_moments_description": "共 {count} 条日常",
   "admin_moments_body_placeholder": "写点什么",
-  "admin_moments_add_image": "图片",
-  "admin_moments_pick_image": "选择图片",
-  "admin_moments_remove_image": "移除图片",
+  "admin_moments_add_image": "图片/视频",
+  "admin_moments_pick_image": "选择图片或视频",
+  "admin_moments_remove_image": "移除",
   "admin_moments_published": "发布",
   "admin_moments_cancel": "取消",
   "admin_moments_save": "保存",
   "admin_moments_saved": "已保存",
   "admin_moments_save_failed": "保存失败",
+  "admin_moments_empty_content": "写点什么，或放张图片/视频",
   "admin_moments_empty": "还没有日常",
   "admin_moments_locked": "已加密",
   "admin_moments_draft": "草稿",
-  "admin_moments_image_only": "仅图片",
+  "admin_moments_col_body": "内容",
+  "admin_moments_image_only": "仅图片/视频",
   "admin_moments_edit": "编辑",
   "admin_moments_delete": "删除",
   "admin_moments_delete_confirm": "删除后无法恢复，确定要删除这条日常吗？",
   "admin_moments_deleted": "已删除",
-  "admin_moments_delete_failed": "删除失败"
+  "admin_moments_delete_failed": "删除失败",
+  "admin_revisions_open": "历史版本",
+  "admin_revisions_current": "当前",
+  "admin_revisions_restore_message": "当前内容会先另存一份，再换成这个版本。",
+  "admin_revisions_restored": "已恢复",
+  "admin_revisions_restore_failed": "恢复失败",
+  "admin_revisions_deleted": "已删除",
+  "admin_revisions_delete_failed": "删除失败",
+  "admin_revisions_delete_message": "删除后无法找回，当前内容不受影响。"
 }

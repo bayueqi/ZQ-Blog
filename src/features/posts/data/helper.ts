@@ -29,6 +29,19 @@ export function adminPostTextColumns(taxonomy?: AdminTaxonomyFilter) {
 function uncategorized(): SQL {
   return sql`${PostsTable.categoryId} IS NULL`;
 }
+
+/**
+ * 公开可见：已有公开快照，且发布时间已到。
+ *
+ * 定时发布靠这一条生效——文章发布时快照就生成了，只有到点之后才对外可见，
+ * 所以每一条公开读取都必须带上它。
+ */
+export function publicVisible(): SQL {
+  return sql`${PostsTable.publicSnapshotJson} IS NOT NULL
+    AND (${PostsTable.publishedAt} IS NULL OR ${PostsTable.publishedAt} <= ${Math.floor(
+      Date.now() / 1000,
+    )})`;
+}
 function hasTag(tagId: number): SQL {
   return sql`EXISTS (SELECT 1 FROM ${PostTagsTable} WHERE ${PostTagsTable.postId} = ${PostsTable.id} AND ${PostTagsTable.tagId} = ${tagId})`;
 }
@@ -63,7 +76,7 @@ export function buildPostWhereClause(options: PostFilters) {
   }
 
   if (options.publicOnly || options.taxonomy?.scope === "public") {
-    whereClauses.push(sql`${PostsTable.publicSnapshotJson} IS NOT NULL`);
+    whereClauses.push(publicVisible());
   }
 
   if (options.search) {

@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ChevronLeft,
   ChevronRight,
+  History,
   ImagePlus,
   Images,
   Lock,
@@ -27,13 +28,20 @@ import {
   type GalleryCategoryRow,
 } from "@/features/gallery/components/admin/gallery-dialogs";
 import "@/features/gallery/components/admin/gallery-workspace.css";
+import "@/features/posts/components/post-manager/post-manager.css";
+import { PostStatusBadge } from "@/features/posts/components/post-status-badge";
 import {
   adminGalleryCategoriesQuery,
   adminGalleryPhotosQuery,
 } from "@/features/gallery/queries";
+import {
+  RevisionHistoryDialog,
+  type RevisionTarget,
+} from "@/features/revisions/components/revision-history-dialog";
 import { MediaPicker } from "@/features/media/components/media-library/components";
 import {
   getPublicImageSrc,
+  isVideoMime,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { orpcClient } from "@/lib/orpc";
@@ -86,6 +94,8 @@ function AdminGalleryPage() {
   }>({ open: false, row: null });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [deleting, setDeleting] = useState<GalleryCategoryRow | null>(null);
+  /** 正在翻历史版本的那个相册集。 */
+  const [history, setHistory] = useState<RevisionTarget | null>(null);
   const [deletingBusy, setDeletingBusy] = useState(false);
   const [preview, setPreview] = useState<number | null>(null);
 
@@ -237,91 +247,141 @@ function AdminGalleryPage() {
               <EmptyState description={m.admin_gallery_empty()} />
             </div>
           ) : (
-            <ul className="gallery-grid">
-              {allCategories.map((row) => (
-                <li key={row.id} className="gallery-card">
-                  <button
-                    type="button"
-                    className="gallery-card-main"
-                    onClick={() => openCategory(row.id)}
-                  >
-                    <div className="gallery-card-thumb">
-                      {row.cover ? (
-                        <img
-                          src={getPublicImageSrc(
-                            row.cover.url,
-                            PUBLIC_IMAGE_WIDTH.cover,
-                          )}
-                          alt=""
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="gallery-card-thumb-empty">
-                          <Images size={26} strokeWidth={1.5} />
-                        </div>
-                      )}
-                      {row.hasAccessPassword && (
-                        <span className="gallery-card-badge">
-                          <Lock size={11} strokeWidth={2} />
-                          {m.gallery_locked_badge()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="gallery-card-text">
-                      <span className="gallery-card-heading">
-                        <span className="gallery-card-title">{row.name}</span>
-                        {row.published ? null : (
-                          <span className="gallery-card-draft">
-                            {m.admin_gallery_draft()}
-                          </span>
-                        )}
-                      </span>
-                      {row.description && (
-                        <span className="gallery-card-desc">
-                          {row.description}
-                        </span>
-                      )}
-                      <span className="gallery-card-meta">
-                        {m.gallery_photo_count({ count: row.photoCount })}
-                        {row.createdAt ? (
-                          <>
-                            {" · "}
-                            {m.gallery_created_at({
-                              date: formatDate(row.createdAt),
-                            })}
-                          </>
-                        ) : null}
-                      </span>
-                    </div>
-                  </button>
-                  <div className="gallery-card-actions">
-                    <IconButton
-                      label={
-                        row.pinned
-                          ? m.admin_gallery_unpin()
-                          : m.admin_gallery_pin()
-                      }
-                      onClick={() => void togglePin(row)}
-                    >
-                      {row.pinned ? <PinOff size={15} /> : <Pin size={15} />}
-                    </IconButton>
-                    <IconButton
-                      label={m.admin_gallery_edit()}
-                      onClick={() => setDialog({ open: true, row })}
-                    >
-                      <Pencil size={15} />
-                    </IconButton>
-                    <IconButton
-                      label={m.admin_gallery_delete()}
-                      tone="danger"
-                      onClick={() => setDeleting(row)}
-                    >
-                      <Trash2 size={15} />
-                    </IconButton>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="post-list-table-wrap">
+              <table className="post-list-table">
+                <colgroup>
+                  <col style={{ width: "44%" }} />
+                  <col style={{ width: "12%" }} />
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "14%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th scope="col">{m.admin_gallery_col_name()}</th>
+                    <th scope="col">{m.admin_posts_filter_status()}</th>
+                    <th scope="col">{m.admin_posts_time_published()}</th>
+                    <th scope="col">{m.admin_posts_time_modified()}</th>
+                    <th scope="col">{m.admin_posts_col_actions()}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allCategories.map((row) => {
+                    const scheduled =
+                      row.published &&
+                      row.publishedAt != null &&
+                      new Date(row.publishedAt).getTime() > Date.now();
+                    return (
+                      <tr key={row.id}>
+                        <td>
+                          <div className="post-list-title-cell">
+                            <span className="post-list-pin">
+                              {row.pinned ? (
+                                <Pin size={18} aria-label={m.pinned_badge()} />
+                              ) : null}
+                            </span>
+                            <button
+                              type="button"
+                              className="flex min-w-0 items-center gap-2.5 text-left"
+                              onClick={() => openCategory(row.id)}
+                            >
+                              {row.cover ? (
+                                <img
+                                  src={getPublicImageSrc(
+                                    row.cover.url,
+                                    PUBLIC_IMAGE_WIDTH.avatar,
+                                  )}
+                                  alt=""
+                                  loading="lazy"
+                                  className="h-10 w-10 shrink-0 rounded object-cover"
+                                />
+                              ) : (
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-(--fuwari-btn-regular-bg) fuwari-text-30">
+                                  <Images size={16} strokeWidth={1.5} />
+                                </span>
+                              )}
+                              <span className="min-w-0">
+                                <span className="post-list-title-line">
+                                  <strong>{row.name}</strong>
+                                  {row.hasAccessPassword ? (
+                                    <Lock
+                                      size={12}
+                                      strokeWidth={2}
+                                      className="post-list-lock"
+                                      aria-label={m.gallery_locked_badge()}
+                                    />
+                                  ) : null}
+                                </span>
+                                <span className="post-list-slug">
+                                  {row.description ||
+                                    m.gallery_photo_count({
+                                      count: row.photoCount,
+                                    })}
+                                </span>
+                              </span>
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <PostStatusBadge
+                            published={row.published}
+                            scheduled={scheduled}
+                          />
+                        </td>
+                        <td className="post-list-date">
+                          {row.publishedAt ? formatDate(row.publishedAt) : "—"}
+                        </td>
+                        <td className="post-list-date">
+                          {row.updatedAt ? formatDate(row.updatedAt) : "—"}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-0.5">
+                            <IconButton
+                              label={
+                                row.pinned
+                                  ? m.admin_gallery_unpin()
+                                  : m.admin_gallery_pin()
+                              }
+                              onClick={() => void togglePin(row)}
+                            >
+                              {row.pinned ? (
+                                <PinOff size={15} />
+                              ) : (
+                                <Pin size={15} />
+                              )}
+                            </IconButton>
+                            <IconButton
+                              label={m.admin_gallery_edit()}
+                              onClick={() => setDialog({ open: true, row })}
+                            >
+                              <Pencil size={15} />
+                            </IconButton>
+                            <IconButton
+                              label={m.admin_revisions_open()}
+                              onClick={() =>
+                                setHistory({
+                                  type: "gallery",
+                                  id: row.id,
+                                })
+                              }
+                            >
+                              <History size={15} />
+                            </IconButton>
+                            <IconButton
+                              label={m.admin_gallery_delete()}
+                              tone="danger"
+                              onClick={() => setDeleting(row)}
+                            >
+                              <Trash2 size={15} />
+                            </IconButton>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )
         ) : photos.isPending ? (
           <GallerySkeleton count={6} square />
@@ -341,11 +401,27 @@ function AdminGalleryPage() {
                   aria-label={m.media_preview_title()}
                   onClick={() => setPreview(index)}
                 >
-                  <img
-                    src={getPublicImageSrc(photo.url, PUBLIC_IMAGE_WIDTH.cover)}
-                    alt={photo.caption ?? ""}
-                    loading="lazy"
-                  />
+                  {isVideoMime(photo.mimeType) ? (
+                    <video
+                      src={photo.url}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      aria-label={photo.caption ?? ""}
+                      onLoadedMetadata={(event) => {
+                        event.currentTarget.currentTime = 0.1;
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={getPublicImageSrc(
+                        photo.url,
+                        PUBLIC_IMAGE_WIDTH.cover,
+                      )}
+                      alt={photo.caption ?? ""}
+                      loading="lazy"
+                    />
+                  )}
                 </button>
                 <button
                   type="button"
@@ -388,6 +464,11 @@ function AdminGalleryPage() {
         onClose={() => setDeleting(null)}
         onConfirm={() => void confirmDelete()}
       />
+      <RevisionHistoryDialog
+        target={history}
+        onClose={() => setHistory(null)}
+        onRestored={refresh}
+      />
       {preview !== null && allPhotos[preview]
         ? createPortal(
             // 挂到 body，免得页面动画的 transform 把 fixed 关进内容区。
@@ -419,14 +500,24 @@ function AdminGalleryPage() {
                   <ChevronLeft size={20} />
                 </button>
               ) : null}
-              <img
-                src={getPublicImageSrc(
-                  allPhotos[preview].url,
-                  PUBLIC_IMAGE_WIDTH.zoom,
-                )}
-                alt={allPhotos[preview].caption ?? ""}
-                onClick={(event) => event.stopPropagation()}
-              />
+              {isVideoMime(allPhotos[preview].mimeType) ? (
+                <video
+                  src={allPhotos[preview].url}
+                  controls
+                  autoPlay
+                  playsInline
+                  onClick={(event) => event.stopPropagation()}
+                />
+              ) : (
+                <img
+                  src={getPublicImageSrc(
+                    allPhotos[preview].url,
+                    PUBLIC_IMAGE_WIDTH.zoom,
+                  )}
+                  alt={allPhotos[preview].caption ?? ""}
+                  onClick={(event) => event.stopPropagation()}
+                />
+              )}
               {allPhotos.length > 1 ? (
                 <button
                   type="button"
@@ -455,14 +546,28 @@ function GallerySkeleton({
   count: number;
   square?: boolean;
 }) {
+  if (square) {
+    return (
+      <div className="gallery-photo-grid" aria-busy="true">
+        {Array.from({ length: count }, (_, index) => (
+          <div key={index} className="gallery-card-thumb" />
+        ))}
+      </div>
+    );
+  }
   return (
-    <div
-      className={square ? "gallery-photo-grid" : "gallery-grid"}
-      aria-busy="true"
-    >
-      {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="gallery-card-thumb" />
-      ))}
+    <div className="post-list-table-wrap" aria-busy="true">
+      <table className="post-list-table">
+        <tbody>
+          {Array.from({ length: count }, (_, index) => (
+            <tr key={index}>
+              <td colSpan={5}>
+                <div className="h-8 animate-pulse rounded bg-(--fuwari-btn-regular-bg)" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

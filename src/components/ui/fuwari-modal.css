@@ -35,6 +35,24 @@
 .fuwari-modal-wide {
   width: min(42rem, calc(100% - 32px));
 }
+/* 历史版本：左边列表右边内容，比 wide 再宽一点。固定高度，
+   免得只有一两条时整个弹窗塌成一条缝。 */
+.fuwari-modal-revisions {
+  width: min(56rem, calc(100% - 32px));
+}
+@media (min-width: 768px) {
+  .fuwari-modal-revisions {
+    height: min(34rem, calc(100dvh - 48px));
+    overflow: hidden;
+  }
+  .fuwari-modal-revisions .fuwari-modal-content {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+}
+/* 结束帧不再带 transform：留在 dialog 上的 transform 会让内部的 fixed 浮层
+   以 dialog 为包含块计算坐标，日历就跑到别处去了。 */
 @keyframes fuwari-modal-in {
   from {
     opacity: 0;
@@ -42,13 +60,11 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 @keyframes fuwari-modal-out {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
   to {
     opacity: 0;

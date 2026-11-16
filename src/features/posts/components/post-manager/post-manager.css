@@ -48,16 +48,17 @@
   border-collapse: collapse;
 }
 .post-list-title-col {
-  width: 57%;
+  width: 42%;
 }
 .post-list-status-col {
-  width: 13%;
+  width: 12%;
 }
+.post-list-published-col,
 .post-list-date-col {
-  width: 17%;
+  width: 15%;
 }
 .post-list-actions-col {
-  width: 13%;
+  width: 16%;
 }
 .post-list-table th {
   height: calc(44 * var(--admin-unit));
@@ -136,17 +137,6 @@
   color: var(--fuwari-fg-50);
   white-space: nowrap;
 }
-.post-list-row-actions {
-  display: flex;
-  align-items: center;
-  gap: calc(17 * var(--admin-unit));
-  font-size: calc(13 * var(--admin-unit));
-  color: var(--fuwari-primary);
-}
-.post-list-row-actions > a {
-  padding: calc(8 * var(--admin-unit)) 0;
-  white-space: nowrap;
-}
 .post-list-footer {
   display: flex;
   align-items: center;
@@ -180,19 +170,17 @@
       calc(18 * var(--admin-unit));
   }
   .post-list-title-col {
-    width: 50%;
+    width: 38%;
   }
   .post-list-status-col {
-    width: 15%;
+    width: 14%;
   }
+  .post-list-published-col,
   .post-list-date-col {
-    width: 20%;
+    width: 14%;
   }
   .post-list-actions-col {
-    width: 15%;
-  }
-  .post-list-row-actions {
-    gap: calc(9 * var(--admin-unit));
+    width: 16%;
   }
 }
 @media (max-width: 1023px) {
@@ -270,6 +258,10 @@
   .post-list-table td:nth-child(2) {
     padding-left: calc(24 * var(--admin-unit));
   }
+  /* 窄屏只留发布时间，最近修改藏起来，免得挤成两行。 */
+  .post-list-table td:nth-child(4) {
+    display: none;
+  }
   .post-list-date {
     font-size: calc(11 * var(--admin-unit));
     align-self: center;
@@ -277,16 +269,10 @@
   .post-list-mobile-date-label {
     display: inline;
   }
-  .post-list-row-actions {
-    gap: 5px;
-  }
   .post-list-table {
     --fuwari-badge-height: calc(22 * var(--admin-unit));
     --fuwari-badge-padding-x: calc(7 * var(--admin-unit));
     --fuwari-badge-font-size: calc(11 * var(--admin-unit));
-  }
-  .post-list-row-actions > a {
-    font-size: calc(12 * var(--admin-unit));
   }
   .post-list-footer {
     font-size: calc(12 * var(--admin-unit));

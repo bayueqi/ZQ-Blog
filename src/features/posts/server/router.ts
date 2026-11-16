@@ -50,10 +50,6 @@ const postErrors = {
     status: 400,
     message: "Post revision snapshot is invalid.",
   },
-  PUBLISHED_AT_IN_FUTURE: {
-    status: 400,
-    message: "Publish date cannot be in the future.",
-  },
   PUBLIC_SLUG_TAKEN: {
     status: 409,
     message: "This public slug is already in use.",
@@ -267,9 +263,6 @@ const publishPost = adminProcedure
     return unwrapResult<{ success: boolean }>(result, {
       POST_NOT_FOUND: () => {
         throw errors.POST_NOT_FOUND();
-      },
-      PUBLISHED_AT_IN_FUTURE: () => {
-        throw errors.PUBLISHED_AT_IN_FUTURE();
       },
       PUBLIC_SLUG_TAKEN: () => {
         throw errors.PUBLIC_SLUG_TAKEN();

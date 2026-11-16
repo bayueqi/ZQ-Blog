@@ -11,9 +11,14 @@ import type {
   MomentUpdateInput,
   MomentWriteInput,
 } from "@/features/moments/moments.schema";
+import {
+  deleteContentRevisions,
+  recordMoment,
+} from "@/features/revisions/service/revisions.service";
 import type { Moment } from "@/lib/db/schema";
 import { serverEnv } from "@/lib/env/server.env";
 import { err, ok } from "@/lib/errors";
+import { siteDayStart } from "@/lib/site-time";
 
 type MomentsContext = DbContext & {
   headers?: Headers;
@@ -40,11 +45,14 @@ function images(row: Moment) {
 }
 
 function toCard(row: Moment, locked: boolean) {
+  // 没指定发布时间就按创建时刻对外显示，免得前台缺日期。
+  const shownAt = row.publishedAt ?? row.createdAt;
   return {
     id: row.id,
     body: locked ? "" : row.body,
     images: locked ? [] : images(row),
-    publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
+    publishedAt: shownAt ? shownAt.toISOString() : null,
+    updatedAt: row.updatedAt ? row.updatedAt.toISOString() : null,
     locked,
     pinned: row.pinnedAt != null,
   };
@@ -63,9 +71,10 @@ export async function listForAdmin(context: MomentsContext) {
   return {
     moments: rows.map((row) => ({
       ...toCard(row, false),
+      // 后台编辑要拿库里的原值，不能被展示用的兜底日期带跑。
+      publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
       hasPassword: Boolean(row.accessPasswordHash),
-      published: Boolean(row.publishedAt),
-      updatedAt: row.updatedAt ? row.updatedAt.toISOString() : null,
+      published: row.published,
     })),
   };
 }
@@ -92,6 +101,16 @@ function passwordOf(password: string | null | undefined) {
   if (password === undefined) return undefined;
   const trimmed = (password ?? "").trim();
   return trimmed ? trimmed : null;
+}
+
+/**
+ * 界面上的 YYYY-MM-DD 换成北京时间零点入库，未来的日期就是定时发布。
+ * undefined 表示这次不改发布时间，空串表示不指定发布时间。
+ */
+function publishedAtOf(value: string | null | undefined) {
+  if (value === undefined) return undefined;
+  const key = (value ?? "").trim();
+  return key ? siteDayStart(key) : null;
 }
 
 /** zod 的图片尺寸可能是 undefined，库里统一存 null。 */
@@ -122,9 +141,13 @@ export async function createMoment(
     body,
     images: normalizeImages(input.images),
     accessPasswordHash: raw ? await hashMomentPassword(raw) : null,
-    publishedAt: input.published ? new Date() : null,
+    published: input.published ?? false,
+    publishedAt: publishedAtOf(input.publishedAt) ?? null,
   });
   if (!row) return err({ reason: "NOT_FOUND" as const });
+
+  // 发布出去的那一版才进历史，草稿由 recordMoment 自己跳过。
+  await recordMoment(context.db, row);
 
   return ok(toCard(row, false));
 }
@@ -141,6 +164,7 @@ export async function updateMoment(
     return err({ reason: "EMPTY" as const });
 
   const raw = passwordOf(input.password);
+  const publishedAt = publishedAtOf(input.publishedAt);
   const row = await Repo.update(context.db, input.id, {
     body,
     images: normalizeImages(input.images),
@@ -149,14 +173,13 @@ export async function updateMoment(
       : {
           accessPasswordHash: raw ? await hashMomentPassword(raw) : null,
         }),
-    publishedAt:
-      input.published && !existing.publishedAt
-        ? new Date()
-        : input.published
-          ? existing.publishedAt
-          : null,
+    ...(input.published === undefined ? {} : { published: input.published }),
+    ...(publishedAt === undefined ? {} : { publishedAt }),
   });
   if (!row) return err({ reason: "NOT_FOUND" as const });
+
+  // 发布出去的那一版才进历史，草稿由 recordMoment 自己跳过。
+  await recordMoment(context.db, row);
 
   return ok(toCard(row, false));
 }
@@ -188,5 +211,6 @@ export async function removeMoment(
     targetId: input.id,
   });
   await Repo.remove(context.db, input.id);
+  await deleteContentRevisions(context.db, "moment", input.id);
   return ok({ ok: true });
 }

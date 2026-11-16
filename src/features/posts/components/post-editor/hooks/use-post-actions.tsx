@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { JSONContent } from "@tiptap/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { PostEditorData } from "@/features/posts/components/post-editor/types";
 import { convertToPlainText, slugify } from "@/features/posts/utils/content";
@@ -35,11 +35,6 @@ export function usePostActions({
   const [processState, setProcessState] = useState<
     "IDLE" | "PROCESSING" | "SUCCESS"
   >("IDLE");
-
-  const canPublish = useMemo(() => {
-    if (!post.publishedAt) return true;
-    return post.publishedAt.toISOString().slice(0, 10) <= post.serverToday;
-  }, [post.publishedAt, post.serverToday]);
 
   const queuedTitleRef = useRef<string | null>(null);
   const prevTitleRef = useRef(post.title);
@@ -193,6 +188,5 @@ export function usePostActions({
     handlePublish,
     handleUnpublish,
     processState,
-    canPublish,
   };
 }

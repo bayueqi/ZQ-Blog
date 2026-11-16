@@ -5,6 +5,7 @@ import type { EditorState } from "@tiptap/pm/state";
 import { NodeSelection } from "@tiptap/pm/state";
 import { Transform } from "@tiptap/pm/transform";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import type { PickedVideo } from "../video-file";
 import { createInPlaceEditing, useInPlaceEditing } from "../in-place-editing";
 import { ImagePlaceholderView } from "./image-placeholder-view";
 
@@ -35,11 +36,15 @@ declare module "@tiptap/core" {
       closeImagePicker: () => ReturnType;
       /** Replaces the picker's placeholder with `image`. */
       fillImagePlaceholder: (image: PickedImage) => ReturnType;
+      /** Replaces the picker's placeholder with `video`. */
+      fillVideoPlaceholder: (video: PickedVideo) => ReturnType;
       /**
        * Replaces the picker's placeholder with `file`, which shows its upload
        * progress in place until it becomes the uploaded image.
        */
       uploadImageToPlaceholder: (file: File) => ReturnType;
+      /** The same for a video file, which becomes a `videoFile` block. */
+      uploadVideoToPlaceholder: (file: File) => ReturnType;
     };
   }
 }
@@ -176,6 +181,31 @@ export const ImagePlaceholder = Node.create({
           if (!target) return false;
           imagePicker.close(tr);
           return commands.uploadImage(file, target);
+        },
+      fillVideoPlaceholder:
+        (video) =>
+        ({ state, tr, dispatch }) => {
+          const target = pickerTarget(state);
+          if (!target) return false;
+          if (!dispatch) return true;
+          const node = state.schema.nodes.videoFile.create({
+            src: video.src,
+            poster: video.poster ?? null,
+            width: video.width || null,
+            height: video.height || null,
+          });
+          tr.replaceWith(target.from, target.to, node);
+          tr.setSelection(NodeSelection.create(tr.doc, target.from));
+          imagePicker.close(tr);
+          return true;
+        },
+      uploadVideoToPlaceholder:
+        (file) =>
+        ({ state, tr, commands }) => {
+          const target = pickerTarget(state);
+          if (!target) return false;
+          imagePicker.close(tr);
+          return commands.uploadVideo(file, target);
         },
     };
   },

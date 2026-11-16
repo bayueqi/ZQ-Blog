@@ -1,15 +1,15 @@
-/** Server UTC calendar date (YYYY-MM-DD). */
-export function serverUtcDateString(now = new Date()): string {
-  return now.toISOString().slice(0, 10);
+import { siteDateKey } from "@/lib/site-time";
+
+/** 服务器“今天”的站点日历日（YYYY-MM-DD），按北京时间计算。 */
+export function serverTodayKey(now = new Date()): string {
+  return siteDateKey(now);
 }
 
-/**
- * True when the stored publish date's UTC calendar day is after server today.
- * Date-picker values are stored as `YYYY-MM-DDT12:00:00Z`.
- */
-export function isFuturePublishDate(
-  publishedAtISO: string,
-  serverToday = serverUtcDateString(),
+/** 发布时间是否还没到，也就是定时发布但尚未生效。 */
+export function isPublishPending(
+  publishedAt: Date | string | number,
+  now: Date = new Date(),
 ): boolean {
-  return publishedAtISO.slice(0, 10) > serverToday;
+  const time = new Date(publishedAt).getTime();
+  return Number.isFinite(time) && time > now.getTime();
 }

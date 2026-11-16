@@ -1,4 +1,5 @@
 import type { PostItem } from "@/features/posts/schema/posts.schema";
+import { siteYear } from "@/lib/site-time";
 import { ArchivePost } from "./archive-post";
 import { ArchiveYear } from "./archive-year";
 
@@ -13,7 +14,7 @@ export function ArchivePanel({ posts }: ArchivePanelProps) {
         return acc;
       }
 
-      const year = new Date(post.publishedAt).getUTCFullYear();
+      const year = siteYear(post.publishedAt);
       acc[year] ??= [];
       acc[year].push(post);
       return acc;

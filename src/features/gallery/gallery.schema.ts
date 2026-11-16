@@ -24,7 +24,10 @@ export const GalleryCategoryCardSchema = z.object({
   privacyProtected: z.boolean(),
   /** 没发布的相册是草稿，前台看不到。 */
   published: z.boolean(),
+  /** 对外显示的发布时间；为空表示发布即当期。 */
+  publishedAt: z.string().nullable(),
   createdAt: z.string().nullable(),
+  updatedAt: z.string().nullable(),
 });
 
 export const GalleryPhotoSchema = z.object({
@@ -34,6 +37,8 @@ export const GalleryPhotoSchema = z.object({
   width: z.number().nullable(),
   height: z.number().nullable(),
   caption: z.string().nullable(),
+  /** 用来判断是图还是视频，前台渲染要走不同的标签。 */
+  mimeType: z.string(),
 });
 
 export const GalleryCategoryListResponseSchema = z.object({
@@ -54,7 +59,12 @@ export const CreateGalleryCategoryInputSchema = z.object({
   password: z.string().min(1).max(100).nullable().optional(),
   /** 设了密码才能开的隐私保护。 */
   privacyProtected: z.boolean().optional(),
-  /** 存成已发布还是草稿。 */
+  /**
+   * 发布时间，YYYY-MM-DD，按北京时间零点入库；填未来的日期就是定时发布。
+   * 空字符串表示不指定，也就是发布即当期。不传表示保持原状。
+   */
+  publishedAt: z.string().max(10).nullable().optional(),
+  /** 是否发布；不传表示保持原状。 */
   published: z.boolean().optional(),
 });
 

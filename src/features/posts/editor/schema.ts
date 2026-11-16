@@ -149,11 +149,45 @@ export const schemaVideo = Node.create({
   },
 });
 
+/**
+ * A video uploaded to the media library, played in place. Stored as the
+ * address it was uploaded to and the size it came with; unlike `video` above
+ * it is not an embed, so nothing is looked up when it is placed.
+ */
+export const schemaVideoFile = Node.create({
+  name: "videoFile",
+  group: "block",
+  atom: true,
+  draggable: false,
+  addAttributes() {
+    return {
+      src: textAttribute("src"),
+      poster: textAttribute("poster"),
+      width: numberAttribute("width"),
+      height: numberAttribute("height"),
+      uploadId: {
+        default: null,
+        rendered: false,
+      },
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="video-file"]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "div",
+      mergeAttributes(HTMLAttributes, { "data-type": "video-file" }),
+    ];
+  },
+});
+
 export function createSchemaExtensions(overrides?: {
   codeBlock?: AnyExtension;
   image?: AnyExtension;
   mathematics?: ReadonlyArray<AnyExtension>;
   video?: AnyExtension;
+  videoFile?: AnyExtension;
 }): Array<AnyExtension> {
   return [
     StarterKit.configure({
@@ -182,6 +216,7 @@ export function createSchemaExtensions(overrides?: {
     ...TableBlockExtension,
     overrides?.image ?? schemaImage,
     overrides?.video ?? schemaVideo,
+    overrides?.videoFile ?? schemaVideoFile,
   ];
 }
 

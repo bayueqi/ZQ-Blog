@@ -87,6 +87,7 @@ export function PostEditorCover({
       <MediaPicker
         open={pickerOpen}
         title={m.editor_meta_cover_pick()}
+        imagesOnly
         onClose={() => setPickerOpen(false)}
         onSelect={(media) => {
           onChange({

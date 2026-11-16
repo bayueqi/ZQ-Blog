@@ -1,5 +1,6 @@
 import type { Range } from "@tiptap/core";
 import { Extension } from "@tiptap/core";
+import type { EditorState, Transaction } from "@tiptap/pm/state";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
 
@@ -23,24 +24,107 @@ declare module "@tiptap/core" {
        * upload finishes. A failed upload removes the image.
        */
       uploadImage: (file: File, at?: number | Range) => ReturnType;
+      /** The same for a video file, which becomes a `videoFile` block. */
+      uploadVideo: (file: File, at?: number | Range) => ReturnType;
     };
   }
 }
 
-function findImagePosByUploadId(view: EditorView, uploadId: string) {
+function findPosByUploadId(view: EditorView, uploadId: string) {
   let found: number | null = null;
   view.state.doc.descendants((descendant: ProseMirrorNode, nodePos: number) => {
     if (found != null) return false;
-    if (
-      descendant.type.name === "image" &&
-      descendant.attrs.uploadId === uploadId
-    ) {
+    if (descendant.attrs.uploadId === uploadId) {
       found = nodePos;
       return false;
     }
     return true;
   });
   return found;
+}
+
+/**
+ * Puts `file` in the document at `at` as a `nodeName` block pointing at a
+ * blob address, then swaps in the uploaded address once it is up; a failed
+ * upload removes the block again.
+ */
+function uploadInto(
+  options: ImageUploadOptions,
+  nodeName: "image" | "videoFile",
+  file: File,
+  at: number | Range | undefined,
+  tr: Transaction,
+  state: EditorState,
+  view: EditorView,
+) {
+  const type = state.schema.nodes[nodeName];
+  if (!type) return false;
+
+  const uploadId = crypto.randomUUID();
+  const blobUrl = URL.createObjectURL(file);
+  const node = type.create({
+    src: blobUrl,
+    uploadId,
+    ...(nodeName === "image" ? { alt: file.name } : {}),
+  });
+  if (typeof at === "object") {
+    tr.replaceWith(at.from, at.to, node);
+  } else {
+    tr.insert(at ?? tr.selection.from, node);
+  }
+
+  const removePlaceholder = () => {
+    if (view.isDestroyed) {
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+    const nodePos = findPosByUploadId(view, uploadId);
+    if (nodePos == null) {
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+    const current = view.state.doc.nodeAt(nodePos);
+    view.dispatch(
+      view.state.tr.delete(nodePos, nodePos + (current?.nodeSize ?? 1)),
+    );
+    URL.revokeObjectURL(blobUrl);
+  };
+
+  options
+    .onUpload(file)
+    .then((result) => {
+      if (view.isDestroyed) {
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+      const nodePos = findPosByUploadId(view, uploadId);
+      if (nodePos == null) {
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+      const current = view.state.doc.nodeAt(nodePos);
+      if (!current) {
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+      view.dispatch(
+        view.state.tr.setNodeMarkup(nodePos, undefined, {
+          ...current.attrs,
+          src: result.url,
+          width: result.width || current.attrs.width,
+          height: result.height || current.attrs.height,
+          uploadId: null,
+        }),
+      );
+      URL.revokeObjectURL(blobUrl);
+    })
+    .catch((error) => {
+      console.error("Upload failed", error);
+      options.onError?.(error);
+      removePlaceholder();
+    });
+
+  return true;
 }
 
 export const ImageUpload = Extension.create<ImageUploadOptions>({
@@ -59,72 +143,13 @@ export const ImageUpload = Extension.create<ImageUploadOptions>({
         (file: File, at?: number | Range) =>
         ({ tr, dispatch, state, view }) => {
           if (!dispatch) return true;
-
-          const uploadId = crypto.randomUUID();
-          const blobUrl = URL.createObjectURL(file);
-          const node = state.schema.nodes.image.create({
-            src: blobUrl,
-            alt: file.name,
-            uploadId,
-          });
-          if (typeof at === "object") {
-            tr.replaceWith(at.from, at.to, node);
-          } else {
-            tr.insert(at ?? tr.selection.from, node);
-          }
-
-          const removePlaceholder = () => {
-            if (view.isDestroyed) {
-              URL.revokeObjectURL(blobUrl);
-              return;
-            }
-            const nodePos = findImagePosByUploadId(view, uploadId);
-            if (nodePos == null) {
-              URL.revokeObjectURL(blobUrl);
-              return;
-            }
-            const current = view.state.doc.nodeAt(nodePos);
-            view.dispatch(
-              view.state.tr.delete(nodePos, nodePos + (current?.nodeSize ?? 1)),
-            );
-            URL.revokeObjectURL(blobUrl);
-          };
-
-          this.options
-            .onUpload(file)
-            .then((result) => {
-              if (view.isDestroyed) {
-                URL.revokeObjectURL(blobUrl);
-                return;
-              }
-              const nodePos = findImagePosByUploadId(view, uploadId);
-              if (nodePos == null) {
-                URL.revokeObjectURL(blobUrl);
-                return;
-              }
-              const current = view.state.doc.nodeAt(nodePos);
-              if (!current) {
-                URL.revokeObjectURL(blobUrl);
-                return;
-              }
-              view.dispatch(
-                view.state.tr.setNodeMarkup(nodePos, undefined, {
-                  ...current.attrs,
-                  src: result.url,
-                  width: result.width || current.attrs.width,
-                  height: result.height || current.attrs.height,
-                  uploadId: null,
-                }),
-              );
-              URL.revokeObjectURL(blobUrl);
-            })
-            .catch((error) => {
-              console.error("Upload failed", error);
-              this.options.onError?.(error);
-              removePlaceholder();
-            });
-
-          return true;
+          return uploadInto(this.options, "image", file, at, tr, state, view);
+        },
+      uploadVideo:
+        (file: File, at?: number | Range) =>
+        ({ tr, dispatch, state, view }) => {
+          if (!dispatch) return true;
+          return uploadInto(this.options, "videoFile", file, at, tr, state, view);
         },
     };
   },

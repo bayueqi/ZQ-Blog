@@ -1,16 +1,19 @@
-import { desc, eq, isNotNull } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
+import { momentVisible } from "@/features/moments/data/helper";
 import type { DB } from "@/lib/db";
 import { MomentsTable, type NewMoment } from "@/lib/db/schema";
 
-/** 前台只看已发布的；置顶在最前，其余新的在前。 */
+/** 前台只看已发布且已到发布时刻的；置顶在最前，其余新的在前。 */
 export function listPublished(db: DB) {
   return db
     .select()
     .from(MomentsTable)
-    .where(isNotNull(MomentsTable.publishedAt))
+    .where(momentVisible())
     .orderBy(
       desc(MomentsTable.pinnedAt),
-      desc(MomentsTable.publishedAt),
+      desc(
+        sql`coalesce(${MomentsTable.publishedAt}, ${MomentsTable.createdAt})`,
+      ),
       desc(MomentsTable.id),
     );
 }

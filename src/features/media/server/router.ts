@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_MEDIA_TYPES,
   GetMediaListInputSchema,
   ImportMediaUrlInputSchema,
   MAX_FILE_SIZE,
@@ -26,7 +26,7 @@ const mediaErrors = {
 const imageFile = z
   .file()
   .max(MAX_FILE_SIZE)
-  .mime([...ACCEPTED_IMAGE_TYPES]);
+  .mime([...ACCEPTED_MEDIA_TYPES]);
 
 const list = adminProcedure
   .route({

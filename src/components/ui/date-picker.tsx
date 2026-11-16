@@ -2,10 +2,12 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { FloatingPopover } from "@/components/ui/floating-popover";
+import { siteDateKey } from "@/lib/site-time";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 import "./field.css";
@@ -16,6 +18,8 @@ interface DatePickerProps {
   onChange: (date: string) => void;
   today?: string;
   maxDate?: string;
+  /** 多一个清除按钮，回调给空串表示取消选择。 */
+  allowClear?: boolean;
   className?: string;
   id?: string;
 }
@@ -26,13 +30,14 @@ const DatePicker: React.FC<DatePickerProps> = ({
   onChange,
   today,
   maxDate,
+  allowClear = false,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
 
-  const todayDate = today ?? new Date().toISOString().slice(0, 10);
+  const todayDate = today ?? siteDateKey();
   const activeDate = value || todayDate;
   const [viewDate, setViewDate] = useState(
     () => new Date(`${activeDate}T00:00:00Z`),
@@ -144,7 +149,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
           if (!isOpen) setViewDate(new Date(`${activeDate}T00:00:00Z`));
           setIsOpen(!isOpen);
         }}
-        className="fuwari-input relative cursor-pointer pl-9 text-left"
+        className={`fuwari-input relative cursor-pointer pl-9 text-left ${allowClear && value ? "pr-8" : ""}`}
       >
         <CalendarIcon
           className="absolute left-3 top-1/2 -translate-y-1/2 fuwari-text-50"
@@ -155,6 +160,20 @@ const DatePicker: React.FC<DatePickerProps> = ({
           {value || m.common_select_date()}
         </span>
       </button>
+
+      {allowClear && value ? (
+        <button
+          type="button"
+          aria-label={m.common_clear()}
+          onClick={() => {
+            onChange("");
+            setIsOpen(false);
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 fuwari-text-30 transition-colors hover:text-(--fuwari-primary)"
+        >
+          <X size={14} strokeWidth={1.5} />
+        </button>
+      ) : null}
 
       <FloatingPopover
         open={isOpen}

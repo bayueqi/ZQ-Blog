@@ -10,7 +10,8 @@ export interface MomentImage {
 }
 
 /**
- * 日常：朋友圈式短内容。`published_at` 为空即草稿；
+ * 日常：朋友圈式短内容。`published` 为 false 即草稿；
+ * `published_at` 只是对外显示的发布时间，为空表示立即发布；
  * `access_password_hash` 不为空时正文要凭密码才下发。
  */
 export const MomentsTable = sqliteTable(
@@ -23,6 +24,10 @@ export const MomentsTable = sqliteTable(
       .notNull()
       .default(sql`'[]'`),
     accessPasswordHash: text("access_password_hash"),
+    /** 是否发布，与发布时间互不影响。 */
+    published: integer("published", { mode: "boolean" })
+      .notNull()
+      .default(false),
     publishedAt: integer("published_at", { mode: "timestamp" }),
     /** 有值即置顶，排在列表最前面。 */
     pinnedAt: integer("pinned_at", { mode: "timestamp" }),

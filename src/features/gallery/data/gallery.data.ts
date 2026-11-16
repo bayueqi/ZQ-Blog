@@ -1,4 +1,5 @@
-import { and, asc, count, desc, eq, isNotNull, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
+import { galleryVisible } from "@/features/gallery/data/helper";
 import type { DB } from "@/lib/db";
 import {
   GalleryCategoriesTable,
@@ -15,8 +16,10 @@ const categoryFields = {
   privacyProtected: GalleryCategoriesTable.privacyProtected,
   sortOrder: GalleryCategoriesTable.sortOrder,
   pinnedAt: GalleryCategoriesTable.pinnedAt,
+  published: GalleryCategoriesTable.published,
   publishedAt: GalleryCategoriesTable.publishedAt,
   createdAt: GalleryCategoriesTable.createdAt,
+  updatedAt: GalleryCategoriesTable.updatedAt,
 };
 
 const coverFields = {
@@ -26,7 +29,7 @@ const coverFields = {
   coverHeight: MediaTable.height,
 };
 
-/** `publishedOnly` 给前台：草稿相册不下发。 */
+/** `publishedOnly` 给前台：草稿和还没到发布日的相册都不下发。 */
 export async function listCategories(
   db: DB,
   options: { publishedOnly?: boolean } = {},
@@ -39,9 +42,7 @@ export async function listCategories(
       eq(MediaTable.id, GalleryCategoriesTable.coverMediaId),
     )
     .where(
-      options.publishedOnly
-        ? isNotNull(GalleryCategoriesTable.publishedAt)
-        : undefined,
+      options.publishedOnly ? galleryVisible() : undefined,
     )
     .orderBy(
       desc(GalleryCategoriesTable.pinnedAt),
@@ -96,6 +97,7 @@ export async function listPhotos(db: DB, categoryId: number) {
       url: MediaTable.url,
       width: MediaTable.width,
       height: MediaTable.height,
+      mimeType: MediaTable.mimeType,
     })
     .from(GalleryPhotosTable)
     .innerJoin(MediaTable, eq(MediaTable.id, GalleryPhotosTable.mediaId))
@@ -156,6 +158,32 @@ export async function updatePhoto(
 
 export async function deletePhoto(db: DB, id: number) {
   await db.delete(GalleryPhotosTable).where(eq(GalleryPhotosTable.id, id));
+}
+
+/** 恢复旧版本时先清空，再按快照重建。 */
+export async function deletePhotosOfCategory(db: DB, categoryId: number) {
+  await db
+    .delete(GalleryPhotosTable)
+    .where(eq(GalleryPhotosTable.categoryId, categoryId));
+}
+
+export async function findPhotoById(db: DB, id: number) {
+  const [row] = await db
+    .select()
+    .from(GalleryPhotosTable)
+    .where(eq(GalleryPhotosTable.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+/** 快照里的媒体可能已经被清掉，恢复时只补还在的。 */
+export async function findExistingMediaIds(db: DB, ids: Array<number>) {
+  if (ids.length === 0) return [];
+  const rows = await db
+    .select({ id: MediaTable.id })
+    .from(MediaTable)
+    .where(inArray(MediaTable.id, ids));
+  return rows.map((row) => row.id);
 }
 
 export async function findCategorySlugTaken(

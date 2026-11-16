@@ -11,6 +11,7 @@ import { lazy, Suspense, type ComponentType } from "react";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { getFuwariThemeStyle } from "@/components/layout/document-style";
 import { siteConfigQuery } from "@/features/config/queries";
+import { siteYear } from "@/lib/site-time";
 import { getLocale } from "@/paraglide/runtime";
 import appCss from "@/styles.css?url";
 
@@ -41,7 +42,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   loader: async ({ context }) => {
     return {
       siteConfig: context.siteConfig,
-      currentYear: new Date().getUTCFullYear(),
+      currentYear: siteYear(),
     };
   },
   head: ({ loaderData }) => {

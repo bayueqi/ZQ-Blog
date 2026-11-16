@@ -42,6 +42,15 @@ export function normalizePostContent(
       };
     }
 
+    if (node.type === "videoFile" && node.attrs) {
+      const { uploadId: _uploadId, ...rest } = node.attrs;
+      node.attrs = {
+        ...rest,
+        width: parseImageSize(rest.width) ?? null,
+        height: parseImageSize(rest.height) ?? null,
+      };
+    }
+
     if (node.type === "codeBlock" && node.attrs) {
       const { highlightedHtml: _highlightedHtml, ...rest } = node.attrs;
       node.attrs = rest;
