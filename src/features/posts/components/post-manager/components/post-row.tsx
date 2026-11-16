@@ -1,5 +1,5 @@
 import { ClientOnly, Link } from "@tanstack/react-router";
-import { History, Lock, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
+import { EyeOff, Lock, Pencil, Pin, PinOff, Send, Trash2 } from "lucide-react";
 import { iconButtonClass, IconButton } from "@/components/ui/icon-button";
 import { PostStatusBadge } from "@/features/posts/components/post-status-badge";
 import { formatDate } from "@/lib/utils";
@@ -14,6 +14,12 @@ interface PostRowProps {
   ) => void;
   onTogglePin?: (post: AdminPostListItem) => void;
   pinPending?: boolean;
+  onPublish?: (post: AdminPostListItem) => void;
+  onUnpublish?: (
+    post: AdminPostListItem,
+    trigger: HTMLButtonElement | null,
+  ) => void;
+  publishPending?: boolean;
 }
 
 export function PostRow({
@@ -21,6 +27,9 @@ export function PostRow({
   onDelete,
   onTogglePin,
   pinPending,
+  onPublish,
+  onUnpublish,
+  publishPending,
 }: PostRowProps) {
   const title = post.title.trim() || m.common_untitled();
   const published = post.status === "published";
@@ -115,15 +124,27 @@ export function PostRow({
           >
             <Pencil size={15} strokeWidth={2} />
           </Link>
-          <Link
-            to="/admin/posts/edit/$id/history"
-            params={{ id: String(post.id) }}
-            aria-label={m.admin_revisions_open()}
-            title={m.admin_revisions_open()}
-            className={iconButtonClass({ size: "sm" })}
-          >
-            <History size={15} strokeWidth={2} />
-          </Link>
+          {published ? (
+            onUnpublish ? (
+              <IconButton
+                size="sm"
+                label={m.editor_header_unpublish()}
+                disabled={publishPending}
+                onClick={(event) => onUnpublish(post, event.currentTarget)}
+              >
+                <EyeOff size={15} strokeWidth={2} />
+              </IconButton>
+            ) : null
+          ) : onPublish ? (
+            <IconButton
+              size="sm"
+              label={m.editor_header_publish()}
+              disabled={publishPending}
+              onClick={() => onPublish(post)}
+            >
+              <Send size={15} strokeWidth={2} />
+            </IconButton>
+          ) : null}
           <IconButton
             size="sm"
             tone="danger"

@@ -15,7 +15,13 @@ import ConfirmationModal from "@/components/ui/confirmation-modal";
 import { PageHeader } from "@/components/ui/page-heading";
 import { Spinner } from "@/components/ui/spinner";
 import { useListScroll } from "./hooks/use-list-scroll";
-import { useDeletePost, usePosts, useTogglePostPin } from "./hooks";
+import {
+  useDeletePost,
+  usePosts,
+  usePublishPost,
+  useTogglePostPin,
+  useUnpublishPost,
+} from "./hooks";
 import { PostManagerSkeleton } from "./post-manager-skeleton";
 import type {
   AdminPostListItem,
@@ -66,7 +72,10 @@ export function PostManager({
     null,
   );
   const [taxonomyOpen, setTaxonomyOpen] = useState(false);
+  const [postToUnpublish, setPostToUnpublish] =
+    useState<AdminPostListItem | null>(null);
   const deleteTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const unpublishTriggerRef = useRef<HTMLButtonElement | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchCallbackRef = useRef(onSearchChange);
@@ -144,6 +153,10 @@ export function PostManager({
   const deleteMutation = useDeletePost({
     onSuccess: () => setPostToDelete(null),
   });
+  const unpublishMutation = useUnpublishPost({
+    onSuccess: () => setPostToUnpublish(null),
+  });
+  const publishMutation = usePublishPost();
   const hasTaxonomyFilter = category !== undefined || tag !== undefined;
   const pinMutation = useTogglePostPin();
   const hasContentFilter =
@@ -247,6 +260,19 @@ export function PostManager({
                           pinMutation.isPending &&
                           pinMutation.variables.id === post.id
                         }
+                        onPublish={(target) =>
+                          publishMutation.mutate(target.id)
+                        }
+                        onUnpublish={(target, trigger) => {
+                          unpublishTriggerRef.current = trigger;
+                          setPostToUnpublish(target);
+                        }}
+                        publishPending={
+                          (publishMutation.isPending &&
+                            publishMutation.variables === post.id) ||
+                          (unpublishMutation.isPending &&
+                            unpublishMutation.variables === post.id)
+                        }
                       />
                     ))
                   )}
@@ -296,6 +322,23 @@ export function PostManager({
             kind === "category" ? { category: id } : { tag: id },
           );
         }}
+      />
+      <ConfirmationModal
+        isOpen={!!postToUnpublish}
+        title={m.editor_unpublish_confirm_title()}
+        message={m.editor_unpublish_confirm_desc()}
+        confirmLabel={m.editor_header_unpublish()}
+        isDanger
+        isLoading={unpublishMutation.isPending}
+        onClose={() => setPostToUnpublish(null)}
+        onConfirm={() => {
+          if (postToUnpublish) unpublishMutation.mutate(postToUnpublish.id);
+        }}
+        returnFocus={() =>
+          unpublishTriggerRef.current?.isConnected
+            ? unpublishTriggerRef.current
+            : searchRef.current
+        }
       />
       <ConfirmationModal
         isOpen={!!postToDelete}

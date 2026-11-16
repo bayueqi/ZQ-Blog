@@ -77,6 +77,23 @@ interface MutationCallbacks {
   onError?: () => void;
 }
 
+export function usePublishPost({ onSuccess, onError }: MutationCallbacks = {}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => orpcClient.posts.admin.publish({ id }),
+    onSuccess: (_result, id) => {
+      toast.success(m.admin_posts_toast_published());
+      void invalidatePostQueries(queryClient, id);
+      onSuccess?.();
+    },
+    onError: () => {
+      toast.error(m.editor_action_publish_failed());
+      onError?.();
+    },
+  });
+}
+
 export function useUnpublishPost({
   onSuccess,
   onError,
@@ -86,7 +103,7 @@ export function useUnpublishPost({
   return useMutation({
     mutationFn: (id: number) => orpcClient.posts.admin.unpublish({ id }),
     onSuccess: (_result, id) => {
-      toast.success(m.editor_header_unpublish());
+      toast.success(m.admin_posts_toast_unpublished());
       void invalidatePostQueries(queryClient, id);
       onSuccess?.();
     },

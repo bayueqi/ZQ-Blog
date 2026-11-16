@@ -493,6 +493,8 @@
   "admin_posts_toast_pinned": "Pinned",
   "admin_posts_toast_unpinned": "Unpinned",
   "admin_posts_toast_pin_failed": "Couldn't update the pin. Try again.",
+  "admin_posts_toast_published": "Published",
+  "admin_posts_toast_unpublished": "Unpublished",
   "admin_post_edit_not_found_title": "Post Not Found",
   "admin_post_edit_not_found_desc": "The post record with ID {id} does not exist or has been removed.",
   "editor_status_save_error": "Save failed",

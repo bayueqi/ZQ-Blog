@@ -487,6 +487,8 @@
   "admin_posts_toast_pinned": "已置顶",
   "admin_posts_toast_unpinned": "已取消置顶",
   "admin_posts_toast_pin_failed": "置顶状态更新失败，请重试。",
+  "admin_posts_toast_published": "已发布",
+  "admin_posts_toast_unpublished": "已下架",
   "admin_post_edit_not_found_title": "未找到文章",
   "admin_post_edit_not_found_desc": "ID 为 {id} 的文章记录不存在或已被移除。",
   "editor_status_save_error": "保存失败",
