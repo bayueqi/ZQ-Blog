@@ -17,6 +17,8 @@ export const MomentCardSchema = z.object({
   pinned: z.boolean(),
   /** 锁着时的编号，界面上显示成「私密日常 2」。 */
   privateIndex: z.number().int().nullable(),
+  /** 设了访问密码就是加密的；管理员在前台也能靠它认出哪条是加密的。 */
+  hasPassword: z.boolean(),
 });
 
 export const MomentListSchema = z.object({
@@ -51,7 +53,6 @@ export const MomentUpdateInputSchema = MomentWriteInputSchema.extend({
 });
 
 export const AdminMomentSchema = MomentCardSchema.extend({
-  hasPassword: z.boolean(),
   published: z.boolean(),
 });
 

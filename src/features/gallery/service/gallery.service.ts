@@ -93,6 +93,8 @@ function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
     photoCount: concealed ? 0 : row.photoCount,
     locked: isLocked,
     pinned: row.pinnedAt != null,
+    // 管理员在前台拿到的也是真实内容（isLocked=false），靠这个认出加密相册。
+    hasPassword: Boolean(row.accessPasswordHash),
     published: row.published,
     publishedAt: concealed || !shownAt ? null : shownAt.toISOString(),
     createdAt: concealed || !row.createdAt ? null : row.createdAt.toISOString(),

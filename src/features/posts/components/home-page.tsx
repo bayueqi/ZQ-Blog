@@ -121,10 +121,21 @@ function PinnedPostCard({ post }: { post: PostItem }) {
       className="fuwari-card-base group flex items-stretch gap-5 p-5 transition-transform md:p-6"
     >
       <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="text-xl leading-snug font-bold fuwari-text-90 transition-colors group-hover:text-(--fuwari-primary) md:text-2xl">
-          {post.locked ?? post.visibility === "password"
-            ? `${m.post_private_placeholder()} ${privateLabelIndex(post.slug)}`
-            : post.title}
+        <h3 className="flex items-center gap-1.5 text-xl leading-snug font-bold fuwari-text-90 transition-colors group-hover:text-(--fuwari-primary) md:text-2xl">
+          {post.locked ? (
+            `${m.post_private_placeholder()} ${privateLabelIndex(post.slug)}`
+          ) : (
+            <>
+              {post.visibility === "password" ? (
+                <Lock
+                  size={16}
+                  strokeWidth={2}
+                  className="shrink-0 fuwari-text-50"
+                />
+              ) : null}
+              {post.title}
+            </>
+          )}
         </h3>
 
         {post.summary ? (
@@ -180,7 +191,9 @@ function PinnedMomentCard({ moment }: { moment: MomentCard }) {
           <Calendar size={13} />
           {formatPublicPostDate(moment.publishedAt)}
         </span>
-        {moment.locked ? <Lock size={13} className="fuwari-text-30" /> : null}
+        {moment.locked || moment.hasPassword ? (
+          <Lock size={13} className="fuwari-text-30" />
+        ) : null}
       </div>
 
       <p className="line-clamp-4 text-[1.05rem] leading-relaxed whitespace-pre-wrap fuwari-text-90">
@@ -259,7 +272,7 @@ function PinnedGalleryCard({ gallery }: { gallery: GalleryCategoryCard }) {
 
       <div className="min-w-0 pt-2.5">
         <div className="flex items-center gap-1.5 text-sm font-medium">
-          {gallery.locked ? (
+          {gallery.locked || gallery.hasPassword ? (
             <Lock size={13} className="shrink-0 fuwari-text-50" />
           ) : null}
           <span className="truncate fuwari-text-90 transition-colors group-hover:text-(--fuwari-primary)">

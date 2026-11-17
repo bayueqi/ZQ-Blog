@@ -92,10 +92,21 @@ export function GalleryIndexPage({
                       )}
                     </div>
                     <div className="space-y-3 p-5">
-                      <h2 className="text-xl font-bold fuwari-text-90 transition group-hover:text-(--fuwari-primary)">
-                        {concealed
-                          ? `${m.gallery_private_placeholder()} ${privateLabelIndex(category.slug)}`
-                          : category.name}
+                      <h2 className="flex items-center gap-1.5 text-xl font-bold fuwari-text-90 transition group-hover:text-(--fuwari-primary)">
+                        {concealed ? (
+                          `${m.gallery_private_placeholder()} ${privateLabelIndex(category.slug)}`
+                        ) : (
+                          <>
+                            {category.hasPassword ? (
+                              <Lock
+                                size={16}
+                                strokeWidth={2}
+                                className="shrink-0 fuwari-text-50"
+                              />
+                            ) : null}
+                            {category.name}
+                          </>
+                        )}
                       </h2>
                       {category.description && (
                         <p className="line-clamp-2 text-sm fuwari-text-50">

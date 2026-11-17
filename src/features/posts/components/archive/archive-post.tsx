@@ -88,6 +88,9 @@ export function ArchivePost({ post }: ArchivePostProps) {
                   aria-label={m.home_pinned_posts()}
                 />
               ) : null}
+              {post.visibility === "password" ? (
+                <Lock size={14} strokeWidth={1.8} className="shrink-0 fuwari-text-50" />
+              ) : null}
               <span className="min-w-0 truncate">{post.title}</span>
               <ChevronRight
                 size={16}

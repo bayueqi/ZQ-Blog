@@ -253,6 +253,9 @@ function MomentItem({
             {m.pinned_badge()}
           </span>
         ) : null}
+        {!locked && moment.hasPassword ? (
+          <Lock size={14} strokeWidth={2} className="fuwari-text-50" />
+        ) : null}
         <div className="ml-auto flex items-center gap-3">
           {locked ? null : (
             <ShareButton path={`/moments#moment-${moment.id}`} />

@@ -20,6 +20,8 @@ export const GalleryCategoryCardSchema = z.object({
   locked: z.boolean(),
   /** 置顶的排在列表最前面。 */
   pinned: z.boolean(),
+  /** 设了访问密码就是加密的；管理员在前台也能靠它认出哪个相册是加密的。 */
+  hasPassword: z.boolean(),
   /** 没发布的相册是草稿，前台看不到。 */
   published: z.boolean(),
   /** 对外显示的发布时间；为空表示发布即当期。 */

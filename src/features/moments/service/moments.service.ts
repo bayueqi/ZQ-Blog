@@ -57,6 +57,8 @@ function toCard(row: Moment, locked: boolean, privateIndex: number | null) {
     locked,
     pinned: !locked && row.pinnedAt != null,
     privateIndex,
+    // 管理员在前台拿到的也是真实内容（locked=false），靠这个认出加密日常。
+    hasPassword: Boolean(row.accessPasswordHash),
   };
 }
 

@@ -9,8 +9,9 @@ interface ArchivePanelProps {
 }
 
 export function ArchivePanel({ posts }: ArchivePanelProps) {
-  const isLocked = (post: PostItem) =>
-    post.locked ?? post.visibility === "password";
+  // 只有真正的锁卡片才进「私密」层；管理员拿到的是真实内容（locked=false），
+  // 加密文章照常落在普通层，只是卡片上多个锁头标识。
+  const isLocked = (post: PostItem) => post.locked === true;
 
   function groupByYear(list: Array<PostItem>) {
     const grouped = list.reduce((acc, post) => {
