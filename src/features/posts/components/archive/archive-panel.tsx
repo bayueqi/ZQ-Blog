@@ -8,9 +8,16 @@ interface ArchivePanelProps {
 }
 
 export function ArchivePanel({ posts }: ArchivePanelProps) {
+  // 私密文章不带时间，落不进任何年份；单独排在末尾，不显示年份。
+  const lockedPosts = posts.filter(
+    (post) => post.locked ?? post.visibility === "password",
+  );
   const groupedPosts = posts.reduce(
     (acc, post) => {
       if (!post.publishedAt) {
+        return acc;
+      }
+      if (post.locked ?? post.visibility === "password") {
         return acc;
       }
 
@@ -36,6 +43,13 @@ export function ArchivePanel({ posts }: ArchivePanelProps) {
           ))}
         </div>
       ))}
+      {lockedPosts.length > 0 && (
+        <div className="mt-2 border-t border-dashed border-(--fuwari-meta-divider) pt-2">
+          {lockedPosts.map((post) => (
+            <ArchivePost key={post.id} post={post} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

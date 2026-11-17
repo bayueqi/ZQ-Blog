@@ -80,20 +80,22 @@ export function GalleryIndexPage({
                       {category.description}
                     </p>
                   )}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <PublicDateMeta
-                      publishedAt={category.publishedAt}
-                      updatedAt={category.updatedAt}
-                    />
-                    <div className="flex items-center">
-                      <div className="fuwari-meta-icon">
-                        <Images strokeWidth={1.5} size={20} />
+                  {concealed ? null : (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <PublicDateMeta
+                        publishedAt={category.publishedAt}
+                        updatedAt={category.updatedAt}
+                      />
+                      <div className="flex items-center">
+                        <div className="fuwari-meta-icon">
+                          <Images strokeWidth={1.5} size={20} />
+                        </div>
+                        <span className="text-sm font-medium fuwari-text-50">
+                          {m.gallery_photo_count({ count: category.photoCount })}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium fuwari-text-50">
-                        {m.gallery_photo_count({ count: category.photoCount })}
-                      </span>
                     </div>
-                  </div>
+                  )}
                 </div>
               </>
             );

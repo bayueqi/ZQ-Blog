@@ -176,10 +176,6 @@ function MomentLock({
 
   return (
     <form onSubmit={submit} className="mt-3 flex flex-col gap-2">
-      <p className="flex items-center gap-1.5 text-sm fuwari-text-50">
-        <Lock size={14} strokeWidth={2} />
-        {m.moments_private_placeholder()} {moment.privateIndex ?? 1}
-      </p>
       <div className="flex items-center gap-2">
         <input
           type="password"
@@ -240,10 +236,17 @@ function MomentItem({
       )}
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <PublicDateMeta
-          publishedAt={moment.publishedAt}
-          updatedAt={moment.updatedAt}
-        />
+        {locked ? (
+          <h2 className="flex items-center gap-2 text-2xl font-bold fuwari-text-90">
+            <Lock size={20} strokeWidth={2} />
+            {m.moments_private_placeholder()} {moment.privateIndex ?? 1}
+          </h2>
+        ) : (
+          <PublicDateMeta
+            publishedAt={moment.publishedAt}
+            updatedAt={moment.updatedAt}
+          />
+        )}
         {moment.pinned ? (
           <span className="flex items-center gap-1 text-xs font-medium text-(--fuwari-primary)">
             <Pin size={12} strokeWidth={2} className="fill-current" />
