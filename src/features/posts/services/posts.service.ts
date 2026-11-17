@@ -160,25 +160,49 @@ async function createPublishRevision(
   });
 }
 
-export function getHomePosts(
-  context: DbContext & { executionCtx: ExecutionContext },
-  page: number,
-) {
+/** 前台也认管理员身份：管理员看的就是真实内容，不走锁卡片。 */
+type MaybeAdminContext = DbContext & {
+  executionCtx: ExecutionContext;
+  session?: { user: { role?: string | null } } | null;
+};
+
+function isAdmin(context: { session?: { user: { role?: string | null } } | null }) {
+  return context.session?.user.role === "admin";
+}
+
+export function getHomePosts(context: MaybeAdminContext, page: number) {
+  // 缓存里存的是访客视图，管理员直接读库。
+  if (isAdmin(context)) {
+    return PostRepo.getHomePosts(context.db, page, { conceal: false });
+  }
   return homePosts.get(context, { page });
 }
 
-export async function getPinnedPosts(
-  context: DbContext & { executionCtx: ExecutionContext },
-) {
+export async function getPinnedPosts(context: MaybeAdminContext) {
+  if (isAdmin(context)) {
+    return PostRepo.findPinnedPosts(context.db, { conceal: false });
+  }
   return pinnedPosts.get(context, {});
 }
 
 export async function getPostsCursor(
-  context: DbContext & { executionCtx: ExecutionContext },
+  context: MaybeAdminContext,
   data: GetPostsCursorInput,
 ) {
   const tagName = normalizePostTagName(data.tagName);
   const categoryName = normalizePostCategoryName(data.categoryName);
+  if (isAdmin(context)) {
+    return PostRepo.getPostsCursor(context.db, {
+      limit: data.limit ?? 10,
+      cursor: data.cursor ?? 0,
+      tagName,
+      categoryName,
+      uncategorized: data.uncategorized,
+      excludePinned: data.excludePinned,
+      publicOnly: true,
+      conceal: false,
+    });
+  }
   return postsList.get(context, {
     limit: data.limit ?? 10,
     cursor: data.cursor ?? 0,

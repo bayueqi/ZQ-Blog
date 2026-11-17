@@ -79,6 +79,12 @@ export const PostItemSchema = PostSelectSchema.omit({
   category: PublicCategorySchema.nullable().catch(null),
   readTimeInMinutes: z.number().int().min(1),
   cover: PublicPostCoverSchema.nullable().catch(null),
+  locked: z
+    .boolean()
+    .optional()
+    .describe(
+      "True when this card only carries the placeholder of a password-protected post.",
+    ),
 });
 export const PostListResponseSchema = z.object({
   items: z.array(PostItemSchema),

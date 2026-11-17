@@ -52,6 +52,8 @@ export function mapSnapshotToPublicPost(
       slug: row.publicSlug ?? "",
       status: "published",
       visibility: row.visibility,
+      // 列表里这张卡片就是锁卡片，前端按它决定要不要渲染标题。
+      locked: true,
       publishedAt: null,
       pinnedAt: null,
       createdAt: epoch,
@@ -70,6 +72,8 @@ export function mapSnapshotToPublicPost(
     slug: snapshot.slug,
     status: "published",
     visibility: row.visibility,
+    // 这里是真实内容（管理员或详情内部用），卡片不该再当成锁卡片。
+    locked: false,
     publishedAt: new Date(snapshot.publishedAt),
     pinnedAt: snapshot.pinnedAt ? new Date(snapshot.pinnedAt) : null,
     createdAt: row.createdAt,

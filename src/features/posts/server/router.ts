@@ -62,7 +62,7 @@ const postErrors = {
   },
 } as const;
 
-const list = publicProcedure
+const list = optionalSessionProcedure
   .route({
     method: "GET",
     path: "/posts",
@@ -73,7 +73,7 @@ const list = publicProcedure
   .output(PostListResponseSchema)
   .handler(({ context, input }) => PostService.getPostsCursor(context, input));
 
-const home = publicProcedure
+const home = optionalSessionProcedure
   .route({
     method: "GET",
     path: "/posts/home/page",
@@ -112,7 +112,7 @@ const adjacent = publicProcedure
     PostService.getAdjacentPosts(context, input),
   );
 
-const pinned = publicProcedure
+const pinned = optionalSessionProcedure
   .route({
     method: "GET",
     path: "/posts/pinned",

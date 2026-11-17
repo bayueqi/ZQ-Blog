@@ -30,7 +30,7 @@ interface PostCardProps {
 export function PostCard({ post, pinned }: PostCardProps) {
   const tagNames = (post.tags ?? []).map((t) => t.name);
   // 隐私保护：卡片上只留一句占位，标题、日期、分类、标签、摘要、封面都不渲染。
-  const concealed = post.visibility === "password";
+  const concealed = post.locked ?? post.visibility === "password";
   const hasCover = Boolean(post.cover) && !concealed;
   const coverWidth = "28%";
 

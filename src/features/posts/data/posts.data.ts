@@ -223,6 +223,8 @@ export async function getPostsCursor(
     categoryName?: string;
     uncategorized?: boolean;
     excludePinned?: boolean;
+    /** 后台与管理员看真实内容，前台列表只留锁卡片。 */
+    conceal?: boolean;
   } = {},
 ): Promise<{
   items: Array<PostItem>;
@@ -236,6 +238,7 @@ export async function getPostsCursor(
     categoryName,
     uncategorized,
     excludePinned,
+    conceal = true,
   } = options;
 
   const conditions = [];
@@ -324,13 +327,17 @@ export async function getPostsCursor(
 
   const hasMore = itemsWithPotentialNext.length > limit;
   const rows = itemsWithPotentialNext.slice(0, limit);
-  const items = await hydratePublicPosts(db, rows);
+  const items = await hydratePublicPosts(db, rows, { conceal });
   const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
 
   return { items, nextCursor };
 }
 
-export async function getHomePosts(db: DB, requestedPage: number) {
+export async function getHomePosts(
+  db: DB,
+  requestedPage: number,
+  { conceal = true }: { conceal?: boolean } = {},
+) {
   const total = await getPostsCount(db, { publicOnly: true });
   const totalPages = Math.max(1, Math.ceil(total / HOME_POSTS_PER_PAGE));
   const page = Math.min(requestedPage, totalPages);
@@ -353,7 +360,11 @@ export async function getHomePosts(db: DB, requestedPage: number) {
     )
     .limit(HOME_POSTS_PER_PAGE)
     .offset((page - 1) * HOME_POSTS_PER_PAGE);
-  return { items: await hydratePublicPosts(db, rows), page, totalPages };
+  return {
+    items: await hydratePublicPosts(db, rows, { conceal }),
+    page,
+    totalPages,
+  };
 }
 
 export async function getPublishedPostsForSitemapBatch(
@@ -486,7 +497,10 @@ export async function findPostAccessMetaById(db: DB, id: number) {
   return row ?? null;
 }
 
-export async function findPinnedPosts(db: DB) {
+export async function findPinnedPosts(
+  db: DB,
+  { conceal = true }: { conceal?: boolean } = {},
+) {
   const rows = await db
     .select({
       id: PostsTable.id,
@@ -506,7 +520,7 @@ export async function findPinnedPosts(db: DB) {
     )
     .orderBy(desc(snapshotPinnedAt));
 
-  return hydratePublicPosts(db, rows);
+  return hydratePublicPosts(db, rows, { conceal });
 }
 
 export async function findPostsByIds(db: DB, ids: number[]) {

@@ -24,7 +24,7 @@ const galleryErrors = {
   NOT_LOCKED: { status: 400, message: "This gallery has no password." },
 } as const;
 
-const listCategories = publicProcedure
+const listCategories = optionalSessionProcedure
   .errors(galleryErrors)
   .route({
     method: "GET",
