@@ -164,16 +164,54 @@ async function createPublishRevision(
 type MaybeAdminContext = DbContext & {
   executionCtx: ExecutionContext;
   session?: { user: { role?: string | null } } | null;
+  headers?: Headers;
+  env?: Env;
 };
 
 function isAdmin(context: { session?: { user: { role?: string | null } } | null }) {
   return context.session?.user.role === "admin";
 }
 
-export function getHomePosts(context: MaybeAdminContext, page: number) {
+/** 从 cookie 里找出已解锁（输过密码）的文章 id，供列表逐条露出真实内容。 */
+async function readUnlockedPostIds(
+  context: MaybeAdminContext,
+): Promise<Set<number>> {
+  const cookieHeader = context.headers?.get("cookie");
+  if (!cookieHeader || !context.env) return new Set();
+
+  const ids: number[] = [];
+  for (const part of cookieHeader.split(";")) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    const match = /^post_access_(\d+)$/.exec(part.slice(0, index).trim());
+    if (match) ids.push(Number(match[1]));
+  }
+  if (ids.length === 0) return new Set();
+
+  const secret = serverEnv(context.env).BETTER_AUTH_SECRET;
+  const unlocked = new Set<number>();
+  await Promise.all(
+    ids.map(async (id) => {
+      const meta = await PostRepo.findPostAccessMetaById(context.db, id);
+      if (!meta?.accessPasswordHash) return;
+      const token = readCookie(cookieHeader, postAccessCookieName(id));
+      if (await verifyPostAccess(secret, id, meta.accessPasswordHash, token)) {
+        unlocked.add(id);
+      }
+    }),
+  );
+  return unlocked;
+}
+
+export async function getHomePosts(context: MaybeAdminContext, page: number) {
   // 缓存里存的是访客视图，管理员直接读库。
   if (isAdmin(context)) {
     return PostRepo.getHomePosts(context.db, page, { conceal: false });
+  }
+  // 访客解锁过的加密文章不能走共享缓存，读库按 cookie 逐条判定。
+  const unlockedIds = await readUnlockedPostIds(context);
+  if (unlockedIds.size > 0) {
+    return PostRepo.getHomePosts(context.db, page, { unlockedIds });
   }
   return homePosts.get(context, { page });
 }
@@ -181,6 +219,10 @@ export function getHomePosts(context: MaybeAdminContext, page: number) {
 export async function getPinnedPosts(context: MaybeAdminContext) {
   if (isAdmin(context)) {
     return PostRepo.findPinnedPosts(context.db, { conceal: false });
+  }
+  const unlockedIds = await readUnlockedPostIds(context);
+  if (unlockedIds.size > 0) {
+    return PostRepo.findPinnedPosts(context.db, { unlockedIds });
   }
   return pinnedPosts.get(context, {});
 }
@@ -201,6 +243,19 @@ export async function getPostsCursor(
       excludePinned: data.excludePinned,
       publicOnly: true,
       conceal: false,
+    });
+  }
+  const unlockedIds = await readUnlockedPostIds(context);
+  if (unlockedIds.size > 0) {
+    return PostRepo.getPostsCursor(context.db, {
+      limit: data.limit ?? 10,
+      cursor: data.cursor ?? 0,
+      tagName,
+      categoryName,
+      uncategorized: data.uncategorized,
+      excludePinned: data.excludePinned,
+      publicOnly: true,
+      unlockedIds,
     });
   }
   return postsList.get(context, {

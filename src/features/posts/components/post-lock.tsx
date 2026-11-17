@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface PostLockProps {
 
 export function PostLock({ slug }: PostLockProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -35,8 +37,16 @@ export function PostLock({ slug }: PostLockProps) {
       setPassword("");
       const data = (await response.json()) as { slug?: string };
       if (data.slug && data.slug !== slug) {
-        // 解锁后地址栏换成真实链接，占位链接只在锁着的时候露脸。
-        window.location.replace(`/post/${encodeURIComponent(data.slug)}`);
+        // 列表里这条要从锁卡片变真实标题，失效列表让回列表页时重新拉取；
+        // 同时换成真实链接，占位链接只在锁着的时候露脸。
+        await queryClient.invalidateQueries({
+          queryKey: orpc.posts.list.key(),
+        });
+        await navigate({
+          to: "/post/$slug",
+          params: { slug: data.slug },
+          replace: true,
+        });
         return;
       }
       await queryClient.invalidateQueries({

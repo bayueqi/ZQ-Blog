@@ -66,7 +66,10 @@ async function hydratePublicPosts(
     publicSnapshotJson: PublicPostSnapshot | null;
   }>,
   // 列表里私密内容只留一张锁卡片；详情页自己处理遮蔽，不能在这里抹掉。
-  { conceal = true }: { conceal?: boolean } = {},
+  {
+    conceal = true,
+    unlockedIds,
+  }: { conceal?: boolean; unlockedIds?: Set<number> } = {},
 ): Promise<Array<PostItem>> {
   if (rows.length === 0) return [];
   const assignments = await db.query.PostsTable.findMany({
@@ -80,13 +83,17 @@ async function hydratePublicPosts(
   const byId = new Map(assignments.map((post) => [post.id, post]));
   return rows.flatMap((row) => {
     const assignment = byId.get(row.id);
+    // 访客输过密码的加密文章，这张卡片要给真实内容，不再是锁卡片。
+    const concealed =
+      conceal &&
+      !(row.visibility === "password" && unlockedIds?.has(row.id));
     const item = mapSnapshotToPublicPost(
       row,
       assignment?.postTags.map(({ tag }) => tag) ?? [],
       assignment?.category
         ? { id: assignment.category.id, name: assignment.category.name }
         : null,
-      conceal,
+      concealed,
     );
     return item ? [item] : [];
   });
@@ -225,6 +232,8 @@ export async function getPostsCursor(
     excludePinned?: boolean;
     /** 后台与管理员看真实内容，前台列表只留锁卡片。 */
     conceal?: boolean;
+    /** 访客已输过密码的文章 id，这些卡片也给真实内容。 */
+    unlockedIds?: Set<number>;
   } = {},
 ): Promise<{
   items: Array<PostItem>;
@@ -239,6 +248,7 @@ export async function getPostsCursor(
     uncategorized,
     excludePinned,
     conceal = true,
+    unlockedIds,
   } = options;
 
   const conditions = [];
@@ -327,7 +337,7 @@ export async function getPostsCursor(
 
   const hasMore = itemsWithPotentialNext.length > limit;
   const rows = itemsWithPotentialNext.slice(0, limit);
-  const items = await hydratePublicPosts(db, rows, { conceal });
+  const items = await hydratePublicPosts(db, rows, { conceal, unlockedIds });
   const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
 
   return { items, nextCursor };
@@ -336,7 +346,7 @@ export async function getPostsCursor(
 export async function getHomePosts(
   db: DB,
   requestedPage: number,
-  { conceal = true }: { conceal?: boolean } = {},
+  { conceal = true, unlockedIds }: { conceal?: boolean; unlockedIds?: Set<number> } = {},
 ) {
   const total = await getPostsCount(db, { publicOnly: true });
   const totalPages = Math.max(1, Math.ceil(total / HOME_POSTS_PER_PAGE));
@@ -361,7 +371,7 @@ export async function getHomePosts(
     .limit(HOME_POSTS_PER_PAGE)
     .offset((page - 1) * HOME_POSTS_PER_PAGE);
   return {
-    items: await hydratePublicPosts(db, rows, { conceal }),
+    items: await hydratePublicPosts(db, rows, { conceal, unlockedIds }),
     page,
     totalPages,
   };
@@ -499,7 +509,7 @@ export async function findPostAccessMetaById(db: DB, id: number) {
 
 export async function findPinnedPosts(
   db: DB,
-  { conceal = true }: { conceal?: boolean } = {},
+  { conceal = true, unlockedIds }: { conceal?: boolean; unlockedIds?: Set<number> } = {},
 ) {
   const rows = await db
     .select({
@@ -520,7 +530,7 @@ export async function findPinnedPosts(
     )
     .orderBy(desc(snapshotPinnedAt));
 
-  return hydratePublicPosts(db, rows, { conceal });
+  return hydratePublicPosts(db, rows, { conceal, unlockedIds });
 }
 
 export async function findPostsByIds(db: DB, ids: number[]) {
