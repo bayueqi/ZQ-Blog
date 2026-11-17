@@ -254,7 +254,9 @@ function MomentItem({
           </span>
         ) : null}
         <div className="ml-auto flex items-center gap-3">
-          <ShareButton path={`/moments#moment-${moment.id}`} />
+          {locked ? null : (
+            <ShareButton path={`/moments#moment-${moment.id}`} />
+          )}
           <ClientOnly>
             {isAdmin ? (
               <Link
