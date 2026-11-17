@@ -72,7 +72,12 @@ async function unlocked(
   );
 }
 
-function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
+function toCategoryCard(
+  row: CategoryBaseRow,
+  isLocked: boolean,
+  // 列表里连 slug 都不给：这一串本身就是名称，详情页要留着写分享链接。
+  { keepSlug = false }: { keepSlug?: boolean } = {},
+) {
   // 设了密码就是私密：锁着的时候名称、描述、封面、张数、时间都不下发。
   const concealed = isLocked;
   // 没指定发布时间就按创建时刻对外显示。
@@ -80,7 +85,7 @@ function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
   return {
     id: row.id,
     name: concealed ? "" : row.name,
-    slug: row.slug,
+    slug: concealed && !keepSlug ? "" : row.slug,
     description: concealed ? null : row.description,
     cover: concealed ? null : coverOf(row),
     photoCount: concealed ? 0 : row.photoCount,
@@ -140,11 +145,10 @@ export async function getCategory(
     return null;
 
   const isUnlocked = await unlocked(context, row);
-  const counts = await Repo.listCategories(context.db);
-  const counted = counts.find((item) => item.id === row.id);
   const card = toCategoryCard(
-    { ...row, photoCount: counted?.photoCount ?? 0 },
+    { ...row, photoCount: await Repo.countPhotos(context.db, row.id) },
     !isUnlocked,
+    { keepSlug: true },
   );
 
   if (!isUnlocked) return { category: card, photos: [], locked: true };

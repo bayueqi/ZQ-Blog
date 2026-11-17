@@ -47,7 +47,6 @@ const GalleryRevisionSnapshotSchema = z.object({
   slug: z.string(),
   description: z.string().nullable(),
   coverMediaId: z.number().nullable(),
-  privacyProtected: z.boolean(),
   sortOrder: z.number(),
   // 早先存下的快照没有照片这一项，按空数组处理。
   photos: z.array(RevisionPhotoSchema).default([]),

@@ -51,10 +51,11 @@ function toCard(row: Moment, locked: boolean) {
     id: row.id,
     body: locked ? "" : row.body,
     images: locked ? [] : images(row),
-    publishedAt: shownAt ? shownAt.toISOString() : null,
-    updatedAt: row.updatedAt ? row.updatedAt.toISOString() : null,
+    // 锁着的时候连时间也不给，只留一张没有信息的锁卡片。
+    publishedAt: locked || !shownAt ? null : shownAt.toISOString(),
+    updatedAt: locked || !row.updatedAt ? null : row.updatedAt.toISOString(),
     locked,
-    pinned: row.pinnedAt != null,
+    pinned: !locked && row.pinnedAt != null,
   };
 }
 

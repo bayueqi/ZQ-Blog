@@ -23,7 +23,6 @@ export const PostRevisionSnapshotSchema = z.object({
   // default 是为了兼容加密功能之前存下的老快照。
   visibility: z.enum(POST_VISIBILITIES).default("public"),
   accessPasswordHash: z.string().nullable().default(null),
-  privacyProtected: z.boolean().default(false),
 });
 
 export const PostRevisionSelectSchema = createSelectSchema(PostRevisionsTable, {

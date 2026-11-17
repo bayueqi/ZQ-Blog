@@ -64,6 +64,15 @@ export async function listCategories(
   }));
 }
 
+/** 单个相册的照片数，详情页不必把整张列表连同全部计数一起读出来。 */
+export async function countPhotos(db: DB, categoryId: number) {
+  const [row] = await db
+    .select({ photos: count(GalleryPhotosTable.id) })
+    .from(GalleryPhotosTable)
+    .where(eq(GalleryPhotosTable.categoryId, categoryId));
+  return row?.photos ?? 0;
+}
+
 export async function findCategoryBySlug(db: DB, slug: string) {
   const [row] = await db
     .select({ ...categoryFields, ...coverFields })

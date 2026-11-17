@@ -43,7 +43,6 @@ async function gallerySnapshot(
     description: row.description,
     coverMediaId: row.coverMediaId,
     accessPasswordHash: row.accessPasswordHash,
-    privacyProtected: row.privacyProtected,
     sortOrder: row.sortOrder,
     photos: photos.map((photo) => ({
       mediaId: photo.mediaId,
@@ -247,7 +246,6 @@ async function restoreGallery(
     description: snapshot.description,
     coverMediaId: snapshot.coverMediaId,
     accessPasswordHash: snapshot.accessPasswordHash,
-    privacyProtected: snapshot.privacyProtected,
     sortOrder: snapshot.sortOrder,
     published: snapshot.published,
     publishedAt: snapshot.publishedAt ? new Date(snapshot.publishedAt) : null,

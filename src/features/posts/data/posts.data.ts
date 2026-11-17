@@ -58,6 +58,8 @@ async function hydratePublicPosts(
     updatedAt: Date;
     publicSnapshotJson: PublicPostSnapshot | null;
   }>,
+  // 列表里私密内容只留一张锁卡片；详情页自己处理遮蔽，不能在这里抹掉。
+  { conceal = true }: { conceal?: boolean } = {},
 ): Promise<Array<PostItem>> {
   if (rows.length === 0) return [];
   const assignments = await db.query.PostsTable.findMany({
@@ -77,6 +79,7 @@ async function hydratePublicPosts(
       assignment?.category
         ? { id: assignment.category.id, name: assignment.category.name }
         : null,
+      conceal,
     );
     return item ? [item] : [];
   });
@@ -508,7 +511,7 @@ export async function findPostBySlug(
       ),
     });
     if (!row?.publicSnapshotJson) return null;
-    const [item] = await hydratePublicPosts(db, [row]);
+    const [item] = await hydratePublicPosts(db, [row], { conceal: false });
     return item
       ? {
           ...row,
@@ -677,6 +680,8 @@ export async function findAdjacentPublicPosts(db: DB, slug: string) {
     .where(
       and(
         publicVisible(),
+        // 私密文章不参与上下篇，标题不能从这里漏出去。
+        ne(PostsTable.visibility, "password"),
         isNotNull(PostsTable.publicSlug),
         or(
           gt(snapshotPublishedAt, publishedAt),
@@ -699,6 +704,8 @@ export async function findAdjacentPublicPosts(db: DB, slug: string) {
     .where(
       and(
         publicVisible(),
+        // 私密文章不参与上下篇，标题不能从这里漏出去。
+        ne(PostsTable.visibility, "password"),
         isNotNull(PostsTable.publicSlug),
         or(
           lt(snapshotPublishedAt, publishedAt),

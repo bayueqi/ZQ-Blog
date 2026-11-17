@@ -127,7 +127,6 @@ async function createPublishRevision(
     categoryId: post.categoryId ?? null,
     visibility: post.visibility,
     accessPasswordHash: post.accessPasswordHash,
-    privacyProtected: post.privacyProtected,
   });
 
   const latestPublish = await PostRevisionRepo.findLatestPostRevision(
@@ -155,7 +154,6 @@ async function createPublishRevision(
       coverMediaId: post.coverMediaId ?? null,
       visibility: post.visibility,
       accessPasswordHash: post.accessPasswordHash,
-      privacyProtected: post.privacyProtected,
     },
   });
 }

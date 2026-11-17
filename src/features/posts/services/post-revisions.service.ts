@@ -39,7 +39,6 @@ function toRevisionSnapshot(
     coverMediaId: post.coverMediaId ?? null,
     visibility: post.visibility,
     accessPasswordHash: post.accessPasswordHash,
-    privacyProtected: post.privacyProtected,
   };
 }
 
@@ -55,7 +54,6 @@ async function hashSnapshot(snapshot: PostRevisionSnapshot) {
     categoryId: snapshot.categoryId ?? null,
     visibility: snapshot.visibility,
     accessPasswordHash: snapshot.accessPasswordHash ?? null,
-    privacyProtected: snapshot.privacyProtected ?? false,
   });
 }
 
@@ -194,9 +192,6 @@ export async function restorePostRevision(
     !targetSnapshot.accessPasswordHash
   ) {
     targetSnapshot.visibility = "public";
-  }
-  if (targetSnapshot.visibility === "public") {
-    targetSnapshot.privacyProtected = false;
   }
   if (targetSnapshot.coverMediaId != null) {
     const coverMedia = await MediaRepo.findMediaById(

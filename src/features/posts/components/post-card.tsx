@@ -54,26 +54,23 @@ export function PostCard({ post, pinned }: PostCardProps) {
           </div>
         )}
 
-        <Link
-          to="/post/$slug"
-          params={{ slug: post.slug }}
-          className="transition group w-full block font-bold mb-3 text-3xl fuwari-text-90 hover:text-(--fuwari-primary) active:text-(--fuwari-primary) relative before:w-1 before:h-5 before:rounded-md before:absolute before:-left-5 before:top-1/2 before:-translate-y-1/2 before:hidden md:before:block before:bg-(--fuwari-primary)"
-        >
-          {concealed ? (
-            <span className="inline-flex items-center gap-2">
-              <Lock
-                size={24}
-                strokeWidth={1.8}
-                className="text-(--fuwari-fg-50)"
-              />
-              {m.post_private_placeholder()}
-            </span>
-          ) : (
-            post.title
-          )}
-          <ChevronRight className="inline-block md:hidden text-[2rem] text-(--fuwari-primary) align-middle -mt-1 ml-1" />
-          <ChevronRight className="text-(--fuwari-primary) text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" />
-        </Link>
+        {concealed ? (
+          // 私密文章只留占位，不给链接：链接里的 slug 本身就是标题。
+          <div className="flex items-center gap-2 font-bold mb-3 text-3xl fuwari-text-50">
+            <Lock size={24} strokeWidth={1.8} />
+            {m.post_private_placeholder()}
+          </div>
+        ) : (
+          <Link
+            to="/post/$slug"
+            params={{ slug: post.slug }}
+            className="transition group w-full block font-bold mb-3 text-3xl fuwari-text-90 hover:text-(--fuwari-primary) active:text-(--fuwari-primary) relative before:w-1 before:h-5 before:rounded-md before:absolute before:-left-5 before:top-1/2 before:-translate-y-1/2 before:hidden md:before:block before:bg-(--fuwari-primary)"
+          >
+            {post.title}
+            <ChevronRight className="inline-block md:hidden text-[2rem] text-(--fuwari-primary) align-middle -mt-1 ml-1" />
+            <ChevronRight className="text-(--fuwari-primary) text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" />
+          </Link>
+        )}
 
         <div
           className={
@@ -82,12 +79,6 @@ export function PostCard({ post, pinned }: PostCardProps) {
               : "flex flex-wrap fuwari-text-50 items-center gap-4 gap-x-4 gap-y-2 mb-4"
           }
         >
-          {post.visibility === "password" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
-              <Lock size={12} strokeWidth={2} />
-              {m.post_locked_badge()}
-            </span>
-          )}
           <div className="flex items-center">
             <div className="fuwari-meta-icon">
               <Calendar size={20} strokeWidth={1.5} />

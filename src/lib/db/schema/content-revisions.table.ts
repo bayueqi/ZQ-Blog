@@ -32,7 +32,6 @@ export interface GalleryRevisionSnapshot {
   description: string | null;
   coverMediaId: number | null;
   accessPasswordHash: string | null;
-  privacyProtected: boolean;
   sortOrder: number;
   photos: Array<GalleryRevisionPhoto>;
   published: boolean;

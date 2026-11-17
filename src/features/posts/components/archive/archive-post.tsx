@@ -17,21 +17,39 @@ export function ArchivePost({ post }: ArchivePostProps) {
   const date = post.publishedAt ? new Date(post.publishedAt) : null;
   // 隐私保护：归档里也只留占位，标题、日期、分类、标签、摘要、封面都不显示。
   const concealed = post.visibility === "password";
-  const hasCover = Boolean(post.cover) && !concealed;
+  const hasCover = Boolean(post.cover);
   const tagNames = (post.tags ?? []).map((tag) => tag.name);
+
+  // 私密文章只占一行位置，不给链接：链接里的 slug 本身就是标题。
+  if (concealed) {
+    return (
+      <div className="my-1 w-full rounded-xl px-2 py-3 md:px-3">
+        <div className="flex flex-row justify-start items-stretch">
+          <div className="w-[15%] shrink-0 md:w-[10%]" />
+          <div className="w-[15%] shrink-0 relative fuwari-timeline-dash flex items-start pt-2.5 md:w-[10%]">
+            <div className="mx-auto w-1 h-1 rounded bg-black/50 dark:bg-white/50 outline outline-(--fuwari-card-bg)" />
+          </div>
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 pr-2 text-base font-bold fuwari-text-50 md:pr-3 md:text-lg">
+            <Lock size={14} strokeWidth={1.8} />
+            {m.post_private_placeholder()}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Link
       to="/post/$slug"
       params={{ slug: post.slug }}
       className="group block! my-1 w-full rounded-xl px-2 py-3 transition-colors hover:bg-(--fuwari-btn-plain-bg-hover) active:bg-(--fuwari-btn-plain-bg-active) md:px-3"
-      aria-label={concealed ? m.post_private_placeholder() : post.title}
+      aria-label={post.title}
     >
       <div className="flex flex-row justify-start items-stretch">
         {/* Date */}
         <div className="w-[15%] shrink-0 pt-1 text-sm text-right fuwari-text-50 md:w-[10%]">
           <time dateTime={date?.toISOString()}>
-            {concealed ? "" : formatPublicPostDate(date, { monthDay: true })}
+            {formatPublicPostDate(date, { monthDay: true })}
           </time>
         </div>
 
@@ -55,7 +73,7 @@ export function ArchivePost({ post }: ArchivePostProps) {
                 group-hover:translate-x-1 group-hover:text-(--fuwari-primary)
                 fuwari-text-75 md:text-lg"
             >
-              {post.pinnedAt && !concealed ? (
+              {post.pinnedAt ? (
                 <Pin
                   size={14}
                   strokeWidth={2}
@@ -64,18 +82,7 @@ export function ArchivePost({ post }: ArchivePostProps) {
                   aria-label={m.home_pinned_posts()}
                 />
               ) : null}
-              <span className="min-w-0 truncate">
-                {concealed ? m.post_private_placeholder() : post.title}
-              </span>
-              {concealed || post.visibility !== "password" ? null : (
-                <Lock
-                  size={12}
-                  strokeWidth={2}
-                  role="img"
-                  aria-label={m.post_locked_badge()}
-                  className="shrink-0 text-(--fuwari-fg-50)"
-                />
-              )}
+              <span className="min-w-0 truncate">{post.title}</span>
               <ChevronRight
                 size={16}
                 strokeWidth={2}
@@ -83,13 +90,7 @@ export function ArchivePost({ post }: ArchivePostProps) {
               />
             </div>
 
-            <div
-              className={
-                concealed
-                  ? "hidden"
-                  : "mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm fuwari-text-50"
-              }
-            >
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm fuwari-text-50">
               {post.category ? (
                 <span className="inline-flex items-center gap-1">
                   <BookOpen size={14} strokeWidth={1.6} />
@@ -108,7 +109,7 @@ export function ArchivePost({ post }: ArchivePostProps) {
               </span>
             </div>
 
-            {concealed || !post.summary ? null : (
+            {!post.summary ? null : (
               <p className="mt-1.5 line-clamp-1 break-words text-sm fuwari-text-50 md:line-clamp-2">
                 {post.summary}
               </p>

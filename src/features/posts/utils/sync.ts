@@ -12,7 +12,6 @@ export async function calculatePostHash(post: {
   categoryId?: number | null;
   visibility?: string;
   accessPasswordHash?: string | null;
-  privacyProtected?: boolean;
 }): Promise<string> {
   const toISOOrNull = (d: Date | string | null) =>
     d instanceof Date ? d.toISOString() : d;
@@ -34,9 +33,6 @@ export async function calculatePostHash(post: {
     ...(post.accessPasswordHash === undefined
       ? {}
       : { accessPasswordHash: post.accessPasswordHash }),
-    ...(post.privacyProtected === undefined
-      ? {}
-      : { privacyProtected: post.privacyProtected }),
   };
 
   const msgUint8 = new TextEncoder().encode(JSON.stringify(stateToHash));

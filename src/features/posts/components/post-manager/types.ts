@@ -8,7 +8,6 @@ export type AdminPostListItem = Omit<
   | "coverMediaId"
   | "categoryId"
   | "accessPasswordHash"
-  | "privacyProtected"
 >;
 
 /** Status filter options for posts list */

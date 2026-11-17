@@ -36,18 +36,19 @@ export function mapSnapshotToPublicPost(
   },
   tags: Array<Tag> = [],
   category: { id: number; name: string } | null = null,
+  /** 列表里私密内容只留锁卡片，链接也不给，所以 slug 一并抹掉。 */
+  concealLocked = true,
 ): PostItem | null {
   const snapshot = row.publicSnapshotJson;
   if (!snapshot) return null;
 
-  // 设了密码就是私密：列表里只留一张锁卡片，其余字段一个都不下发。
-  if (row.visibility === "password") {
+  if (concealLocked && row.visibility === "password") {
     const epoch = new Date(0);
     return {
       id: row.id,
       title: "",
       summary: null,
-      slug: snapshot.slug,
+      slug: "",
       status: "published",
       visibility: row.visibility,
       publishedAt: null,

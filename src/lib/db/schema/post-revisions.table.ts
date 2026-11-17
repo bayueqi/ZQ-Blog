@@ -24,7 +24,6 @@ export interface PostRevisionSnapshot {
   // 加密和隐私也得进版本，否则恢复完成员还是恢复前的样子。
   visibility: PostVisibility;
   accessPasswordHash: string | null;
-  privacyProtected: boolean;
 }
 
 export const PostRevisionsTable = sqliteTable(
