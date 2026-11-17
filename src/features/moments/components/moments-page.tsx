@@ -205,8 +205,6 @@ function MomentItem({
   commentCount,
   isAdmin,
   highlightCommentId,
-  unlocked,
-  onUnlocked,
 }: {
   moment: MomentCard;
   first: boolean;
@@ -214,9 +212,6 @@ function MomentItem({
   isAdmin: boolean;
   /** 有值时直接展开评论区并定位到那条评论。 */
   highlightCommentId?: number;
-  /** 父组件已记录这条解锁过，用于立即把它挪出私密层。 */
-  unlocked: boolean;
-  onUnlocked: () => void;
 }) {
   const [opened, setOpened] = useState<{
     body: string;
@@ -228,7 +223,7 @@ function MomentItem({
     if (highlightCommentId != null) setShowComments(true);
   }, [highlightCommentId]);
 
-  const locked = moment.locked && !unlocked && !opened;
+  const locked = moment.locked && !opened;
   const body = opened?.body ?? moment.body;
   const images = opened?.images ?? moment.images;
 
@@ -282,10 +277,9 @@ function MomentItem({
       {locked ? (
         <MomentLock
           moment={moment}
-          onUnlocked={(nextBody, nextImages) => {
-            setOpened({ body: nextBody, images: nextImages });
-            onUnlocked();
-          }}
+          onUnlocked={(nextBody, nextImages) =>
+            setOpened({ body: nextBody, images: nextImages })
+          }
         />
       ) : (
         <>
@@ -350,29 +344,10 @@ export function MomentsPage({
   });
   const counts = commentCounts?.counts ?? {};
 
-  // 就地解锁过的日常，立即从私密层挪到普通层，不必刷新。
-  const [unlockedIds, setUnlockedIds] = useState<Set<number>>(
-    () => new Set(),
-  );
-  const unlock = (id: number) =>
-    setUnlockedIds((prev) => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-
-  const isLocked = (moment: MomentCard) =>
-    moment.locked && !unlockedIds.has(moment.id);
-
   // 三段式：置顶在上，普通居中，私密在下。
-  const pinnedMoments = moments.filter(
-    (moment) => moment.pinned && !isLocked(moment),
-  );
-  const normalMoments = moments.filter(
-    (moment) => !moment.pinned && !isLocked(moment),
-  );
-  const lockedMoments = moments.filter(isLocked);
+  const pinnedMoments = moments.filter((moment) => moment.pinned && !moment.locked);
+  const normalMoments = moments.filter((moment) => !moment.pinned && !moment.locked);
+  const lockedMoments = moments.filter((moment) => moment.locked);
   const groups = [
     { key: "pinned", items: pinnedMoments },
     { key: "normal", items: normalMoments },
@@ -407,8 +382,6 @@ export function MomentsPage({
                   first={index === 0}
                   commentCount={counts[String(moment.id)] ?? 0}
                   isAdmin={isAdmin}
-                  unlocked={unlockedIds.has(moment.id)}
-                  onUnlocked={() => unlock(moment.id)}
                   highlightCommentId={
                     hashMomentId === moment.id ? highlightCommentId : undefined
                   }

@@ -1,10 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
-import { orpc } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
 interface GalleryLockProps {
@@ -12,8 +9,6 @@ interface GalleryLockProps {
 }
 
 export function GalleryLock({ categoryId }: GalleryLockProps) {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -34,21 +29,11 @@ export function GalleryLock({ categoryId }: GalleryLockProps) {
         setFailed(true);
         return;
       }
-      // cookie 已写入。失效相册列表，让列表页这条从锁卡片变真实标题，
-      // 然后换到真实链接，不再整页刷新。
+      // cookie 已写入，直接换到真实链接，整页加载最省事。
       const data = (await response.json()) as { slug?: string };
-      await queryClient.invalidateQueries({
-        queryKey: orpc.gallery.categories.list.key(),
-      });
-      if (data.slug) {
-        await navigate({
-          to: "/gallery/$category",
-          params: { category: data.slug },
-          replace: true,
-        });
-      } else {
-        await navigate({ to: "/gallery", replace: true });
-      }
+      window.location.replace(
+        data.slug ? `/gallery/${encodeURIComponent(data.slug)}` : "/gallery",
+      );
     } catch {
       setFailed(true);
     } finally {
