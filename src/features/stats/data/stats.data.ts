@@ -1,7 +1,4 @@
-import { and, count, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
-import { galleryVisible } from "@/features/gallery/data/helper";
-import { momentVisible } from "@/features/moments/data/helper";
-import { publicVisible } from "@/features/posts/data/helper";
+import { count, eq, max } from "drizzle-orm";
 import {
   FriendLinksTable,
   GalleryCategoriesTable,
@@ -10,42 +7,33 @@ import {
   PostsTable,
 } from "@/lib/db/schema";
 
-const postIsPublic = and(
-  isNotNull(PostsTable.publicSlug),
-  publicVisible(),
-);
-
+/** 已发布的文章，不看是否加密、不看定时是否到点。 */
 export async function countPublishedPosts(db: DB) {
   const [row] = await db
-    .select({
-      total: count(),
-      latest: max(
-        sql<string>`json_extract(${PostsTable.publicSnapshotJson}, '$.publishedAt')`,
-      ),
-    })
+    .select({ total: count(), latest: max(PostsTable.publishedAt) })
     .from(PostsTable)
-    .where(postIsPublic);
+    .where(eq(PostsTable.status, "published"));
 
   return { total: row?.total ?? 0, latest: row?.latest ?? null };
 }
 
-/** 已发布的日常；上锁的也算，访客在列表里看得见它。 */
+/** 已发布的日常，上锁的也照常计数。 */
 export async function countPublishedMoments(db: DB) {
   const [row] = await db
     .select({ total: count(), latest: max(MomentsTable.publishedAt) })
     .from(MomentsTable)
-    .where(momentVisible());
+    .where(eq(MomentsTable.published, true));
 
   return { total: row?.total ?? 0, latest: row?.latest ?? null };
 }
 
-/** 相册集与照片，上锁的既不计数也不露名字。 */
+/** 已发布的相册集与照片，上锁的也照常计数。 */
 export async function countPublicGallery(db: DB) {
   const [categories, photos] = await Promise.all([
     db
       .select({ total: count() })
       .from(GalleryCategoriesTable)
-      .where(and(galleryVisible(), isNull(GalleryCategoriesTable.accessPasswordHash))),
+      .where(eq(GalleryCategoriesTable.published, true)),
     db
       .select({ total: count() })
       .from(GalleryPhotosTable)
@@ -53,7 +41,7 @@ export async function countPublicGallery(db: DB) {
         GalleryCategoriesTable,
         eq(GalleryPhotosTable.categoryId, GalleryCategoriesTable.id),
       )
-      .where(and(galleryVisible(), isNull(GalleryCategoriesTable.accessPasswordHash))),
+      .where(eq(GalleryCategoriesTable.published, true)),
   ]);
 
   return {

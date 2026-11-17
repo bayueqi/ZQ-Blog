@@ -8,7 +8,7 @@ const stats = publicProcedure
     path: "/stats",
     summary: "Public counts for the home page",
     description:
-      "Only counts what a visitor can open: published posts, unprotected galleries and the comments on them.",
+      "Counts every published item. Locked or password-protected entries are counted too, and the numbers do not depend on who is asking.",
     tags: ["Stats"],
   })
   .output(SiteStatsSchema)
