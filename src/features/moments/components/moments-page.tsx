@@ -339,6 +339,16 @@ export function MomentsPage({
   });
   const counts = commentCounts?.counts ?? {};
 
+  // 三段式：置顶在上，普通居中，私密在下。
+  const pinnedMoments = moments.filter((moment) => moment.pinned && !moment.locked);
+  const normalMoments = moments.filter((moment) => !moment.pinned && !moment.locked);
+  const lockedMoments = moments.filter((moment) => moment.locked);
+  const groups = [
+    { key: "pinned", items: pinnedMoments },
+    { key: "normal", items: normalMoments },
+    { key: "locked", items: lockedMoments },
+  ].filter((group) => group.items.length > 0);
+
   return (
     <section className="fuwari-card-base p-6 fuwari-content-enter">
       <header className="mb-6 space-y-1">
@@ -351,17 +361,28 @@ export function MomentsPage({
         <EmptyState description={m.moments_empty()} />
       ) : (
         <div className="flex flex-col">
-          {moments.map((moment, index) => (
-            <MomentItem
-              key={moment.id}
-              moment={moment}
-              first={index === 0}
-              commentCount={counts[String(moment.id)] ?? 0}
-              isAdmin={isAdmin}
-              highlightCommentId={
-                hashMomentId === moment.id ? highlightCommentId : undefined
+          {groups.map((group, groupIndex) => (
+            <div
+              key={group.key}
+              className={
+                groupIndex > 0
+                  ? "mt-5 border-t border-black pt-1 dark:border-white/70"
+                  : undefined
               }
-            />
+            >
+              {group.items.map((moment, index) => (
+                <MomentItem
+                  key={moment.id}
+                  moment={moment}
+                  first={index === 0}
+                  commentCount={counts[String(moment.id)] ?? 0}
+                  isAdmin={isAdmin}
+                  highlightCommentId={
+                    hashMomentId === moment.id ? highlightCommentId : undefined
+                  }
+                />
+              ))}
+            </div>
           ))}
         </div>
       )}
