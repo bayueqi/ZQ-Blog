@@ -2,7 +2,6 @@ import {
   and,
   desc,
   eq,
-  isNull,
   sql,
   type SQL,
   type SQLWrapper,
@@ -31,10 +30,12 @@ export type SearchDocumentFields = {
 /** 写入索引时带分词结果。 */
 export type SearchDocumentRow = SearchDocumentFields & { tokens: string };
 
-/** 查询索引时额外带上文章发布时间和分类。 */
+/** 查询索引时额外带上文章发布时间、分类和加密状态。 */
 export type SearchDocumentMatch = SearchDocumentFields & {
   publishedAt: Date | null;
   category: string | null;
+  visibility: "public" | "password";
+  accessPasswordHash: string | null;
 };
 
 export async function upsertSearchDocument(
@@ -92,20 +93,16 @@ export async function matchSearchDocuments(
   env: Env,
   match: string,
   limit: number,
-  includeLocked = false,
 ): Promise<SearchDocumentMatch[]> {
-  // 加密文章的正文同样在索引里，但只有管理员能把它查出来。
-  const visibilityFilter = includeLocked
-    ? ""
-    : " AND p.visibility <> 'password'";
-  // 定时发布的文章发布时就进了索引，到点之前不能出现在结果里。
+  // 加密文章的正文同样在索引里，这里一并取回；能不能看由调用方按身份判断。
   const nowSeconds = Math.floor(Date.now() / 1000);
   const result = await env.DB.prepare(
     `SELECT d.post_id AS postId, d.slug, d.title, d.summary, d.content, d.tags,
-            p.published_at AS publishedAt, c.name AS category
+            p.published_at AS publishedAt, c.name AS category,
+            p.visibility AS visibility, p.access_password_hash AS accessPasswordHash
      FROM search_documents_fts
      JOIN search_documents d ON d.post_id = search_documents_fts.rowid
-     JOIN posts p ON p.id = d.post_id${visibilityFilter}
+     JOIN posts p ON p.id = d.post_id
      LEFT JOIN categories c ON c.id = p.category_id
      WHERE search_documents_fts MATCH ?
        AND (p.published_at IS NULL OR p.published_at <= ?)
@@ -122,6 +119,8 @@ export async function matchSearchDocuments(
       tags: string;
       publishedAt: number | null;
       category: string | null;
+      visibility: "public" | "password";
+      accessPasswordHash: string | null;
     }>();
 
   return (result.results ?? []).map((row) => ({
@@ -134,6 +133,8 @@ export async function matchSearchDocuments(
     publishedAt:
       row.publishedAt === null ? null : new Date(row.publishedAt * 1000),
     category: row.category ?? null,
+    visibility: row.visibility,
+    accessPasswordHash: row.accessPasswordHash,
   }));
 }
 
@@ -202,14 +203,14 @@ export type MomentSearchRow = {
   id: number;
   body: string;
   publishedAt: Date | null;
+  accessPasswordHash: string | null;
 };
 
-/** 日常：搜正文与日期；上锁的只有管理员能搜到。 */
+/** 日常：搜正文与日期；上锁的取回后由调用方按身份判断能不能看。 */
 export async function matchMoments(
   db: DB,
   terms: Array<string>,
   limit: number,
-  includeLocked = false,
 ): Promise<Array<MomentSearchRow>> {
   if (terms.length === 0) return [];
   const conditions = allTermsMatch(
@@ -223,15 +224,10 @@ export async function matchMoments(
       id: MomentsTable.id,
       body: MomentsTable.body,
       publishedAt: MomentsTable.publishedAt,
+      accessPasswordHash: MomentsTable.accessPasswordHash,
     })
     .from(MomentsTable)
-    .where(
-      and(
-        momentVisible(),
-        includeLocked ? undefined : isNull(MomentsTable.accessPasswordHash),
-        ...conditions,
-      ),
-    )
+    .where(and(momentVisible(), ...conditions))
     .orderBy(desc(MomentsTable.publishedAt), desc(MomentsTable.id))
     .limit(limit);
 
@@ -244,14 +240,14 @@ export type GallerySearchRow = {
   slug: string;
   description: string | null;
   publishedAt: Date | null;
+  accessPasswordHash: string | null;
 };
 
-/** 相册集：完全隐藏或上锁的，只有管理员能搜到。 */
+/** 相册集：上锁的取回后由调用方按身份判断能不能看。 */
 export async function matchGalleryCategories(
   db: DB,
   terms: Array<string>,
   limit: number,
-  includeLocked = false,
 ): Promise<Array<GallerySearchRow>> {
   if (terms.length === 0) return [];
   const conditions = allTermsMatch(
@@ -267,20 +263,10 @@ export async function matchGalleryCategories(
       slug: GalleryCategoriesTable.slug,
       description: GalleryCategoriesTable.description,
       publishedAt: GalleryCategoriesTable.publishedAt,
+      accessPasswordHash: GalleryCategoriesTable.accessPasswordHash,
     })
     .from(GalleryCategoriesTable)
-    .where(
-      and(
-        galleryVisible(),
-        includeLocked
-          ? undefined
-          : isNull(GalleryCategoriesTable.accessPasswordHash),
-        includeLocked
-          ? undefined
-          : isNull(GalleryCategoriesTable.accessPasswordHash),
-        ...conditions,
-      ),
-    )
+    .where(and(galleryVisible(), ...conditions))
     .orderBy(GalleryCategoriesTable.sortOrder, GalleryCategoriesTable.id)
     .limit(limit);
 

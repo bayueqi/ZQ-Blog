@@ -1,6 +1,20 @@
 import { isNotNull } from "drizzle-orm";
 import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
 import { convertToPlainText } from "@/features/posts/utils/content";
+import {
+  postAccessCookieName,
+  readCookie,
+  verifyPostAccess,
+} from "@/features/posts/utils/post-access";
+import {
+  galleryAccessCookieName,
+  verifyGalleryAccess,
+} from "@/features/gallery/gallery-access";
+import {
+  momentAccessCookieName,
+  verifyMomentAccess,
+} from "@/features/moments/moments-access";
+import { serverEnv } from "@/lib/env/server.env";
 import * as SearchRepo from "@/features/search/data/search.data";
 import {
   CONTENT_SLICE,
@@ -117,11 +131,11 @@ function occurrencesOf(
 }
 
 async function searchPosts(
-  context: DbContext,
+  context: DbContext & { headers?: Headers },
   query: string,
   terms: Array<string>,
   limit: number,
-  includeLocked: boolean,
+  isAdmin: boolean,
 ): Promise<Array<SearchHit>> {
   const match = toFtsMatchQuery(query);
   if (!match) return [];
@@ -133,11 +147,25 @@ async function searchPosts(
     context.env,
     match,
     fetchLimit,
-    includeLocked,
   );
+
+  const secret = serverEnv(context.env).BETTER_AUTH_SECRET;
+  const cookie = context.headers?.get("cookie") ?? null;
 
   const hits: Array<SearchHit> = [];
   for (const row of rows) {
+    // 加密文章：管理员直接看；访客带了对的解锁 cookie 才能命中。
+    if (row.visibility === "password" && !isAdmin) {
+      if (!row.accessPasswordHash) continue;
+      const unlocked = await verifyPostAccess(
+        secret,
+        row.postId,
+        row.accessPasswordHash,
+        readCookie(cookie, postAccessCookieName(row.postId)),
+      );
+      if (!unlocked) continue;
+    }
+
     const haystack = `${row.title}\n${row.summary}\n${row.content}\n${hitDateText(row.publishedAt)}`;
     if (!terms.every((term) => includesTerm(haystack, term))) continue;
 
@@ -178,7 +206,7 @@ async function searchPosts(
 }
 
 export async function search(
-  context: DbContext,
+  context: DbContext & { headers?: Headers },
   data: SearchQueryInput,
   viewer: { isAdmin?: boolean } = {},
 ): Promise<Array<SearchHit>> {
@@ -187,20 +215,61 @@ export async function search(
 
   const terms = queryTerms(query);
   const limit = Math.min(data.limit, 25);
-  // 上锁的内容只对管理员开放。
-  const includeLocked = viewer.isAdmin === true;
+  const isAdmin = viewer.isAdmin === true;
+  const secret = serverEnv(context.env).BETTER_AUTH_SECRET;
+  const cookie = context.headers?.get("cookie") ?? null;
 
-  const [posts, moments, galleries, friendLinks] = await Promise.all([
-    searchPosts(context, query, terms, limit, includeLocked),
-    SearchRepo.matchMoments(context.db, terms, EXTRA_LIMIT, includeLocked),
-    SearchRepo.matchGalleryCategories(
-      context.db,
-      terms,
-      EXTRA_LIMIT,
-      includeLocked,
-    ),
+  // 上锁内容：管理员直接看；访客带了对的解锁 cookie 才命中。
+  async function canRead(
+    id: number,
+    hash: string | null,
+    verify: (
+      secret: string,
+      id: number,
+      hash: string,
+      token: string | undefined,
+    ) => Promise<boolean>,
+    cookieName: (id: number) => string,
+  ): Promise<boolean> {
+    if (isAdmin) return true;
+    if (!hash) return false;
+    return verify(secret, id, hash, readCookie(cookie, cookieName(id)));
+  }
+
+  const [posts, momentRows, galleryRows, friendLinks] = await Promise.all([
+    searchPosts(context, query, terms, limit, isAdmin),
+    SearchRepo.matchMoments(context.db, terms, EXTRA_LIMIT),
+    SearchRepo.matchGalleryCategories(context.db, terms, EXTRA_LIMIT),
     SearchRepo.matchFriendLinks(context.db, terms, EXTRA_LIMIT),
   ]);
+
+  const moments: Array<SearchRepo.MomentSearchRow> = [];
+  for (const row of momentRows) {
+    if (
+      await canRead(
+        row.id,
+        row.accessPasswordHash,
+        verifyMomentAccess,
+        momentAccessCookieName,
+      )
+    ) {
+      moments.push(row);
+    }
+  }
+
+  const galleries: Array<SearchRepo.GallerySearchRow> = [];
+  for (const row of galleryRows) {
+    if (
+      await canRead(
+        row.id,
+        row.accessPasswordHash,
+        verifyGalleryAccess,
+        galleryAccessCookieName,
+      )
+    ) {
+      galleries.push(row);
+    }
+  }
 
   const momentHits: Array<SearchHit> = moments.map((row) => {
     const titleHtml = buildSnippet({
