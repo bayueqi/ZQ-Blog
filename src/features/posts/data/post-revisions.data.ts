@@ -140,8 +140,7 @@ export async function restorePostSnapshot(
         contentJson: data.snapshot.contentJson,
         coverMediaId: data.snapshot.coverMediaId ?? null,
         categoryId: data.snapshot.categoryId ?? null,
-        visibility: data.snapshot.visibility,
-        accessPasswordHash: data.snapshot.accessPasswordHash ?? null,
+        // 可见性与密码属于安全设置，恢复旧版本不该把加密的文章放回公开。
       })
       .where(eq(PostsTable.id, data.postId)),
     db.delete(PostTagsTable).where(eq(PostTagsTable.postId, data.postId)),

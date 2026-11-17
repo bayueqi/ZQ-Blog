@@ -15,6 +15,12 @@ import type {
 } from "@/lib/db/schema";
 import type { GalleryCategory } from "@/lib/db/schema";
 import { err, ok } from "@/lib/errors";
+import {
+  formatPrivateSlug,
+  isPrivateSlug,
+  nextPrivateIndex,
+  PRIVATE_SLUG_PREFIX,
+} from "@/lib/private-slug";
 
 /** 每个内容最多留这么多条，多了从最老的开始丢。 */
 const MAX_REVISIONS = 30;
@@ -215,12 +221,27 @@ async function restoreMoment(
   await MomentRepo.update(db, targetId, {
     body: snapshot.body,
     images: snapshot.images,
-    accessPasswordHash: snapshot.accessPasswordHash,
+    // 恢复只还原正文与图片，密码保持当前设置。
     published: snapshot.published,
     publishedAt: snapshot.publishedAt ? new Date(snapshot.publishedAt) : null,
     pinnedAt: snapshot.pinnedAt ? new Date(snapshot.pinnedAt) : null,
   });
   return ok({ ok: true });
+}
+
+/** 恢复出来的可能是加密版本：对外链接换成占位编号，标题不进地址栏。 */
+async function privateGallerySlug(
+  db: DB,
+  current: string | null | undefined,
+): Promise<string> {
+  if (isPrivateSlug(current, PRIVATE_SLUG_PREFIX.gallery)) {
+    return current as string;
+  }
+  const slugs = await GalleryRepo.listPrivateGallerySlugs(db);
+  return formatPrivateSlug(
+    PRIVATE_SLUG_PREFIX.gallery,
+    nextPrivateIndex(slugs) + 1,
+  );
 }
 
 async function restoreGallery(
@@ -239,13 +260,20 @@ async function restoreGallery(
     snapshot.slug,
     targetId,
   );
+  const slug = taken ? row.slug : snapshot.slug;
+  // 密码沿用当前设置，恢复旧版本不该把加密的相册放回公开；
+  // 对外链接按当前是否加密来定，锁着就用占位编号。
+  const publicSlug =
+    row.accessPasswordHash != null
+      ? await privateGallerySlug(db, row.publicSlug)
+      : slug;
 
   await GalleryRepo.updateCategory(db, targetId, {
     name: snapshot.name,
-    slug: taken ? row.slug : snapshot.slug,
+    slug,
+    publicSlug,
     description: snapshot.description,
     coverMediaId: snapshot.coverMediaId,
-    accessPasswordHash: snapshot.accessPasswordHash,
     sortOrder: snapshot.sortOrder,
     published: snapshot.published,
     publishedAt: snapshot.publishedAt ? new Date(snapshot.publishedAt) : null,
