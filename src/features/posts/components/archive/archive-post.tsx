@@ -16,7 +16,7 @@ interface ArchivePostProps {
 export function ArchivePost({ post }: ArchivePostProps) {
   const date = post.publishedAt ? new Date(post.publishedAt) : null;
   // 隐私保护：归档里也只留占位，标题、日期、分类、标签、摘要、封面都不显示。
-  const concealed = post.privacyProtected;
+  const concealed = post.visibility === "password";
   const hasCover = Boolean(post.cover) && !concealed;
   const tagNames = (post.tags ?? []).map((tag) => tag.name);
 

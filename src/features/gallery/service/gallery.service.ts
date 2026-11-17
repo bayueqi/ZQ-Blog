@@ -73,8 +73,8 @@ async function unlocked(
 }
 
 function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
-  // 锁着又开了隐私保护：名称、描述、封面、张数、时间都不下发。
-  const concealed = isLocked && row.privacyProtected;
+  // 设了密码就是私密：锁着的时候名称、描述、封面、张数、时间都不下发。
+  const concealed = isLocked;
   // 没指定发布时间就按创建时刻对外显示。
   const shownAt = row.publishedAt ?? row.createdAt ?? null;
   return {
@@ -86,7 +86,6 @@ function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
     photoCount: concealed ? 0 : row.photoCount,
     locked: isLocked,
     pinned: row.pinnedAt != null,
-    privacyProtected: row.privacyProtected,
     published: row.published,
     publishedAt: concealed || !shownAt ? null : shownAt.toISOString(),
     createdAt: concealed || !row.createdAt ? null : row.createdAt.toISOString(),
@@ -218,7 +217,6 @@ export async function createCategory(
     accessPasswordHash: input.password
       ? await hashGalleryPassword(input.password)
       : null,
-    privacyProtected: Boolean(input.password && input.privacyProtected),
     published: input.published ?? false,
     publishedAt: publishedAtOf(input.publishedAt) ?? null,
   });
@@ -254,15 +252,9 @@ export async function updateCategory(
       ? await hashGalleryPassword(input.password)
       : null;
   }
-  if (input.privacyProtected !== undefined) {
-    data.privacyProtected = input.privacyProtected;
-  }
   const publishedAt = publishedAtOf(input.publishedAt);
   if (publishedAt !== undefined) data.publishedAt = publishedAt;
   if (input.published !== undefined) data.published = input.published;
-  // 密码没了，隐私保护也就没有意义。
-  if (data.accessPasswordHash === null) data.privacyProtected = false;
-
   const row = await Repo.updateCategory(context.db, input.id, data);
   // 发布出去的那一版才进历史，草稿由 recordGallery 自己跳过。
   if (row) await recordGallery(context.db, row);

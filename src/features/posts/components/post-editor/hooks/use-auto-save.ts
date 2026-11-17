@@ -38,7 +38,6 @@ type MetaSnapshot = {
   categoryId: number | null;
   coverMediaId: number | null;
   visibility: PostEditorData["visibility"];
-  privacyProtected: boolean;
   accessPassword: string;
 };
 
@@ -57,7 +56,6 @@ function toMeta(post: PostEditorData): MetaSnapshot {
     categoryId: post.categoryId,
     coverMediaId: post.coverMediaId,
     visibility: post.visibility,
-    privacyProtected: post.privacyProtected,
     accessPassword: post.accessPassword,
   };
 }
@@ -74,7 +72,6 @@ function isMetaDirty(curr: MetaSnapshot, prev: MetaSnapshot | null) {
     prev.categoryId !== curr.categoryId ||
     prev.coverMediaId !== curr.coverMediaId ||
     prev.visibility !== curr.visibility ||
-    prev.privacyProtected !== curr.privacyProtected ||
     prev.accessPassword !== curr.accessPassword
   );
 }

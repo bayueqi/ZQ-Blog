@@ -30,7 +30,6 @@ export function mapSnapshotToPublicPost(
     id: number;
     status: "draft" | "published";
     visibility: "public" | "password";
-    privacyProtected: boolean;
     createdAt: Date;
     updatedAt: Date;
     publicSnapshotJson: PublicPostSnapshot | null;
@@ -41,6 +40,27 @@ export function mapSnapshotToPublicPost(
   const snapshot = row.publicSnapshotJson;
   if (!snapshot) return null;
 
+  // 设了密码就是私密：列表里只留一张锁卡片，其余字段一个都不下发。
+  if (row.visibility === "password") {
+    const epoch = new Date(0);
+    return {
+      id: row.id,
+      title: "",
+      summary: null,
+      slug: snapshot.slug,
+      status: "published",
+      visibility: row.visibility,
+      publishedAt: null,
+      pinnedAt: null,
+      createdAt: epoch,
+      updatedAt: epoch,
+      readTimeInMinutes: 1,
+      tags: [],
+      category: null,
+      cover: null,
+    };
+  }
+
   return {
     id: row.id,
     title: snapshot.title,
@@ -48,7 +68,6 @@ export function mapSnapshotToPublicPost(
     slug: snapshot.slug,
     status: "published",
     visibility: row.visibility,
-    privacyProtected: row.privacyProtected,
     publishedAt: new Date(snapshot.publishedAt),
     pinnedAt: snapshot.pinnedAt ? new Date(snapshot.pinnedAt) : null,
     createdAt: row.createdAt,

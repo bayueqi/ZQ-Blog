@@ -274,7 +274,7 @@ export async function matchGalleryCategories(
         galleryVisible(),
         includeLocked
           ? undefined
-          : eq(GalleryCategoriesTable.privacyProtected, false),
+          : isNull(GalleryCategoriesTable.accessPasswordHash),
         includeLocked
           ? undefined
           : isNull(GalleryCategoriesTable.accessPasswordHash),

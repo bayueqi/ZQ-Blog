@@ -13,7 +13,6 @@ const categoryFields = {
   slug: GalleryCategoriesTable.slug,
   description: GalleryCategoriesTable.description,
   accessPasswordHash: GalleryCategoriesTable.accessPasswordHash,
-  privacyProtected: GalleryCategoriesTable.privacyProtected,
   sortOrder: GalleryCategoriesTable.sortOrder,
   pinnedAt: GalleryCategoriesTable.pinnedAt,
   published: GalleryCategoriesTable.published,

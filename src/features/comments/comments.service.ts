@@ -88,7 +88,7 @@ async function requireTarget(
     context.db,
     target.targetId,
   );
-  if (!category || category.privacyProtected || category.accessPasswordHash) {
+  if (!category || category.accessPasswordHash) {
     return null;
   }
   const ref = { targetType: "gallery", slug: category.slug } as const;

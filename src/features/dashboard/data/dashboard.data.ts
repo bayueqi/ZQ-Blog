@@ -59,7 +59,7 @@ const targetIsOpen = or(
   ),
   and(
     eq(CommentsTable.targetType, "gallery"),
-    eq(GalleryCategoriesTable.privacyProtected, false),
+    isNull(GalleryCategoriesTable.accessPasswordHash),
     isNull(GalleryCategoriesTable.accessPasswordHash),
   ),
 );

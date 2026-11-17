@@ -79,7 +79,6 @@ function EditPost() {
     coverMediaId: post.coverMediaId,
     cover: post.cover,
     visibility: post.visibility,
-    privacyProtected: post.privacyProtected,
     hasAccessPassword: post.hasAccessPassword,
   };
 
@@ -106,9 +105,6 @@ function EditPost() {
           coverMediaId: data.coverMediaId,
           categoryId: data.categoryId,
           visibility: data.visibility,
-          // 关掉密码访问就不再谈隐私保护。
-          privacyProtected:
-            data.visibility === "password" && data.privacyProtected,
           // Going public drops the password; blank input keeps the stored one.
           ...(data.visibility === "public"
             ? { accessPassword: null }

@@ -62,6 +62,7 @@ const PostUpdateSchema = createUpdateSchema(PostsTable, {
     createdAt: true,
     updatedAt: true,
     accessPasswordHash: true,
+    privacyProtected: true,
   })
   .extend({
     // Plain text on the wire; hashed before it is written.
@@ -74,6 +75,7 @@ export const PostItemSchema = PostSelectSchema.omit({
   publicSlug: true,
   coverMediaId: true,
   categoryId: true,
+  privacyProtected: true,
 }).extend({
   tags: z.array(TagSelectSchema).optional(),
   category: PublicCategorySchema.nullable().catch(null),
@@ -97,6 +99,7 @@ export const PostWithTocSchema = PostSelectSchema.omit({
   publicSlug: true,
   coverMediaId: true,
   categoryId: true,
+  privacyProtected: true,
 })
   .extend({
     tags: z.array(TagSelectSchema).optional(),
@@ -256,7 +259,6 @@ const AdminPostListItemSchema = z.object({
   publicSlug: PublicSlugSchema,
   status: z.enum(["draft", "published"]),
   visibility: z.enum(["public", "password"]),
-  privacyProtected: z.boolean(),
   publishedAt: coercedDateNullable,
   pinnedAt: coercedDateNullable,
   createdAt: coercedDate,

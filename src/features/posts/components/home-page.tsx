@@ -121,7 +121,9 @@ function PinnedPostCard({ post }: { post: PostItem }) {
     >
       <div className="flex min-w-0 flex-1 flex-col">
         <h3 className="text-xl leading-snug font-bold fuwari-text-90 transition-colors group-hover:text-(--fuwari-primary) md:text-2xl">
-          {post.privacyProtected ? m.post_private_placeholder() : post.title}
+          {post.visibility === "password"
+            ? m.post_private_placeholder()
+            : post.title}
         </h3>
 
         {post.summary ? (

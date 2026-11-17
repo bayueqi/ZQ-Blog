@@ -48,8 +48,8 @@ export const Route = createFileRoute("/_public/post/$slug")({
   },
   head: ({ loaderData }) => {
     const post = loaderData?.post;
-    // 开了隐私保护又没解锁，标题、描述、封面一律不下发。
-    const concealed = Boolean(post?.locked && post.privacyProtected);
+    // 设了密码又没解锁，标题、描述、封面一律不下发。
+    const concealed = Boolean(post?.locked);
     const title = concealed ? m.post_private_placeholder() : post?.title;
     const description = concealed ? "" : (post?.summary ?? "");
     const canonicalHref = loaderData?.canonicalHref ?? "";

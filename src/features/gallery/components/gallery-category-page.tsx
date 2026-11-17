@@ -69,7 +69,8 @@ export function GalleryCategoryPage({
 
   const current = active === null ? null : photos[active];
   // 锁着又开了隐私保护：标题、描述、张数都不显示。
-  const concealed = locked && category.privacyProtected;
+  // 设了密码就是私密：锁着的时候标题、描述、张数、时间都不显示。
+  const concealed = locked;
 
   return (
     <section className="fuwari-card-base fuwari-content-enter">

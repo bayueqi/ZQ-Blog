@@ -20,8 +20,6 @@ export const GalleryCategoryCardSchema = z.object({
   locked: z.boolean(),
   /** 置顶的排在列表最前面。 */
   pinned: z.boolean(),
-  /** 解锁前连名称、描述、封面、创建时间都不下发。 */
-  privacyProtected: z.boolean(),
   /** 没发布的相册是草稿，前台看不到。 */
   published: z.boolean(),
   /** 对外显示的发布时间；为空表示发布即当期。 */
@@ -57,8 +55,6 @@ export const CreateGalleryCategoryInputSchema = z.object({
   coverMediaId: z.number().nullable().optional(),
   /** null/空 表示不设密码。 */
   password: z.string().min(1).max(100).nullable().optional(),
-  /** 设了密码才能开的隐私保护。 */
-  privacyProtected: z.boolean().optional(),
   /**
    * 发布时间，YYYY-MM-DD，按北京时间零点入库；填未来的日期就是定时发布。
    * 空字符串表示不指定，也就是发布即当期。不传表示保持原状。

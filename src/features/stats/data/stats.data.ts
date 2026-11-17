@@ -1,4 +1,4 @@
-import { and, count, eq, isNotNull, max, sql } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
 import { galleryVisible } from "@/features/gallery/data/helper";
 import { momentVisible } from "@/features/moments/data/helper";
 import { publicVisible } from "@/features/posts/data/helper";
@@ -39,13 +39,13 @@ export async function countPublishedMoments(db: DB) {
   return { total: row?.total ?? 0, latest: row?.latest ?? null };
 }
 
-/** 相册集与照片，隐私保护的既不计数也不露名字。 */
+/** 相册集与照片，上锁的既不计数也不露名字。 */
 export async function countPublicGallery(db: DB) {
   const [categories, photos] = await Promise.all([
     db
       .select({ total: count() })
       .from(GalleryCategoriesTable)
-      .where(and(galleryVisible(), eq(GalleryCategoriesTable.privacyProtected, false))),
+      .where(and(galleryVisible(), isNull(GalleryCategoriesTable.accessPasswordHash))),
     db
       .select({ total: count() })
       .from(GalleryPhotosTable)
@@ -53,7 +53,7 @@ export async function countPublicGallery(db: DB) {
         GalleryCategoriesTable,
         eq(GalleryPhotosTable.categoryId, GalleryCategoriesTable.id),
       )
-      .where(and(galleryVisible(), eq(GalleryCategoriesTable.privacyProtected, false))),
+      .where(and(galleryVisible(), isNull(GalleryCategoriesTable.accessPasswordHash))),
   ]);
 
   return {

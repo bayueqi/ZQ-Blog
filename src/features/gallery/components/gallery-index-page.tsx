@@ -28,7 +28,7 @@ export function GalleryIndexPage({
         <ul className="grid gap-5 sm:grid-cols-2">
           {categories.map((category) => {
             // 锁着又开了隐私保护：名称、描述、封面、张数、时间都不露。
-            const concealed = category.locked && category.privacyProtected;
+            const concealed = category.locked;
             return (
               <li key={category.id}>
                 <Link

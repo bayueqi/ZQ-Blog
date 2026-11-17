@@ -1,4 +1,4 @@
-import { desc, sql } from "drizzle-orm";
+import { and, desc, ne, sql } from "drizzle-orm";
 import { Feed } from "feed";
 import type { SiteConfig } from "@/features/config/config.schema";
 import * as ConfigService from "@/features/config/service/config.service";
@@ -43,7 +43,8 @@ export async function buildFeed(env: Env, executionCtx: ExecutionContext) {
       updatedAt: PostsTable.updatedAt,
     })
     .from(PostsTable)
-    .where(publicVisible())
+    // 设了密码的文章不进订阅源，标题和摘要都不该出现在这里。
+    .where(and(publicVisible(), ne(PostsTable.visibility, "password")))
     .orderBy(
       desc(
         sql`json_extract(${PostsTable.publicSnapshotJson}, '$.publishedAt')`,
@@ -77,11 +78,7 @@ export async function buildFeed(env: Env, executionCtx: ExecutionContext) {
       id: post.id.toString(),
       link: `https://${DOMAIN}/post/${encodeURIComponent(post.publicSlug ?? snapshot.slug)}`,
       description: snapshot.summary ?? "",
-      // A locked body would leak through the feed, so only the summary ships.
-      content:
-        post.visibility === "password"
-          ? (snapshot.summary ?? "")
-          : convertToPlainText(snapshot.contentJson),
+      content: convertToPlainText(snapshot.contentJson),
       author: [feedAuthor],
       date: new Date(snapshot.publishedAt),
     });

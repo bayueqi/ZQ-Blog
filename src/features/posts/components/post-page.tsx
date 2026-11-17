@@ -50,7 +50,7 @@ export function PostPage({
   // Approximate word count
   const wordCount = post.readTimeInMinutes * 300;
   // 隐私保护：解锁前连标题、时间、分类标签都不出现在页面上。
-  const concealed = post.locked && post.privacyProtected;
+  const concealed = post.locked;
 
   return (
     <div className="relative flex flex-col rounded-(--fuwari-radius-large) py-1 md:py-0 md:bg-transparent gap-4 mb-4 w-full">

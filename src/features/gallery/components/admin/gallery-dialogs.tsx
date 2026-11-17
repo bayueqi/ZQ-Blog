@@ -82,7 +82,6 @@ export function GalleryCategoryDialog({
   const [passwordProtected, setPasswordProtected] = useState(
     Boolean(row?.hasAccessPassword),
   );
-  const [privacy, setPrivacy] = useState(Boolean(row?.privacyProtected));
   // 发布状态与发布时间各管各的：草稿即使填了日期也不会上线。
   const [published, setPublished] = useState(row?.published ?? true);
   const [publishedAt, setPublishedAt] = useState(
@@ -109,7 +108,6 @@ export function GalleryCategoryDialog({
         name: name.trim(),
         description: description.trim() || undefined,
         coverMediaId: cover?.id ?? null,
-        privacyProtected: passwordProtected && privacy,
         published,
         publishedAt,
         ...passwordField,
@@ -217,22 +215,6 @@ export function GalleryCategoryDialog({
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </FormField>
-              <div className="flex items-center gap-2.5">
-                <span className="w-16 shrink-0 whitespace-nowrap text-sm fuwari-text-75">
-                  {m.editor_meta_privacy()}
-                </span>
-                <Switch
-                  aria-label={m.editor_meta_privacy()}
-                  checked={privacy}
-                  onCheckedChange={setPrivacy}
-                  className="min-h-10"
-                />
-              </div>
-              {privacy ? (
-                <p className="text-xs fuwari-text-50">
-                  {m.admin_gallery_privacy_hint()}
-                </p>
-              ) : null}
             </>
           ) : null}
 

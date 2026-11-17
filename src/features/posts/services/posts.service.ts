@@ -206,21 +206,22 @@ export async function findPostBySlug(
   // 这页的内容取决于 cookie，边缘缓存里放一份就会被别的访客读到。
   if (context.cacheHint) context.cacheHint.privatePage = true;
 
-  // 隐私保护连元信息一起收走，浏览器里连标题都拿不到。
-  const lockedView = () =>
-    post.privacyProtected
-      ? {
-          ...post,
-          title: "",
-          summary: null,
-          cover: null,
-          tags: [],
-          category: null,
-          contentJson: null,
-          toc: [],
-          locked: true,
-        }
-      : { ...post, contentJson: null, toc: [], locked: true };
+  // 设了密码就是私密：连元信息一起收走，浏览器里连标题、时间都拿不到。
+  const lockedView = () => ({
+    ...post,
+    title: "",
+    summary: null,
+    cover: null,
+    tags: [],
+    category: null,
+    contentJson: null,
+    toc: [],
+    // 类型上这些字段不可空，用纪元时间占位；锁定时页面不渲染它们。
+    publishedAt: new Date(0),
+    updatedAt: new Date(0),
+    createdAt: new Date(0),
+    locked: true,
+  });
 
   const meta = await PostRepo.findPostAccessMetaById(context.db, post.id);
   // 标了加密却没存密码：宁可锁死，也不能把正文放出去。
