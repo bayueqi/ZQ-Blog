@@ -11,52 +11,54 @@ interface ArchivePanelProps {
 export function ArchivePanel({ posts }: ArchivePanelProps) {
   const isLocked = (post: PostItem) =>
     post.locked ?? post.visibility === "password";
-  // 三段式：置顶在上，普通居中（按年份），私密在下。
-  const pinnedPosts = posts.filter(
-    (post) => !isLocked(post) && post.pinnedAt && post.publishedAt,
-  );
-  const lockedPosts = posts.filter(isLocked);
-  const groupedPosts = posts.reduce(
-    (acc, post) => {
-      if (!post.publishedAt) {
-        return acc;
-      }
-      if (isLocked(post) || post.pinnedAt) {
-        return acc;
-      }
 
+  function groupByYear(list: Array<PostItem>) {
+    const grouped = list.reduce((acc, post) => {
+      if (!post.publishedAt) return acc;
       const year = siteYear(post.publishedAt);
       acc[year] ??= [];
       acc[year].push(post);
       return acc;
-    },
-    {} as Record<number, Array<PostItem>>,
-  );
+    }, {} as Record<number, Array<PostItem>>);
+    const years = Object.keys(grouped)
+      .map(Number)
+      .sort((a, b) => b - a);
+    return { grouped, years };
+  }
 
-  const years = Object.keys(groupedPosts)
-    .map(Number)
-    .sort((a, b) => b - a);
+  // 三段式：置顶在上，普通居中，私密在下；置顶和普通都按年份标题展示。
+  const pinned = groupByYear(
+    posts.filter((post) => !isLocked(post) && post.pinnedAt),
+  );
+  const normal = groupByYear(
+    posts.filter((post) => !isLocked(post) && !post.pinnedAt),
+  );
+  const lockedPosts = posts.filter(isLocked);
+
+  const renderYears = (
+    years: Array<number>,
+    grouped: Record<number, Array<PostItem>>,
+  ) =>
+    years.map((year) => (
+      <div key={year}>
+        <ArchiveYear year={year} count={grouped[year].length} />
+        {grouped[year].map((post) => (
+          <ArchivePost key={post.id} post={post} />
+        ))}
+      </div>
+    ));
 
   const sections: Array<{ key: string; node: ReactNode }> = [];
-  if (pinnedPosts.length > 0) {
+  if (pinned.years.length > 0) {
     sections.push({
       key: "pinned",
-      node: pinnedPosts.map((post) => (
-        <ArchivePost key={post.id} post={post} />
-      )),
+      node: renderYears(pinned.years, pinned.grouped),
     });
   }
-  if (years.length > 0) {
+  if (normal.years.length > 0) {
     sections.push({
       key: "normal",
-      node: years.map((year) => (
-        <div key={year}>
-          <ArchiveYear year={year} count={groupedPosts[year].length} />
-          {groupedPosts[year].map((post) => (
-            <ArchivePost key={post.id} post={post} />
-          ))}
-        </div>
-      )),
+      node: renderYears(normal.years, normal.grouped),
     });
   }
   if (lockedPosts.length > 0) {
