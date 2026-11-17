@@ -101,7 +101,8 @@ export const postBySlug = defineEntry({
       id: post.id,
       title: post.title,
       summary: post.summary,
-      slug: post.slug,
+      // 私密文章对外只给占位链接，真实链接留在解锁后跳转用。
+      slug: post.publicSlug ?? post.slug,
       status: "published" as const,
       visibility: post.visibility,
       publishedAt: post.publishedAt,

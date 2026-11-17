@@ -1,4 +1,10 @@
 import { slugify } from "@/features/posts/utils/content";
+import {
+  formatPrivateSlug,
+  isPrivateSlug,
+  nextPrivateIndex,
+  PRIVATE_SLUG_PREFIX,
+} from "@/lib/private-slug";
 import * as CommentRepo from "@/features/comments/data/comments.data";
 import { err, ok } from "@/lib/errors";
 import { serverEnv } from "@/lib/env/server.env";
@@ -72,12 +78,7 @@ async function unlocked(
   );
 }
 
-function toCategoryCard(
-  row: CategoryBaseRow,
-  isLocked: boolean,
-  // 列表里连 slug 都不给：这一串本身就是名称，详情页要留着写分享链接。
-  { keepSlug = false }: { keepSlug?: boolean } = {},
-) {
+function toCategoryCard(row: CategoryBaseRow, isLocked: boolean) {
   // 设了密码就是私密：锁着的时候名称、描述、封面、张数、时间都不下发。
   const concealed = isLocked;
   // 没指定发布时间就按创建时刻对外显示。
@@ -85,7 +86,8 @@ function toCategoryCard(
   return {
     id: row.id,
     name: concealed ? "" : row.name,
-    slug: concealed && !keepSlug ? "" : row.slug,
+    // 锁着只报编号，真实链接由解锁后的跳转去用。
+    slug: concealed ? (row.publicSlug ?? "") : row.slug,
     description: concealed ? null : row.description,
     cover: concealed ? null : coverOf(row),
     photoCount: concealed ? 0 : row.photoCount,
@@ -148,7 +150,6 @@ export async function getCategory(
   const card = toCategoryCard(
     { ...row, photoCount: await Repo.countPhotos(context.db, row.id) },
     !isUnlocked,
-    { keepSlug: true },
   );
 
   if (!isUnlocked) return { category: card, photos: [], locked: true };
@@ -205,6 +206,21 @@ async function uniqueSlug(
   return candidate;
 }
 
+/** 私密相册接着已有的编号往后排，已经占上的编号不再变。 */
+async function nextPrivateGallerySlug(
+  context: GalleryContext,
+  current: string | null | undefined,
+) {
+  if (isPrivateSlug(current, PRIVATE_SLUG_PREFIX.gallery)) {
+    return current as string;
+  }
+  const slugs = await Repo.listPrivateGallerySlugs(context.db);
+  return formatPrivateSlug(
+    PRIVATE_SLUG_PREFIX.gallery,
+    nextPrivateIndex(slugs) + 1,
+  );
+}
+
 export async function createCategory(
   context: GalleryContext,
   input: CreateGalleryCategoryInput,
@@ -213,14 +229,18 @@ export async function createCategory(
     Repo.findCategorySlugTaken(context.db, value),
   );
 
+  const accessPasswordHash = input.password
+    ? await hashGalleryPassword(input.password)
+    : null;
   const row = await Repo.insertCategory(context.db, {
     name: input.name,
     slug,
+    publicSlug: accessPasswordHash
+      ? await nextPrivateGallerySlug(context, null)
+      : slug,
     description: input.description ?? null,
     coverMediaId: input.coverMediaId ?? null,
-    accessPasswordHash: input.password
-      ? await hashGalleryPassword(input.password)
-      : null,
+    accessPasswordHash,
     published: input.published ?? false,
     publishedAt: publishedAtOf(input.publishedAt) ?? null,
   });
@@ -259,6 +279,23 @@ export async function updateCategory(
   const publishedAt = publishedAtOf(input.publishedAt);
   if (publishedAt !== undefined) data.publishedAt = publishedAt;
   if (input.published !== undefined) data.published = input.published;
+  // 链接跟着密码走：设了密码就换成占位编号，取消了就换回名称。
+  const wasLocked = existing.accessPasswordHash != null;
+  const willBeLocked =
+    data.accessPasswordHash !== undefined
+      ? data.accessPasswordHash !== null
+      : wasLocked;
+  if (willBeLocked) {
+    // 原本就锁着的沿用旧编号；刚设上密码的要重新领一个。
+    if (!wasLocked || data.slug !== undefined || !existing.publicSlug) {
+      data.publicSlug = await nextPrivateGallerySlug(
+        context,
+        wasLocked ? existing.publicSlug : null,
+      );
+    }
+  } else {
+    data.publicSlug = data.slug ?? existing.slug;
+  }
   const row = await Repo.updateCategory(context.db, input.id, data);
   // 发布出去的那一版才进历史，草稿由 recordGallery 自己跳过。
   if (row) await recordGallery(context.db, row);

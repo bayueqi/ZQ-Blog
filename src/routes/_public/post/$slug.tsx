@@ -9,6 +9,7 @@ import { PostPage } from "@/features/posts/components/post-page";
 import { PostPageSkeleton } from "@/features/posts/components/post-page-skeleton";
 import { adjacentPostsQuery, postBySlugQuery } from "@/features/posts/queries";
 import { jsonContentHasType } from "@/features/posts/utils/content";
+import { privateLabelIndex } from "@/lib/private-slug";
 import { m } from "@/paraglide/messages";
 import {
   buildArticleJsonLd,
@@ -50,7 +51,9 @@ export const Route = createFileRoute("/_public/post/$slug")({
     const post = loaderData?.post;
     // 设了密码又没解锁，标题、描述、封面一律不下发。
     const concealed = Boolean(post?.locked);
-    const title = concealed ? m.post_private_placeholder() : post?.title;
+    const title = concealed
+      ? `${m.post_private_placeholder()} ${privateLabelIndex(post?.slug)}`
+      : post?.title;
     const description = concealed ? "" : (post?.summary ?? "");
     const canonicalHref = loaderData?.canonicalHref ?? "";
     const coverUrl =

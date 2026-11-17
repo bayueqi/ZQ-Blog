@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/post-unlock")({
         );
         if (!post) return json({ error: "POST_NOT_FOUND" }, 404);
         if (post.visibility !== "password" || !post.accessPasswordHash) {
-          return json({ ok: true });
+          return json({ ok: true, slug: post.slug });
         }
 
         const valid = await verifyPostPassword(
@@ -50,7 +50,8 @@ export const Route = createFileRoute("/api/post-unlock")({
           post.id,
           post.accessPasswordHash,
         );
-        return json({ ok: true }, 200, {
+        // 解锁后前端跳到真实链接，占位链接只在锁着的时候用。
+        return json({ ok: true, slug: post.slug }, 200, {
           "set-cookie": `${postAccessCookieName(post.id)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}`,
         });
       },

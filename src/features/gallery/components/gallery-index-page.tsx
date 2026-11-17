@@ -7,6 +7,7 @@ import {
   getPublicImageSrc,
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
+import { privateLabelIndex } from "@/lib/private-slug";
 import { m } from "@/paraglide/messages";
 
 export function GalleryIndexPage({
@@ -27,7 +28,7 @@ export function GalleryIndexPage({
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2">
           {categories.map((category) => {
-            // 设了密码就是私密：名称、描述、封面、张数、时间都不露，也不给链接。
+            // 设了密码就是私密：名称、描述、封面、张数、时间都不露，只报编号。
             const concealed = category.locked;
             const card = (
               <>
@@ -71,7 +72,7 @@ export function GalleryIndexPage({
                 <div className="space-y-3 p-5">
                   <h2 className="text-xl font-bold fuwari-text-90 transition group-hover:text-(--fuwari-primary)">
                     {concealed
-                      ? m.gallery_private_placeholder()
+                      ? `${m.gallery_private_placeholder()} ${privateLabelIndex(category.slug)}`
                       : category.name}
                   </h2>
                   {category.description && (
@@ -99,19 +100,13 @@ export function GalleryIndexPage({
 
             return (
               <li key={category.id}>
-                {concealed ? (
-                  <div className="fuwari-card-base block overflow-hidden">
-                    {card}
-                  </div>
-                ) : (
-                  <Link
-                    to="/gallery/$category"
-                    params={{ category: category.slug }}
-                    className="group fuwari-card-base block overflow-hidden transition-transform hover:-translate-y-0.5"
-                  >
-                    {card}
-                  </Link>
-                )}
+                <Link
+                  to="/gallery/$category"
+                  params={{ category: category.slug }}
+                  className="group fuwari-card-base block overflow-hidden transition-transform hover:-translate-y-0.5"
+                >
+                  {card}
+                </Link>
               </li>
             );
           })}

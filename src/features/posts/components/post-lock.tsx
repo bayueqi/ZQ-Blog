@@ -33,6 +33,12 @@ export function PostLock({ slug }: PostLockProps) {
         return;
       }
       setPassword("");
+      const data = (await response.json()) as { slug?: string };
+      if (data.slug && data.slug !== slug) {
+        // 解锁后地址栏换成真实链接，占位链接只在锁着的时候露脸。
+        window.location.replace(`/post/${encodeURIComponent(data.slug)}`);
+        return;
+      }
       await queryClient.invalidateQueries({
         queryKey: orpc.posts.bySlug.key({ input: { slug } }),
       });

@@ -233,16 +233,33 @@ export async function restorePostRevision(
   }
 
   await syncPostMedia(context.db, restoredPost);
-  if (restoredPost.publicSnapshotJson) {
-    context.executionCtx.waitUntil(
-      invalidate.postPublished(context, {
-        slug: restoredPost.publicSnapshotJson.slug,
-      }),
-    );
+
+  // 恢复出来的可能是加密版本：对外链接跟着换成编号，标题不进地址栏。
+  let finalPost = restoredPost;
+  const snapshot = restoredPost.publicSnapshotJson;
+  if (snapshot) {
+    const previousSlug = restoredPost.publicSlug;
+    const publicSlug =
+      restoredPost.visibility === "password"
+        ? await PostRepo.nextPrivatePostSlug(context.db, previousSlug)
+        : restoredPost.slug;
+    if (publicSlug !== previousSlug) {
+      const rewritten = await PostRepo.updatePost(context.db, restoredPost.id, {
+        publicSlug,
+        publicSnapshotJson: { ...snapshot, slug: publicSlug },
+      } as Parameters<typeof PostRepo.updatePost>[2]);
+      if (rewritten) finalPost = rewritten;
+    }
+    for (const slug of new Set([previousSlug, publicSlug])) {
+      if (!slug) continue;
+      context.executionCtx.waitUntil(
+        invalidate.postPublished(context, { slug }),
+      );
+    }
   }
 
   return ok({
-    post: restoredPost,
+    post: finalPost,
     restored: true,
     revisionId: revision.id,
   });

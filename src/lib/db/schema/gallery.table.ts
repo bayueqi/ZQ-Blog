@@ -9,6 +9,8 @@ export const GalleryCategoriesTable = sqliteTable(
     id,
     name: text().notNull(),
     slug: text().notNull().unique(),
+    /** 对外的链接：私密相册是「私密相册-1」这样的占位，公开时与 slug 一致。 */
+    publicSlug: text("public_slug"),
     description: text(),
     coverMediaId: integer("cover_media_id").references(() => MediaTable.id, {
       onDelete: "set null",

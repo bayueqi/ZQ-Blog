@@ -20,6 +20,7 @@ import type { MomentCard } from "@/features/moments/moments.schema";
 import type { PostItem } from "@/features/posts/schema/posts.schema";
 import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
 import type { SiteStats } from "@/features/stats/stats.schema";
+import { privateLabelIndex } from "@/lib/private-slug";
 import { m } from "@/paraglide/messages";
 
 interface HomePageProps {
@@ -122,7 +123,7 @@ function PinnedPostCard({ post }: { post: PostItem }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <h3 className="text-xl leading-snug font-bold fuwari-text-90 transition-colors group-hover:text-(--fuwari-primary) md:text-2xl">
           {post.visibility === "password"
-            ? m.post_private_placeholder()
+            ? `${m.post_private_placeholder()} ${privateLabelIndex(post.slug)}`
             : post.title}
         </h3>
 
@@ -183,7 +184,9 @@ function PinnedMomentCard({ moment }: { moment: MomentCard }) {
       </div>
 
       <p className="line-clamp-4 text-[1.05rem] leading-relaxed whitespace-pre-wrap fuwari-text-90">
-        {moment.locked ? m.moments_locked() : moment.body}
+        {moment.locked
+          ? `${m.moments_private_placeholder()} ${moment.privateIndex ?? 1}`
+          : moment.body}
       </p>
 
       {moment.images.length > 0 ? (
@@ -260,7 +263,9 @@ function PinnedGalleryCard({ gallery }: { gallery: GalleryCategoryCard }) {
             <Lock size={13} className="shrink-0 fuwari-text-50" />
           ) : null}
           <span className="truncate fuwari-text-90 transition-colors group-hover:text-(--fuwari-primary)">
-            {concealed ? m.post_private_placeholder() : gallery.name}
+            {concealed
+              ? `${m.gallery_private_placeholder()} ${privateLabelIndex(gallery.slug)}`
+              : gallery.name}
           </span>
         </div>
         {concealed ? null : (

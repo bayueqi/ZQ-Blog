@@ -32,11 +32,12 @@ export function mapSnapshotToPublicPost(
     visibility: "public" | "password";
     createdAt: Date;
     updatedAt: Date;
+    publicSlug?: string | null;
     publicSnapshotJson: PublicPostSnapshot | null;
   },
   tags: Array<Tag> = [],
   category: { id: number; name: string } | null = null,
-  /** 列表里私密内容只留锁卡片，链接也不给，所以 slug 一并抹掉。 */
+  /** 列表里私密内容只留锁卡片，露出的是「私密文章-1」这类占位链接。 */
   concealLocked = true,
 ): PostItem | null {
   const snapshot = row.publicSnapshotJson;
@@ -48,7 +49,7 @@ export function mapSnapshotToPublicPost(
       id: row.id,
       title: "",
       summary: null,
-      slug: "",
+      slug: row.publicSlug ?? "",
       status: "published",
       visibility: row.visibility,
       publishedAt: null,

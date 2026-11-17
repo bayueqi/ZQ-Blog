@@ -1391,6 +1391,7 @@
   "moments_title": "日常",
   "moments_empty": "还没有写下任何日常",
   "moments_locked": "这条日常已加密",
+  "moments_private_placeholder": "私密日常",
   "moments_password_placeholder": "访问密码",
   "moments_unlock": "解锁",
   "moments_wrong_password": "密码不对",

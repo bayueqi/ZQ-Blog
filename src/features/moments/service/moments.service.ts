@@ -44,7 +44,7 @@ function images(row: Moment) {
   return Array.isArray(row.images) ? row.images : [];
 }
 
-function toCard(row: Moment, locked: boolean) {
+function toCard(row: Moment, locked: boolean, privateIndex: number | null) {
   // 没指定发布时间就按创建时刻对外显示，免得前台缺日期。
   const shownAt = row.publishedAt ?? row.createdAt;
   return {
@@ -56,13 +56,31 @@ function toCard(row: Moment, locked: boolean) {
     updatedAt: locked || !row.updatedAt ? null : row.updatedAt.toISOString(),
     locked,
     pinned: !locked && row.pinnedAt != null,
+    privateIndex,
   };
 }
 
 export async function listPublished(context: MomentsContext) {
   const rows = await Repo.listPublished(context.db);
+  // 锁着的日常按列表顺序编号，同一条每次都是同一个数字。
+  const privateIndexes = new Map<number, number>();
+  let lockedCount = 0;
+  for (const row of rows) {
+    if (row.accessPasswordHash && context.session?.user.role !== "admin") {
+      lockedCount += 1;
+      privateIndexes.set(row.id, lockedCount);
+    }
+  }
   const cards = await Promise.all(
-    rows.map(async (row) => toCard(row, !(await unlocked(context, row)))),
+    rows.map(async (row) => {
+      const locked = !(await unlocked(context, row));
+      // 锁着的按出现顺序编号，界面只显示「私密日常 N」。
+      return toCard(
+        row,
+        locked,
+        locked ? (privateIndexes.get(row.id) ?? null) : null,
+      );
+    }),
   );
   return { moments: cards };
 }
@@ -71,7 +89,7 @@ export async function listForAdmin(context: MomentsContext) {
   const rows = await Repo.listAll(context.db);
   return {
     moments: rows.map((row) => ({
-      ...toCard(row, false),
+      ...toCard(row, false, null),
       // 后台编辑要拿库里的原值，不能被展示用的兜底日期带跑。
       publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
       hasPassword: Boolean(row.accessPasswordHash),
@@ -150,7 +168,7 @@ export async function createMoment(
   // 发布出去的那一版才进历史，草稿由 recordMoment 自己跳过。
   await recordMoment(context.db, row);
 
-  return ok(toCard(row, false));
+  return ok(toCard(row, false, null));
 }
 
 export async function updateMoment(
@@ -182,7 +200,7 @@ export async function updateMoment(
   // 发布出去的那一版才进历史，草稿由 recordMoment 自己跳过。
   await recordMoment(context.db, row);
 
-  return ok(toCard(row, false));
+  return ok(toCard(row, false, null));
 }
 
 /** 置顶只是排序标记，不影响发布状态与密码。 */

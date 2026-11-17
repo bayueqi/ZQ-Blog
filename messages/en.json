@@ -1407,6 +1407,7 @@
   "moments_title": "Moments",
   "moments_empty": "Nothing here yet",
   "moments_locked": "This moment is protected",
+  "moments_private_placeholder": "Private moment",
   "moments_password_placeholder": "Password",
   "moments_unlock": "Unlock",
   "moments_wrong_password": "Wrong password",

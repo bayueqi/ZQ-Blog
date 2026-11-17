@@ -19,6 +19,7 @@ import {
 } from "@/features/posts/utils/post-public-search";
 import type { PostItem } from "@/features/posts/schema/posts.schema";
 import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
+import { privateLabelIndex } from "@/lib/private-slug";
 import { m } from "@/paraglide/messages";
 
 interface PostCardProps {
@@ -55,11 +56,15 @@ export function PostCard({ post, pinned }: PostCardProps) {
         )}
 
         {concealed ? (
-          // 私密文章只留占位，不给链接：链接里的 slug 本身就是标题。
-          <div className="flex items-center gap-2 font-bold mb-3 text-3xl fuwari-text-50">
+          // 私密文章只报编号，链接也是编号，点进去才输密码。
+          <Link
+            to="/post/$slug"
+            params={{ slug: post.slug }}
+            className="flex items-center gap-2 font-bold mb-3 text-3xl fuwari-text-50 transition hover:text-(--fuwari-primary)"
+          >
             <Lock size={24} strokeWidth={1.8} />
-            {m.post_private_placeholder()}
-          </div>
+            {m.post_private_placeholder()} {privateLabelIndex(post.slug)}
+          </Link>
         ) : (
           <Link
             to="/post/$slug"

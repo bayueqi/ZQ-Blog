@@ -34,6 +34,12 @@ import type {
   PublicPostSnapshot,
 } from "@/lib/db/schema";
 import {
+  formatPrivateSlug,
+  isPrivateSlug,
+  nextPrivateIndex,
+  PRIVATE_SLUG_PREFIX,
+} from "@/lib/private-slug";
+import {
   CategoriesTable,
   PostsTable,
   PostTagsTable,
@@ -56,6 +62,7 @@ async function hydratePublicPosts(
     visibility: PostVisibility;
     createdAt: Date;
     updatedAt: Date;
+    publicSlug?: string | null;
     publicSnapshotJson: PublicPostSnapshot | null;
   }>,
   // 列表里私密内容只留一张锁卡片；详情页自己处理遮蔽，不能在这里抹掉。
@@ -301,6 +308,7 @@ export async function getPostsCursor(
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      publicSlug: PostsTable.publicSlug,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -331,6 +339,7 @@ export async function getHomePosts(db: DB, requestedPage: number) {
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      publicSlug: PostsTable.publicSlug,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -423,18 +432,44 @@ export async function findPublishedPostAccessBySlug(db: DB, slug: string) {
   const [row] = await db
     .select({
       id: PostsTable.id,
+      slug: PostsTable.slug,
       visibility: PostsTable.visibility,
       accessPasswordHash: PostsTable.accessPasswordHash,
     })
     .from(PostsTable)
     .where(
       and(
-        eq(PostsTable.publicSlug, slug),
         publicVisible(),
+        // 占位链接与真实链接都能解锁，解锁后统一跳到真实链接。
+        or(eq(PostsTable.publicSlug, slug), eq(PostsTable.slug, slug)),
       ),
     )
     .limit(1);
   return row ?? null;
+}
+
+/** 私密文章接着已有的编号往后排，已经占上的编号不再变。 */
+export async function nextPrivatePostSlug(
+  db: DB,
+  current: string | null | undefined,
+) {
+  if (isPrivateSlug(current, PRIVATE_SLUG_PREFIX.post)) {
+    return current as string;
+  }
+  const slugs = await listPrivatePostSlugs(db);
+  return formatPrivateSlug(
+    PRIVATE_SLUG_PREFIX.post,
+    nextPrivateIndex(slugs) + 1,
+  );
+}
+
+/** 已用的私密占位链接，新文章接着往后编号。 */
+export async function listPrivatePostSlugs(db: DB) {
+  const rows = await db
+    .select({ slug: PostsTable.publicSlug })
+    .from(PostsTable)
+    .where(eq(PostsTable.visibility, "password"));
+  return rows.map((row) => row.slug);
 }
 
 /** Just what the access check needs, without touching the cached detail. */
@@ -457,6 +492,7 @@ export async function findPinnedPosts(db: DB) {
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      publicSlug: PostsTable.publicSlug,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -481,6 +517,7 @@ export async function findPostsByIds(db: DB, ids: number[]) {
       id: PostsTable.id,
       status: PostsTable.status,
       visibility: PostsTable.visibility,
+      publicSlug: PostsTable.publicSlug,
       createdAt: PostsTable.createdAt,
       updatedAt: PostsTable.updatedAt,
       publicSnapshotJson: PostsTable.publicSnapshotJson,
@@ -506,7 +543,11 @@ export async function findPostBySlug(
   if (publicOnly) {
     const row = await db.query.PostsTable.findFirst({
       where: and(
-        eq(PostsTable.publicSlug, slug),
+        // 私密文章对外是占位链接，解锁后跳回真实链接，两个都要能打开。
+        or(
+          eq(PostsTable.publicSlug, slug),
+          and(eq(PostsTable.slug, slug), eq(PostsTable.visibility, "password")),
+        ),
         publicVisible(),
       ),
     });

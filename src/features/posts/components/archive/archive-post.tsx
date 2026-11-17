@@ -7,6 +7,7 @@ import {
 } from "@/features/media/utils/media.utils";
 import type { PostItem } from "@/features/posts/schema/posts.schema";
 import { formatPublicPostDate } from "@/features/posts/utils/format-public-post-date";
+import { privateLabelIndex } from "@/lib/private-slug";
 import { m } from "@/paraglide/messages";
 
 interface ArchivePostProps {
@@ -20,10 +21,15 @@ export function ArchivePost({ post }: ArchivePostProps) {
   const hasCover = Boolean(post.cover);
   const tagNames = (post.tags ?? []).map((tag) => tag.name);
 
-  // 私密文章只占一行位置，不给链接：链接里的 slug 本身就是标题。
+  // 私密文章只报编号，链接也是编号，点进去才输密码。
   if (concealed) {
     return (
-      <div className="my-1 w-full rounded-xl px-2 py-3 md:px-3">
+      <Link
+        to="/post/$slug"
+        params={{ slug: post.slug }}
+        className="group block! my-1 w-full rounded-xl px-2 py-3 transition-colors hover:bg-(--fuwari-btn-plain-bg-hover) active:bg-(--fuwari-btn-plain-bg-active) md:px-3"
+        aria-label={`${m.post_private_placeholder()} ${privateLabelIndex(post.slug)}`}
+      >
         <div className="flex flex-row justify-start items-stretch">
           <div className="w-[15%] shrink-0 md:w-[10%]" />
           <div className="w-[15%] shrink-0 relative fuwari-timeline-dash flex items-start pt-2.5 md:w-[10%]">
@@ -31,10 +37,10 @@ export function ArchivePost({ post }: ArchivePostProps) {
           </div>
           <div className="flex min-w-0 flex-1 items-center gap-1.5 pr-2 text-base font-bold fuwari-text-50 md:pr-3 md:text-lg">
             <Lock size={14} strokeWidth={1.8} />
-            {m.post_private_placeholder()}
+            {m.post_private_placeholder()} {privateLabelIndex(post.slug)}
           </div>
         </div>
-      </div>
+      </Link>
     );
   }
 

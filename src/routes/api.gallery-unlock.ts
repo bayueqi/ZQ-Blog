@@ -35,7 +35,9 @@ export const Route = createFileRoute("/api/gallery-unlock")({
           parsed.data.categoryId,
         );
         if (!category) return json({ error: "CATEGORY_NOT_FOUND" }, 404);
-        if (!category.accessPasswordHash) return json({ ok: true });
+        if (!category.accessPasswordHash) {
+          return json({ ok: true, slug: category.slug });
+        }
 
         const valid = await verifyGalleryPassword(
           parsed.data.password,
@@ -48,7 +50,8 @@ export const Route = createFileRoute("/api/gallery-unlock")({
           category.id,
           category.accessPasswordHash,
         );
-        return json({ ok: true }, 200, {
+        // 解锁后前端跳到真实链接，占位链接只在锁着的时候用。
+        return json({ ok: true, slug: category.slug }, 200, {
           "set-cookie": `${galleryAccessCookieName(category.id)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}`,
         });
       },

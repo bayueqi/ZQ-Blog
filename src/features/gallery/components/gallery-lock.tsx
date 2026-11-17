@@ -29,8 +29,11 @@ export function GalleryLock({ categoryId }: GalleryLockProps) {
         setFailed(true);
         return;
       }
-      // cookie 已写入，整页刷新最省事，也不用逐个失效缓存。
-      window.location.reload();
+      // cookie 已写入，直接换到真实链接，整页加载最省事。
+      const data = (await response.json()) as { slug?: string };
+      window.location.replace(
+        data.slug ? `/gallery/${encodeURIComponent(data.slug)}` : "/gallery",
+      );
     } catch {
       setFailed(true);
     } finally {

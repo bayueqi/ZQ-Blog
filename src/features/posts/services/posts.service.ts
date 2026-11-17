@@ -94,11 +94,13 @@ async function buildPublicSnapshot(
   db: DB,
   post: NonNullable<Awaited<ReturnType<typeof PostRepo.findPostById>>>,
   contentJson: PublicPostSnapshot["contentJson"],
+  // 私密文章对外只报编号，真实链接留在库里，解锁后才跳过去。
+  publicSlug: string = post.slug,
 ): Promise<PublicPostSnapshot> {
   return {
     title: post.title,
     summary: post.summary,
-    slug: post.slug,
+    slug: publicSlug,
     contentJson,
     tagIds: [...new Set(post.tags.map((tag) => tag.id))].sort((a, b) => a - b),
     categoryId: post.categoryId ?? null,
@@ -593,15 +595,40 @@ export async function updatePost(
   }
 
   if (
-    updateData.visibility !== undefined ||
-    updateData.accessPasswordHash !== undefined
+    (updateData.visibility !== undefined ||
+      updateData.accessPasswordHash !== undefined) &&
+    updatedPost.publicSnapshotJson
   ) {
-    const snapshot = updatedPost.publicSnapshotJson;
-    if (snapshot && updatedPost.publicSlug) {
-      // The cached detail carries visibility, so it has to go.
+    const previousSlug = updatedPost.publicSlug;
+    // 改成密码访问就换成占位链接，改回公开就换回真实链接，标题不进地址栏。
+    const publicSlug =
+      updatedPost.visibility === "password"
+        ? await PostRepo.nextPrivatePostSlug(
+            context.db,
+            previousSlug,
+          )
+        : updatedPost.slug;
+
+    if (publicSlug !== previousSlug) {
+      const rewritten = await PostRepo.updatePost(context.db, updatedPost.id, {
+        publicSlug,
+        publicSnapshotJson: {
+          ...updatedPost.publicSnapshotJson,
+          slug: publicSlug,
+        } as PublicPostSnapshot,
+      });
+      if (rewritten) updatedPost = rewritten;
+    }
+
+    // The cached detail carries visibility, so both old and new links go.
+    for (const slug of new Set([previousSlug, publicSlug])) {
+      if (!slug) continue;
       context.executionCtx.waitUntil(
-        invalidate.postPublished(context, { slug: updatedPost.publicSlug }),
+        invalidate.postPublished(context, { slug }),
       );
+    }
+    const snapshot = updatedPost.publicSnapshotJson;
+    if (snapshot) {
       context.executionCtx.waitUntil(
         SearchService.upsert(context, {
           id: updatedPost.id,
@@ -667,13 +694,24 @@ export async function publishPost(
     publishedPost = updated;
   }
 
-  const slugTaken = await PostRepo.publicSlugExists(
-    context.db,
-    publishedPost.slug,
-    { excludeId: publishedPost.id },
-  );
-  if (slugTaken) {
-    return err({ reason: "PUBLIC_SLUG_TAKEN" });
+  const privateSlug =
+    publishedPost.visibility === "password"
+      ? await PostRepo.nextPrivatePostSlug(
+          context.db,
+          publishedPost.publicSlug,
+        )
+      : null;
+
+  // 私密文章的链接是编号，不跟标题走，也就没有重名可争。
+  if (!privateSlug) {
+    const slugTaken = await PostRepo.publicSlugExists(
+      context.db,
+      publishedPost.slug,
+      { excludeId: publishedPost.id },
+    );
+    if (slugTaken) {
+      return err({ reason: "PUBLIC_SLUG_TAKEN" });
+    }
   }
 
   const normalizedContent = normalizePostContent(publishedPost.contentJson);
@@ -698,6 +736,7 @@ export async function publishPost(
     context.db,
     publishedPost,
     snapshotContent,
+    privateSlug ?? publishedPost.slug,
   );
   const previousPublicSlug = publishedPost.publicSlug;
   const published = await PostRepo.writePublicSnapshot(

@@ -15,6 +15,8 @@ export const MomentCardSchema = z.object({
   updatedAt: z.string().nullable(),
   locked: z.boolean(),
   pinned: z.boolean(),
+  /** 锁着时的编号，界面上显示成「私密日常 2」。 */
+  privateIndex: z.number().int().nullable(),
 });
 
 export const MomentListSchema = z.object({

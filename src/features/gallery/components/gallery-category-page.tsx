@@ -25,6 +25,7 @@ import {
   PUBLIC_IMAGE_WIDTH,
 } from "@/features/media/utils/media.utils";
 import { ShareButton } from "@/features/share/share-dialog";
+import { privateLabelIndex } from "@/lib/private-slug";
 import { m } from "@/paraglide/messages";
 
 export function GalleryCategoryPage({
@@ -84,7 +85,9 @@ export function GalleryCategoryPage({
         </Link>
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-3xl font-bold fuwari-text-90 md:text-[2.25rem]/[2.75rem]">
-            {concealed ? m.gallery_private_placeholder() : category.name}
+            {concealed
+              ? `${m.gallery_private_placeholder()} ${privateLabelIndex(category.slug)}`
+              : category.name}
           </h1>
           <div className="flex shrink-0 items-center gap-3">
             <ShareButton size="md" path={`/gallery/${category.slug}`} />

@@ -178,7 +178,7 @@ function MomentLock({
     <form onSubmit={submit} className="mt-3 flex flex-col gap-2">
       <p className="flex items-center gap-1.5 text-sm fuwari-text-50">
         <Lock size={14} strokeWidth={2} />
-        {m.moments_locked()}
+        {m.moments_private_placeholder()} {moment.privateIndex ?? 1}
       </p>
       <div className="flex items-center gap-2">
         <input

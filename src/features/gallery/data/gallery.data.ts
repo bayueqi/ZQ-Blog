@@ -1,4 +1,14 @@
-import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  ne,
+  or,
+} from "drizzle-orm";
 import { galleryVisible } from "@/features/gallery/data/helper";
 import type { DB } from "@/lib/db";
 import {
@@ -11,6 +21,7 @@ const categoryFields = {
   id: GalleryCategoriesTable.id,
   name: GalleryCategoriesTable.name,
   slug: GalleryCategoriesTable.slug,
+  publicSlug: GalleryCategoriesTable.publicSlug,
   description: GalleryCategoriesTable.description,
   accessPasswordHash: GalleryCategoriesTable.accessPasswordHash,
   sortOrder: GalleryCategoriesTable.sortOrder,
@@ -81,9 +92,24 @@ export async function findCategoryBySlug(db: DB, slug: string) {
       MediaTable,
       eq(MediaTable.id, GalleryCategoriesTable.coverMediaId),
     )
-    .where(eq(GalleryCategoriesTable.slug, slug))
+    // 私密相册对外是占位链接，解锁后跳回真实链接，两个都要能打开。
+    .where(
+      or(
+        eq(GalleryCategoriesTable.publicSlug, slug),
+        eq(GalleryCategoriesTable.slug, slug),
+      ),
+    )
     .limit(1);
   return row ?? null;
+}
+
+/** 已用的私密占位链接，新相册接着往后编号。 */
+export async function listPrivateGallerySlugs(db: DB) {
+  const rows = await db
+    .select({ slug: GalleryCategoriesTable.publicSlug })
+    .from(GalleryCategoriesTable)
+    .where(isNotNull(GalleryCategoriesTable.accessPasswordHash));
+  return rows.map((row) => row.slug);
 }
 
 export async function findCategoryById(db: DB, id: number) {
